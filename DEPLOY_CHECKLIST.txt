@@ -1,0 +1,13 @@
+DIGITAL AKK — CHECKLIST
+
+[ ] index.html в корне репозитория
+[ ] assets/, icons/, admin/ загружены полностью
+[ ] .nojekyll загружен
+[ ] GitHub Pages = main / root
+[ ] Главная без 404
+[ ] /admin/ без 404
+[ ] Анкета открывается без обязательного подтверждения email
+[ ] Афиша и Ticketon-ссылки открываются
+[ ] Новости обновляются при наличии сети
+[ ] Android/iPhone install flow открывается
+[ ] После обновления версии выполнен Ctrl+F5 / очищен старый service worker

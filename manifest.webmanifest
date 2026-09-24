@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Digital AKK",
+  "name": "Digital AKK — Ассоциация корейцев Казахстана",
   "short_name": "Digital AKK",
-  "description": "Ассоциация корейцев Казахстана",
+  "description": "Цифровое приложение Ассоциации корейцев Казахстана",
   "lang": "ru",
   "start_url": "./#home",
   "scope": "./",

@@ -1,15 +1,27 @@
-Digital AKK — GitHub Pages package
-1) Upload the contents of this folder to the ROOT of the GitHub repository.
-2) Keep the structure:
-   index.html
-   manifest.webmanifest
-   sw.js
-   config.json
-   i18n.json
-   page-catalog.json
-   icons/
-   assets/
-   offline.html
-3) GitHub Pages: Settings → Pages → Deploy from branch → main → / (root).
-4) The app uses relative paths so it works from a repository subpath.
-5) Android/iPhone install buttons are included on the normal web page and hidden in standalone mode.
+Digital AKK — публикация на GitHub Pages
+
+1. Создай/открой репозиторий на GitHub.
+2. ЗАГРУЗИ СОДЕРЖИМОЕ этой папки в КОРЕНЬ репозитория, а не саму внешнюю папку целиком.
+   В корне должны лежать index.html, config.json, manifest.webmanifest, sw.js, папки assets, icons, admin и файл .nojekyll.
+3. GitHub → Settings → Pages.
+4. Source: Deploy from a branch.
+5. Branch: main, Folder: / (root) → Save.
+6. Через 1–3 минуты GitHub покажет публичный адрес вида:
+   https://USERNAME.github.io/REPOSITORY/
+7. Открой этот адрес и сделай жёсткое обновление Ctrl+F5 один раз после первой публикации.
+
+Админка:
+  https://USERNAME.github.io/REPOSITORY/admin/
+
+Проверка после публикации:
+- Главная загружается без 404.
+- Переходы между разделами работают.
+- «Мой АКК» открывает анкету/вход.
+- Анкета содержит ФИО, дату рождения, телефон, город, образование и другие поля.
+- Театр → Афиша открывается, кнопка покупки ведёт на Ticketon там, где ссылка задана.
+- Новости обновляются при наличии интернета/доступности источников.
+- Settings/Настройки открываются.
+- Кнопки установки PWA видны в обычном браузере и скрываются в установленном режиме.
+- /admin/ загружается из подпапки репозитория.
+
+Если после обновления GitHub показывается старая версия, очисти данные сайта/service worker либо открой DevTools → Application → Service Workers → Unregister и обнови страницу.
