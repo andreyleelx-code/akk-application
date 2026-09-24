@@ -1,4 +1,4 @@
-const CACHE_NAME = "digital-akk-github-v2";
+const CACHE_NAME = "digital-akk-github-v3-root";
 const BASE = new URL("./", self.location.href);
 
 function appUrl(path) {
@@ -12,12 +12,12 @@ const SHELL = [
   "config.json",
   "i18n.json",
   "page-catalog.json",
-  "assets/app-DWPFIQMZ.css",
-  "assets/user-LAD5EIO2.js",
-  "assets/akk-logo-current.jpg",
-  "icons/icon-192.png",
-  "icons/icon-512.png",
-  "icons/maskable-512.png"
+  "app-DWPFIQMZ.css",
+  "user-LAD5EIO2.js",
+  "akk-logo-current.jpg",
+  "icon-192.png",
+  "icon-512.png",
+  "maskable-512.png"
 ].map(appUrl);
 
 self.addEventListener("install", (event) => {
@@ -63,11 +63,12 @@ self.addEventListener("fetch", (event) => {
 
   const basePath = new URL("./", BASE).pathname;
   const isAppAsset =
-    url.pathname.startsWith(new URL("icons/", BASE).pathname) ||
-    url.pathname.startsWith(new URL("assets/", BASE).pathname) ||
-    ["manifest.webmanifest", "config.json", "i18n.json", "page-catalog.json"].some(
-      (name) => url.pathname === new URL(name, BASE).pathname
-    );
+    [
+      "manifest.webmanifest", "config.json", "i18n.json", "page-catalog.json",
+      "app-DWPFIQMZ.css", "user-LAD5EIO2.js", "akk-logo-current.jpg",
+      "icon-192.png", "icon-512.png", "maskable-512.png",
+      "admin.html", "admin-W4IW26M7.css", "admin-2GT3ARL5.js"
+    ].some((name) => url.pathname === new URL(name, BASE).pathname);
 
   if (isAppAsset) {
     event.respondWith(
