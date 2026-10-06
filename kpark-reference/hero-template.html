@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hero — шаблон по мотивам kpark.co</title>
+<link href="https://fonts.googleapis.com/css2?family=Aboreto&family=Lato:wght@300;700&display=swap" rel="stylesheet">
+<style>
+  /* Параметры сняты с kpark.co: затемнение 0.56 на чёрном, высота 55.56% ширины, макс. 1920px */
+  :root { --white:#fff; --black:#000; --grey:#c2c2c2; --video-opacity:.56; --ease:cubic-bezier(.645,.045,.355,1); --ease-float:cubic-bezier(.445,.05,.55,.95); }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--black); color:var(--white); font-family:'Lato',sans-serif; font-weight:300; }
+
+  /* Шапка поверх видео */
+  .header { position:absolute; top:0; left:0; right:0; z-index:10; display:flex; justify-content:space-between; align-items:center; padding:24px 4vw; }
+  .header nav a { color:var(--white); text-decoration:none; margin-right:32px; font-size:16px; letter-spacing:.05em; }
+  .header .phone { color:var(--white); text-decoration:none; font-weight:700; }
+
+  /* HERO */
+  .hero { position:relative; width:100%; height:55.56vw; min-height:520px; max-height:100vh; background:var(--black); overflow:hidden; }
+  .hero__video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:var(--video-opacity); }
+  .hero__content { position:relative; z-index:2; max-width:1920px; height:100%; margin:0 auto; padding:0 4vw; display:grid; grid-template-rows:auto 1fr auto; }
+
+  .hero__kicker { justify-self:end; width:55%; margin-top:9.6vw; margin-right:3.3vw; text-align:center; font-weight:700; font-size:clamp(16px,1.56vw,30px); line-height:1.2;
+                  animation:floatIn 900ms 300ms var(--ease-float) backwards; }
+  .hero__title { align-self:end; width:88%; font-weight:700; font-size:clamp(22px,2.01vw,40px); letter-spacing:.2em; line-height:.9; text-transform:none;
+                 animation:revealIn 700ms 1ms var(--ease) backwards; }
+  .hero__lead { margin:2vw 0 6vw; max-width:60%; font-size:clamp(15px,1.32vw,25px); line-height:1.35;
+                animation:floatIn 900ms 600ms var(--ease-float) backwards; }
+
+  @keyframes revealIn { from { clip-path:polygon(0 100%,100% 100%,100% 100%,0 100%); } to { clip-path:polygon(0 0,100% 0,100% 100%,0 100%); } }
+  @keyframes floatIn  { from { opacity:0; transform:translateY(60px); } to { opacity:1; transform:none; } }
+  @keyframes slideIn  { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:none; } }
+
+  /* Блок «Портфолио» — второе видео в рамке 4px, без затемнения, без лупа */
+  .portfolio { position:relative; max-width:1920px; margin:0 auto; padding:5vw 4vw; }
+  .portfolio__title { text-align:center; font-size:18px; margin-bottom:3vw; animation:slideIn 800ms var(--ease) backwards; }
+  .portfolio__frame { position:relative; border:4px solid var(--black); aspect-ratio:16/9; overflow:hidden; }
+  .portfolio__frame video { width:100%; height:100%; object-fit:cover; display:block; }
+  .portfolio__strip { position:absolute; top:1.8%; right:.8%; width:40.8%; aspect-ratio:2172/320; object-fit:cover; }
+
+  /* Мобильная версия (как на сайте: ≤750px, заголовок Aboreto 400, секция почти квадратная) */
+  @media (max-width:750px) {
+    .header nav { display:none; }
+    .hero { height:102.6vw; min-height:0; }
+    .hero__kicker { width:100%; margin:80px 0 0; }
+    .hero__title { width:100%; font-family:'Aboreto',sans-serif; font-weight:400; font-size:22px; line-height:1.1; letter-spacing:.12em; }
+    .hero__lead { max-width:100%; }
+  }
+  @media (prefers-reduced-motion:reduce) { * { animation:none !important; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <nav><a href="#">Главная</a><a href="#">Услуги</a><a href="#">Портфолио</a></nav>
+  <a class="phone" href="tel:+70000000000">[ТЕЛЕФОН]</a>
+</header>
+
+<section class="hero">
+  <!-- Заменить на наш ролик из видеоредактора. Инфографика вшита в сам mp4. -->
+  <video class="hero__video" autoplay muted loop playsinline preload="auto" poster="hero-poster.jpg">
+    <source src="hero-mobile.mp4" type="video/mp4" media="(max-width: 750px)">
+    <source src="hero.mp4" type="video/mp4">
+  </video>
+  <div class="hero__content">
+    <h2 class="hero__kicker">[Верхняя строка: подход / УТП]</h2>
+    <h1 class="hero__title">[ГЛАВНЫЙ ЗАГОЛОВОК]</h1>
+    <p class="hero__lead">[Подзаголовок: что делаем и какую пользу это даёт клиенту]</p>
+  </div>
+</section>
+
+<section class="portfolio">
+  <p class="portfolio__title">[Заголовок блока портфолио]</p>
+  <div class="portfolio__frame">
+    <video autoplay muted playsinline preload="auto" poster="portfolio-poster.jpg">
+      <source src="portfolio.mp4" type="video/mp4">
+    </video>
+    <img class="portfolio__strip" src="strip.png" alt="">
+  </div>
+</section>
+
+</body>
+</html>
