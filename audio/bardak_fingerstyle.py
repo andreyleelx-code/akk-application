@@ -3,20 +3,19 @@
 Chords/tempo taken from public chord sites (D#m key, 143 BPM; verse i–III–VI–III,
 chorus i–VI–III–V). The top-line melody is an original fingerstyle line, not the vocal.
 
-Guitar: sampled steel-string acoustic (FluidR3 GM, program 25) rendered by FluidSynth.
+Guitar: real recorded steel-string acoustic notes (tonejs-instruments, MIT), one sample per\nsemitone, played back by the small sampler below with velocity tone, detune and finger damping.
 Body percussion (thumb kick on the top, palm slap, nail ticks) is synthesized and mixed in.
 
-Usage: python3 bardak_fingerstyle.py out.wav
+Usage: python3 bardak_fingerstyle.py out.wav path/to/tonejs-instruments/samples/guitar-acoustic
 """
-import subprocess, sys, wave, os, tempfile
+import sys, wave, os
 import numpy as np
-import mido
 
 SR = 44100
 BPM = 143
 STEP = 60 / BPM / 4          # 16th note
-CAPO = 6                     # Am shapes, capo 6 -> D#m
-SF2 = "/usr/share/sounds/sf2/FluidR3_GM.sf2"
+CAPO = -6                    # Am shapes shifted down a tritone -> D#m (fits the sampled range)
+SAMPLE_DIR = sys.argv[2]     # folder of tonejs-instruments samples/guitar-acoustic/*.wav
 rng = np.random.default_rng(11)
 
 # ------------------------------------------------------------------ arrangement (Am shapes)
@@ -144,40 +143,67 @@ for b, (ch, mel, mode, harm) in enumerate(bars):
         hits += [((s0 + st) * STEP, "kick", 1.0) for st in (0, 3, 6, 10)]
         hits += [((s0 + st) * STEP, "slap", 0.9 if st != 15 else 0.45) for st in (4, 12, 15)]
 
-# ------------------------------------------------------------------ MIDI -> FluidSynth
-mid = mido.MidiFile(ticks_per_beat=960)
-tr = mido.MidiTrack()
-mid.tracks.append(tr)
-tempo = mido.bpm2tempo(120)  # absolute seconds are encoded directly; 120 bpm => 1 beat = 0.5 s
-tr.append(mido.MetaMessage("set_tempo", tempo=tempo))
-tr.append(mido.Message("program_change", program=25, channel=0))
-tr.append(mido.Message("control_change", control=91, value=25, channel=0))  # reverb send
+# ------------------------------------------------------------------ sampler (real recorded steel-string notes)
+NAMES = {"C": 0, "Cs": 1, "D": 2, "Ds": 3, "E": 4, "F": 5, "Fs": 6,
+         "G": 7, "Gs": 8, "A": 9, "As": 10, "B": 11}
 
 
-def to_ticks(t):
-    return int(round(max(0.0, t) / 0.5 * 960))
+def load_wav(path):
+    with wave.open(path) as w:
+        x = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float64)
+        if w.getnchannels() == 2:
+            x = x.reshape(-1, 2).mean(axis=1)
+    return x / 32768.0
 
 
-events = []
+SAMPLES = {}
+for fn in os.listdir(SAMPLE_DIR):
+    if fn.endswith(".wav"):
+        name = fn[:-4]
+        midi = 12 * (int(name[-1]) + 1) + NAMES[name[:-1]]
+        x = load_wav(os.path.join(SAMPLE_DIR, fn))
+        onset = int(np.argmax(np.abs(x) > 0.02 * np.abs(x).max()))
+        x = x[max(0, onset - 40):]
+        x /= np.sqrt(np.mean(x[: int(0.3 * SR)] ** 2)) + 1e-9   # level-match the notes
+        SAMPLES[midi] = x
+KEYS = np.array(sorted(SAMPLES))
+
+
+def movavg(x, w):
+    c = np.cumsum(np.concatenate([np.zeros(w), x]))
+    return (c[w:] - c[:-w]) / w
+
+
+def render_note(m, dur, v):
+    k = int(KEYS[np.argmin(np.abs(KEYS - m))])
+    src = SAMPLES[k]
+    ratio = 2 ** ((m - k) / 12 + rng.normal(0, 0.03) / 12)  # a few cents of human detune
+    rel = 0.14
+    n = int((dur + rel) * SR)
+    idx = np.arange(n) * ratio
+    idx = idx[idx < len(src) - 1]
+    i0 = idx.astype(int)
+    fr = idx - i0
+    y = src[i0] * (1 - fr) + src[i0 + 1] * fr
+    b = v / 127
+    y = b * y + (1 - b) * movavg(y, 7)                     # softer touch -> darker tone
+    env = np.ones(len(y))
+    cut = int(dur * SR)
+    if cut < len(y):
+        tail = len(y) - cut
+        env[cut:] = np.exp(-np.arange(tail) / (0.035 * SR))  # finger damps the string
+    return y * env * b ** 1.4
+
+
+length = int((max(t + d for t, _, d, _ in notes) + 3) * SR)
+g = np.zeros((length, 2))
 for t, m, d, v in notes:
-    events.append((to_ticks(t), 1, mido.Message("note_on", note=m, velocity=v, channel=0)))
-    events.append((to_ticks(t + d), 0, mido.Message("note_off", note=m, velocity=0, channel=0)))
-events.sort(key=lambda e: (e[0], e[1]))
-last = 0
-for tick, _, msg in events:
-    msg.time = tick - last
-    last = tick
-    tr.append(msg)
-
-tmp = tempfile.mkdtemp()
-mid_path = os.path.join(tmp, "g.mid")
-gtr_path = os.path.join(tmp, "g.wav")
-mid.save(mid_path)
-subprocess.run(["fluidsynth", "-ni", "-g", "0.6", "-r", str(SR), "-F", gtr_path, SF2, mid_path],
-               check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-with wave.open(gtr_path) as w:
-    g = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).reshape(-1, 2) / 32768.0
+    y = render_note(m, d, v)
+    i = int(max(0, t) * SR)
+    j = min(length, i + len(y))
+    pan = np.clip((m - 57) / 40, -0.35, 0.35)
+    g[i:j, 0] += y[: j - i] * (1 - pan)
+    g[i:j, 1] += y[: j - i] * (1 + pan)
 
 
 # ------------------------------------------------------------------ synthesized body percussion
@@ -205,8 +231,13 @@ def slap(v):
     bp = onepole_lp(n - onepole_lp(n, 0.08), 0.45)
     snap = bp * np.exp(-t * 32)
     thump = np.sin(2 * np.pi * 165 * t) * np.exp(-t * 45) * 0.7
-    buzz = np.sin(2 * np.pi * 330 * t + 2 * np.sin(2 * np.pi * 47 * t)) * np.exp(-t * 55) * 0.25
-    return (snap * 1.1 + thump + buzz) * v
+    # real strings choked under the palm: first few ms of recorded notes, damped fast
+    chuck = np.zeros(len(t))
+    for m in (40, 45, 50, 55):
+        s = SAMPLES[int(KEYS[np.argmin(np.abs(KEYS - m))])][: len(t)]
+        chuck[: len(s)] += s
+    chuck *= np.exp(-t * 70) * 0.12
+    return (snap * 0.8 + thump + chuck) * v
 
 
 def tick(v):
@@ -232,7 +263,25 @@ wet = np.fft.irfft(np.fft.rfft(perc, nfft) * np.fft.rfft(ir, nfft), nfft)[: len(
 perc = perc + wet / (np.abs(wet).max() + 1e-9) * np.abs(perc).max() * 0.15
 
 gpk = np.abs(g).max()
-mix = g / gpk + np.stack([perc, perc], axis=1) * 0.55
+dry = g / gpk + np.stack([perc, perc], axis=1)[: len(g)] * 0.5
+
+
+def room_ir(seed):
+    r = np.random.default_rng(seed)
+    t = np.arange(int(1.2 * SR)) / SR
+    h = movavg(r.normal(0, 1, len(t)), 4)[: len(t)] * np.exp(-t * 4.5)
+    h[: int(0.015 * SR)] = 0
+    return h
+
+
+def conv(x, h):
+    nfft = 1 << (len(x) + len(h)).bit_length()
+    return np.fft.irfft(np.fft.rfft(x, nfft) * np.fft.rfft(h, nfft), nfft)[: len(x)]
+
+
+wet = np.stack([conv(dry[:, 0], room_ir(1)), conv(dry[:, 1], room_ir(2))], axis=1)
+wet *= np.abs(dry).max() / (np.abs(wet).max() + 1e-9)
+mix = dry * 0.85 + wet * 0.22
 mix = np.tanh(mix * 1.1) / np.tanh(1.1)
 mix /= np.abs(mix).max() / 0.95
 
