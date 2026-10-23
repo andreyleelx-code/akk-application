@@ -574,6 +574,9 @@ def apply_brand(html: str) -> str:
     if b.get("theme"):
         tokens = "".join(f"{k}:{v};" for k, v in b["theme"].items())
         css.append(f":root{{{tokens}}}")
+    if b.get("for_client"):
+        # версия для заказчика: прячем заметки для исполнителя (маржа, что предложить, вопросы)
+        css.append(".internal{display:none!important}.grid2:has(>.internal){grid-template-columns:minmax(0,1fr)}")
     if b.get("logo_is_wordmark"):
         css.append(".brand-name{display:none}")
     if b.get("road"):

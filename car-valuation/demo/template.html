@@ -75,6 +75,15 @@ button{font:inherit;cursor:pointer}
 .fact{border-top:3px solid var(--accent);padding-top:10px}
 .fact b{display:block;font:700 24px var(--display)}
 .fact span{font-size:13px;color:var(--muted)}
+.agenda{display:flex;flex-wrap:wrap;gap:8px}
+.agenda a{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);text-decoration:none;border-radius:99px;padding:7px 14px;font-size:14px}
+.agenda a:hover{border-color:var(--accent)}
+.agenda a i{font-style:normal;font-family:var(--mono);font-size:12px;color:var(--accent)}
+.offer-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.offer-steps .card{display:flex;flex-direction:column;gap:8px;border-top:4px solid var(--accent)}
+.offer-steps .price{font-family:var(--display);font-size:22px;font-weight:800;color:var(--ink)}
+.offer-steps .k{font:600 12px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+@media (max-width:900px){.offer-steps{grid-template-columns:1fr}}
 .promise{border-left:4px solid var(--accent);padding:14px 18px;background:var(--paper);border-radius:0 12px 12px 0;font-size:16px}
 
 /* Конвейер */
@@ -343,6 +352,7 @@ code{background:var(--soft);padding:1px 5px;border-radius:4px}
 pre code{background:none;padding:0}
 .checks{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
 .checks label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.checks.dot li{display:flex;gap:10px}.checks.dot li::before{content:'';flex:none;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:8px}
 .checks input{margin-top:4px;accent-color:var(--accent)}
 .tree{white-space:pre;font-family:var(--mono);font-size:13px;line-height:1.6}
 
@@ -391,10 +401,11 @@ pre code{background:none;padding:0}
   <a href="#summary"><span>10</span>Панель руководства</a>
   <a href="#cost"><span>11</span>Стоимость</a>
   <a href="#accuracy"><span>12</span>Точность и гарантии</a>
+  <a href="#offer"><span>13</span>Предложение</a>
   <a href="#plan"><span>13</span>План и сроки</a>
   <a href="#setup"><span>14</span>Инструкция</a>
   <a href="#limits"><span>15</span>Границы и риски</a>
-  <a href="#questions"><span>16</span>Вопросы к встрече</a>
+  <a class="internal" href="#questions"><span>16</span>Вопросы к встрече</a>
   <a href="#tech"><span>17</span>Техническая часть</a>
 </nav>
 
@@ -414,6 +425,15 @@ pre code{background:none;padding:0}
       <div class="fact"><b>100%</b><span>решений принимает человек</span></div>
     </div>
   </div>
+  <nav class="agenda no-print" aria-label="Главное">
+    <a href="#rental"><i>→</i>Выдача и возврат: пример</a>
+    <a href="#voice"><i>→</i>Голос мастера</a>
+    <a href="#map"><i>→</i>Карта парка</a>
+    <a href="#summary"><i>→</i>Панель руководства</a>
+    <a href="#rentRoi"><i>→</i>Выгода в деньгах</a>
+    <a href="#accuracy"><i>→</i>Точность и гарантии</a>
+    <a href="#offer"><i>→</i>Условия пилота</a>
+  </nav>
   <div class="promise">Мы не обещаем ИИ, который не ошибается. Мы даём <b>второй взгляд, который не устаёт</b>: он проверяет каждую зону на каждой машине и показывает оценщику, куда посмотреть ещё раз.</div>
   <div class="grid3">
     <div class="card"><h3>Проблема</h3><p class="note" style="margin-top:6px">Сотни фото за день, спешка. Пропущенный дефект — прямой убыток, и его списывают на конкретного сотрудника.</p></div>
@@ -733,13 +753,13 @@ pre code{background:none;padding:0}
         <select id="inModel"><option value="opus">Claude Opus 5.5 (рекомендуем)</option><option value="fable">Claude Fable 5.1 (максимум)</option></select></div>
       <div class="field"><label for="inWeb">Машин, где нужен поиск запчастей в интернете, %</label><input id="inWeb" type="number" min="0" max="100" value="30"></div>
       <div class="field"><label for="inRate">Курс, ₸ за $1</label><input id="inRate" type="number" min="1" value="500"></div>
-      <div class="field"><label for="inFee">Абонентская плата заказчика, ₸/мес</label><input id="inFee" type="number" min="0" step="10000" value="200000"></div>
+      <div class="field"><label for="inFee">Абонентская плата, ₸/мес</label><input id="inFee" type="number" min="0" step="10000" value="200000"></div>
     </div>
     <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
       <div class="result-grid">
         <div class="kpi"><b id="rCar">—</b><span>ИИ на одну машину</span></div>
         <div class="kpi"><b id="rMonth">—</b><span>все расходы в месяц</span></div>
-        <div class="kpi"><b id="rMargin">—</b><span>остаётся вам из абонентки</span></div>
+        <div class="kpi internal"><b id="rMargin">—</b><span>остаётся вам из абонентки</span></div>
       </div>
       <div class="tbl-wrap"><table id="tMonth"></table></div>
       <div class="tbl-wrap"><table id="tCar"></table></div>
@@ -757,9 +777,9 @@ pre code{background:none;padding:0}
         <tr><td>Толщиномер, если его нет</td><td>Заказчик</td><td class="n">30–80 тыс. ₸</td></tr>
         <tr class="total"><td>Итого прямых расходов</td><td></td><td class="n">~15 000 ₸</td></tr>
       </tbody></table></div>
-      <p class="note">Ваша работа в эти расходы не входит, она стоит в договоре отдельно.</p>
+      <p class="note internal">Ваша работа в эти расходы не входит, она стоит в договоре отдельно.</p>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+    <div class="internal" style="display:flex;flex-direction:column;gap:10px;min-width:0">
       <h3>Что предложить заказчику</h3>
       <div class="tbl-wrap"><table><thead><tr><th>Этап</th><th>Формат</th><th class="n">Ориентир</th></tr></thead><tbody>
         <tr><td>Тест на прошлых сделках</td><td>Бесплатно, 3–5 дней: показываем, что поймал ИИ</td><td class="n">0 ₸</td></tr>
@@ -771,8 +791,29 @@ pre code{background:none;padding:0}
     </div>
   </div>
 
+  <div class="card" id="rentRoi" style="display:flex;flex-direction:column;gap:14px">
+    <h3>Выгода для проката: повреждения, которые сейчас не удаётся выставить</h3>
+    <p class="note">Клиент спорит: «это было до меня». Без фото «до» и «после» с отметками спор проигран, ремонт оплачивает компания. Цифры ниже — гипотеза, её проверим на ваших прошлых возвратах.</p>
+    <div class="grid3">
+      <div class="field"><label for="inFleet">Машин в парке</label><input id="inFleet" type="number" min="1" value="30"></div>
+      <div class="field"><label for="inTurn">Возвратов на машину в месяц</label><input id="inTurn" type="number" min="0" step="0.5" value="4"></div>
+      <div class="field"><label for="inDmg">Возвратов с новым повреждением, %</label><input id="inDmg" type="number" min="0" max="100" value="15"></div>
+      <div class="field"><label for="inDmgAvg">Средний ремонт, ₸</label><input id="inDmgAvg" type="number" min="0" step="5000" value="60000"></div>
+      <div class="field"><label for="inLost">Сейчас не удаётся выставить клиенту, %</label><input id="inLost" type="number" min="0" max="100" value="40"></div>
+      <div class="field"><label for="inRecover">Из них вернёт фотоакт, %</label><input id="inRecover" type="number" min="0" max="100" value="60"></div>
+      <div class="field"><label for="inRentFee">Абонентка для этого парка, ₸/мес</label><input id="inRentFee" type="number" min="0" step="10000" value="100000"></div>
+      <div class="field"><label for="inExtra">Доп. удержания, которые бот считает сам (мойка, перепробег, топливо), ₸ на возврат</label><input id="inExtra" type="number" min="0" step="500" value="1500"></div>
+    </div>
+    <div class="result-grid">
+      <div class="kpi"><b id="rRentSave">—</b><span>возвращённых денег в месяц</span></div>
+      <div class="kpi"><b id="rRentSpend">—</b><span>система в месяц: ИИ на выдачу и возврат + абонентка</span></div>
+      <div class="kpi"><b id="rRentRoi">—</b><span>на 1 ₸ затрат</span></div>
+    </div>
+    <p class="note" id="rRentHow"></p>
+  </div>
+
   <div class="card" style="display:flex;flex-direction:column;gap:14px">
-    <h3>Окупаемость для заказчика</h3>
+    <h3>Окупаемость для выкупа</h3>
     <p class="note">Гипотеза: точные доли проверим на их прошлых сделках. Число машин берётся из калькулятора выше.</p>
     <div class="grid3">
       <div class="field"><label for="inMiss">Доля машин с пропущенным дефектом, %</label><input id="inMiss" type="number" min="0" max="100" value="8"></div>
@@ -845,6 +886,43 @@ pre code{background:none;padding:0}
   </div>
 </section>
 
+<!-- offer -->
+<section id="offer">
+  <div class="eyebrow">Предложение</div>
+  <h2>Предложение для {{COMPANY}}</h2>
+  <p class="lead">Начинаем с бесплатной проверки на ваших прошлых машинах. Платите только за пилот, и половину — только если пилот достиг целей, которые мы согласуем заранее.</p>
+  <div class="offer-steps">
+    <div class="card"><span class="k">Шаг 1 · 3–5 дней</span><b>Бесплатный тест</b>
+      <p class="note">Берём 20 прошлых пар «выдача — возврат» с фото. Показываем, что нашёл ИИ, что пропустил и где ошибся. Вы решаете, идти ли дальше.</p>
+      <span class="price">0 ₸</span></div>
+    <div class="card"><span class="k">Шаг 2 · 2 недели</span><b>Пилот на 5–10 машинах</b>
+      <p class="note">Бот у сотрудников на выдаче и возврате, голосовой помощник, акт клиенту, карта и панель руководства. Еженедельный разбор расхождений.</p>
+      <span class="price">150–300 тыс. ₸</span><span class="note">50% при старте, 50% — если цели достигнуты</span></div>
+    <div class="card"><span class="k">Шаг 3 · помесячно</span><b>Работа на всём парке</b>
+      <p class="note">Поддержка, калибровка под ваш парк, доработки. Отказаться можно в любой месяц: бот, данные и фото остаются у вас.</p>
+      <span class="price">100–250 тыс. ₸/мес</span><span class="note">зависит от размера парка; для 30 машин — нижняя граница</span><span class="note">+ расходы на ИИ и сервер по факту: несколько сотен ₸ за осмотр</span></div>
+  </div>
+  <div class="grid3">
+    <div class="card"><h3 style="margin-bottom:10px">Цели пилота (согласуем)</h3><ul class="checks dot">
+      <li>Каждый возврат снят по всем обязательным ракурсам</li>
+      <li>ИИ находит не меньше 8 из 10 новых повреждений, которые нашёл опытный сотрудник</li>
+      <li>Осмотр с отчётом — не дольше, чем сейчас</li>
+      <li>Каждый спор с клиентом закрыт актом с фото «до» и «после»</li></ul></div>
+    <div class="card"><h3 style="margin-bottom:10px">Что нужно от вас</h3><ul class="checks dot">
+      <li>20 прошлых пар фото выдачи и возврата</li>
+      <li>Прайс кузовного ремонта и список подрядчиков</li>
+      <li>Условия договора: депозит, перепробег, мойка, топливо</li>
+      <li>1–2 сотрудника на пилот и 30 минут обучения</li>
+      <li>Аккаунты Claude API и сервера на компанию</li></ul></div>
+    <div class="card"><h3 style="margin-bottom:10px">Что вы получаете</h3><ul class="checks dot">
+      <li>Telegram-бот для сотрудников, с голосом</li>
+      <li>Акт приёма-передачи клиенту в WhatsApp</li>
+      <li>Панель руководства и карта парка</li>
+      <li>Базу подрядчиков и цен ремонта</li>
+      <li>Исходный код и все данные — у вас</li></ul></div>
+  </div>
+</section>
+
 <!-- 08 -->
 <section id="plan">
   <div class="eyebrow">План</div>
@@ -863,7 +941,7 @@ pre code{background:none;padding:0}
 <section id="setup">
   <div class="eyebrow">Инструкция</div>
   <h2>Как собрать и запустить</h2>
-  <p class="lead">Всё создаётся на аккаунтах заказчика. Вам остаётся роль администратора по договору. Полный запуск занимает около двух часов.</p>
+  <p class="lead">Всё создаётся на аккаунтах заказчика<span class="internal">. Вам остаётся роль администратора по договору</span>. Полный запуск занимает около двух часов.</p>
   <ol class="steps">
     <li><div><b>Telegram-бот · 5 минут</b><p class="note">В Telegram найти @BotFather → <code>/newbot</code> → имя бота. Получить токен вида <code>123456:ABC…</code>. Бота лучше создать с телефона заказчика.</p></div></li>
     <li><div><b>Ключ Claude API · 10 минут</b><p class="note">console.anthropic.com → организация заказчика → Billing: пополнить $20 → API Keys: создать ключ. Вас пригласить участником.</p></div></li>
@@ -922,7 +1000,7 @@ pytest                  # проверка: всё зелёное</code></pre></
 </section>
 
 <!-- 11 -->
-<section id="questions">
+<section id="questions" class="internal">
   <div class="eyebrow">Суббота</div>
   <h2>Что спросить и что забрать</h2>
   <div class="grid2">
@@ -1295,11 +1373,25 @@ function renderCost(){
   $("rSave").textContent = tenge(save);
   $("rSpend").textContent = tenge(spend);
   $("rRoi").textContent = spend ? (save/spend).toFixed(1).replace(".",",") + " ₸" : "—";
+  // прокат: каждый возврат = два осмотра (выдача и возврат)
+  const returns = v("inFleet") * v("inTurn");
+  const damaged = returns * v("inDmg")/100;
+  const lost = damaged * v("inLost")/100;
+  const recovered = lost * v("inRecover")/100 * v("inDmgAvg");
+  const extra = returns * v("inExtra");
+  const rentSave = recovered + extra;
+  const rentSpend = pc.usd * rate * returns * 2 + (vps + supa) * rate + v("inRentFee");
+  $("rRentSave").textContent = tenge(rentSave);
+  $("rRentSpend").textContent = tenge(rentSpend);
+  $("rRentRoi").textContent = rentSpend ? (rentSave/rentSpend).toFixed(1).replace(".",",") + " ₸" : "—";
+  $("rRentHow").textContent = `${fmt(returns)} возвратов в месяц → ${fmt(Math.round(damaged))} с новым повреждением → ${fmt(Math.round(lost))} сейчас не выставлены → фотоакт вернёт ${fmt(Math.round(lost*v("inRecover")/100))} × ${fmt(v("inDmgAvg"))} ₸ = ${tenge(recovered)}. Плюс ${tenge(extra)} мелких удержаний, которые сейчас забывают выставить. Время сотрудников не считали.`;
 }
-["inCars","inDays","inPhotos","inModel","inWeb","inRate","inFee","inMiss","inLoss","inCatch"].forEach(id => $(id).addEventListener("input", renderCost));
+["inCars","inDays","inPhotos","inModel","inWeb","inRate","inFee","inMiss","inLoss","inCatch","inFleet","inTurn","inDmg","inDmgAvg","inLost","inRecover","inRentFee","inExtra"].forEach(id => $(id).addEventListener("input", renderCost));
 
 /* ---------- Вопросы ---------- */
-const QUESTIONS = ["Сколько машин оценивают в день и в пиковый день?","Кто утверждает цену, есть ли старший оценщик?","Есть ли письменный чек-лист осмотра?",
+const QUESTIONS = ["Сколько машин в парке и сколько выдач/возвратов в день?","Как сейчас фиксируют состояние при выдаче: фото, бумажный акт?",
+  "Как часто клиент спорит о повреждениях и чем заканчивается спор?","Какой депозит и что из него удерживают: ремонт, мойка, перепробег, топливо?",
+  "Нужна ли оценка при выкупе машин в парк, сколько в месяц?","Сколько машин оценивают в день и в пиковый день?","Кто утверждает цену, есть ли старший оценщик?","Есть ли письменный чек-лист осмотра?",
   "Какие дефекты пропускают чаще всего?","Сколько стоила последняя крупная ошибка и сколько таких в месяц?","Кто платит за ошибку сейчас?",
   "Есть ли архив сделок с фото и ценой продажи? В каком виде?","Откуда берут цены аналогов?","Есть ли толщиномер и OBD-сканер?",
   "Кто принимает решение о внедрении?","Готовы завести аккаунты на себя: API, Supabase, сервер?","Есть ли требования к хранению персональных данных?"];
@@ -1307,6 +1399,7 @@ $("qList").innerHTML = QUESTIONS.map((q,i) => `<li><label><input type="checkbox"
 
 /* ---------- оглавление ---------- */
 const links = [...document.querySelectorAll("#toc a")];
+links.filter(a => getComputedStyle(a).display !== "none").forEach((a,i) => { const n = a.querySelector("span"); if (n) n.textContent = String(i+1).padStart(2,"0"); });
 const io = new IntersectionObserver(es => es.forEach(e => {
   if (e.isIntersecting) links.forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id));
 }), {rootMargin:"-30% 0px -60% 0px"});

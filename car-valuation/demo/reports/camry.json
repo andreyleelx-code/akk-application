@@ -1,5 +1,6 @@
 {
   "id": "demo-camry",
+  "kind": "buyback",
   "car": {
     "vin_or_plate": "731 KZA 02",
     "make": "Toyota",
@@ -7,7 +8,10 @@
     "year": 2018,
     "mileage_km": 110000
   },
-  "created_at": "2026-10-23T09:40:13.106418Z",
+  "rental": null,
+  "settlement": null,
+  "location": null,
+  "created_at": "2026-10-23T23:05:20.117160Z",
   "photos": [
     {
       "angle_id": "front",
@@ -67,7 +71,7 @@
         }
       ],
       "chosen": 0,
-      "id": "d8e3f812"
+      "id": "ffb7695e"
     },
     {
       "zone": "body",
@@ -86,7 +90,7 @@
       "status": "confirmed",
       "options": [],
       "chosen": null,
-      "id": "d7fe5b53"
+      "id": "b0fb2a90"
     },
     {
       "zone": "body",
@@ -117,7 +121,7 @@
         }
       ],
       "chosen": 0,
-      "id": "ba874bbb"
+      "id": "e959d529"
     },
     {
       "zone": "glass_lights",
@@ -148,7 +152,7 @@
         }
       ],
       "chosen": 0,
-      "id": "31d7cfdd"
+      "id": "bf81dcab"
     },
     {
       "zone": "wheels",
@@ -190,7 +194,7 @@
         }
       ],
       "chosen": 0,
-      "id": "41f61e53"
+      "id": "67345847"
     },
     {
       "zone": "body",
@@ -221,7 +225,7 @@
         }
       ],
       "chosen": 0,
-      "id": "b829647a"
+      "id": "98f7bc14"
     }
   ],
   "not_assessable": [

@@ -12,6 +12,7 @@
 | [04-economics-legal.md](04-economics-legal.md) | Стоимость, модели продажи, юрформа, персональные данные |
 | [05-risks.md](05-risks.md) | Риски и что с ними делать |
 | [06-plan-handover.md](06-plan-handover.md) | Пошаговый план, передача проекта заказчику |
+| [07-rental-voice-map.md](07-rental-voice-map.md) | Прокат (выдача/возврат, удержания), салон, голос, карта, точность |
 | [photo-rules.md](photo-rules.md) | Правила съёмки для оценщиков (раздать на площадке) |
 | [meeting/saturday-discovery.md](meeting/saturday-discovery.md) | Вопросы на субботнюю встречу-разведку |
 | [meeting/open-questions.md](meeting/open-questions.md) | Открытые вопросы для развития идеи |

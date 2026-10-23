@@ -1,5 +1,6 @@
 {
   "id": "demo-tucson",
+  "kind": "buyback",
   "car": {
     "vin_or_plate": "455 HTA 01",
     "make": "Hyundai",
@@ -7,7 +8,10 @@
     "year": 2020,
     "mileage_km": 85000
   },
-  "created_at": "2026-10-23T09:40:13.207952Z",
+  "rental": null,
+  "settlement": null,
+  "location": null,
+  "created_at": "2026-10-23T23:05:20.284835Z",
   "photos": [
     {
       "angle_id": "front",
@@ -78,7 +82,7 @@
         }
       ],
       "chosen": 0,
-      "id": "7095f7c0"
+      "id": "e863a14f"
     },
     {
       "zone": "glass_lights",
@@ -109,7 +113,7 @@
         }
       ],
       "chosen": 0,
-      "id": "09eb7b63"
+      "id": "f3f0171a"
     },
     {
       "zone": "body",
@@ -140,7 +144,7 @@
         }
       ],
       "chosen": 0,
-      "id": "b147138c"
+      "id": "c8558948"
     },
     {
       "zone": "wheels",
@@ -171,7 +175,7 @@
         }
       ],
       "chosen": 0,
-      "id": "2b2bd51e"
+      "id": "f90f4f5a"
     }
   ],
   "not_assessable": [
