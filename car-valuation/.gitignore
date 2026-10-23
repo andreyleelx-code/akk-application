@@ -20,3 +20,4 @@ demo/.artifact.html
 # Фирменные версии под конкретных заказчиков — не публикуем
 demo/brand-*.json
 demo/presentation-*.html
+demo/logo-*.svg

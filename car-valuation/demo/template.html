@@ -324,10 +324,10 @@ pre code{background:none;padding:0}
   .sheet{box-shadow:none;border:0}
 }
 </style>
-
+{{BRAND_HEAD}}
 <div class="layout">
 <nav class="toc" id="toc" aria-label="Разделы">
-  <div class="brand"><span class="logo-row">{{LOGO}}<span>{{COMPANY}}</span></span><small>Второй взгляд оценщика · демо</small></div>
+  <div class="brand"><span class="logo-row">{{LOGO}}<span class="brand-name">{{COMPANY}}</span></span><small>Второй взгляд оценщика · демо</small></div>
   <a href="#top"><span>01</span>Суть</a>
   <a href="#how"><span>02</span>Как работает</a>
   <a href="#rental"><span>03</span>Прокат: выдача и возврат</a>
@@ -468,8 +468,8 @@ pre code{background:none;padding:0}
   <h2>Как бот общается с оценщиком и со старшим</h2>
   <p class="lead">Слева телефон оценщика на площадке, справа телефон старшего оценщика. Переписка построена по машине, выбранной в демо. Текст отчёта сформирован кодом бота.</p>
   <div class="phones">
-    <div class="phone" aria-label="Чат оценщика"><header><div class="av">{{LOGO}}</div><div><b>{{COMPANY}} · оценка</b><small>бот · оценщик Ерлан</small></div></header><div class="chat" id="chatA"></div></div>
-    <div class="phone" aria-label="Чат старшего оценщика"><header><div class="av">{{LOGO}}</div><div><b>{{COMPANY}} · оценка</b><small>бот · старший оценщик Айгерим</small></div></header><div class="chat" id="chatB"></div></div>
+    <div class="phone" aria-label="Чат оценщика"><header><div class="av">{{ICON}}</div><div><b>{{COMPANY}} · оценка</b><small>бот · оценщик Ерлан</small></div></header><div class="chat" id="chatA"></div></div>
+    <div class="phone" aria-label="Чат старшего оценщика"><header><div class="av">{{ICON}}</div><div><b>{{COMPANY}} · оценка</b><small>бот · старший оценщик Айгерим</small></div></header><div class="chat" id="chatB"></div></div>
   </div>
 </section>
 
@@ -491,7 +491,7 @@ pre code{background:none;padding:0}
     <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">panel.{{DOMAIN}} / обзор</div><div class="who">Владелец · вход по паролю</div></div>
     <div class="app">
       <aside id="panelNav" role="tablist" aria-label="Разделы панели">
-        <div class="logo logo-row">{{LOGO}}<span>{{COMPANY}}</span></div>
+        <div class="logo logo-row">{{LOGO}}<span class="brand-name">{{COMPANY}}</span></div>
         <button type="button" role="tab" data-p="overview" aria-selected="true">Обзор</button>
         <button type="button" role="tab" data-p="list" aria-selected="false">Оценки</button>
         <button type="button" role="tab" data-p="people" aria-selected="false">Оценщики</button>

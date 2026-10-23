@@ -208,7 +208,7 @@ class RentalCase:
 
 
 LIXIANG = RentalCase(
-    id="l7", car=Car(vin_or_plate="702 SWR 02", make="Lixiang", model="L7", year=2024, mileage_km=15_880),
+    id="l9", car=Car(vin_or_plate="702 SWR 02", make="Lixiang", model="L9", year=2024, mileage_km=15_880),
     color="#2b2f33", plate="702 SWR 02", body_type="suv", rental_body="suv",
     views={"front": "Спереди", "left": "Левый бок", "right": "Правый бок", "rear": "Сзади"},
     before=[
@@ -219,7 +219,7 @@ LIXIANG = RentalCase(
     ],
     new=[
         D("right", "body", "dent", C, 0.89, "правая задняя дверь", "Вмятина ~5 см без повреждения ЛКП",
-          mbox(470, 258, 76, 52), c.dent("l7in", 508, 282, 28, 18), OK),
+          mbox(470, 258, 76, 52), c.dent("l9in", 508, 282, 28, 18), OK),
         D("front", "body", "scratch", C, 0.81, "передний бампер справа", "Поверхностная царапина ~20 см",
           (452, 316, 100, 28), c.scratch(462, 332, 540, 328, 4), OK),
     ],
@@ -399,8 +399,39 @@ def apply_brand(html: str) -> str:
     b = json.loads(BRAND_FILE.read_text("utf-8"))
     tag = (f"Демо для {b['company']} · цифры и фото условные" if b.get("for_client")
            else "Демо на примерах · цифры и фото условные")
+    def file_or(key: str, fallback: str) -> str:
+        f = b.get(key)
+        return (BRAND_FILE.parent / f).read_text("utf-8").strip() if f else fallback
+
+    mono = logo_svg(b["initials"], b["accent"], b["accent_ink"])
+    logo, icon = file_or("logo_file", mono), file_or("logo_icon_file", mono)
+    extra = ""
+    if b.get("fonts_href"):
+        extra += f'<link rel="stylesheet" href="{escape(b["fonts_href"])}">\n'
+    css = []
+    if b.get("theme"):
+        tokens = "".join(f"{k}:{v};" for k, v in b["theme"].items())
+        css.append(f":root{{{tokens}}}")
+    if b.get("logo_is_wordmark"):
+        css.append(".brand-name{display:none}")
+    if b.get("road"):
+        # пунктирная «дорога» через первый экран, как на сайте компании
+        road = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 300' preserveAspectRatio='none'>"
+                "<path d='M0 260 C300 200 520 170 760 175 C960 180 1080 120 1200 40' fill='none' "
+                f"stroke='{b['accent']}' stroke-width='3' stroke-dasharray='22 18' opacity='0.4'/></svg>")
+        from urllib.parse import quote
+        css.append("#top{position:relative;overflow:hidden}#top::before{content:'';position:absolute;inset:auto 0 46% 0;"
+                   f"height:300px;background:url(\"data:image/svg+xml,{quote(road)}\") no-repeat center/100% 100%;"
+                   "pointer-events:none;z-index:0}#top>*{position:relative;z-index:1}"
+                   ".hero h1{font-weight:900;letter-spacing:-.02em}"
+                   ".tag.demo{background:transparent;border:1px solid var(--line);color:var(--ink);padding:5px 12px}"
+                   ".lead,.hero p{text-shadow:0 0 12px var(--bg)}")
+    if css:
+        extra += "<style>" + "".join(css) + "</style>\n"
     values = {
-        "{{LOGO}}": logo_svg(b["initials"], b["accent"], b["accent_ink"]),
+        "{{BRAND_HEAD}}": extra,
+        "{{LOGO}}": logo,
+        "{{ICON}}": icon,
         "{{COMPANY}}": escape(b["company"]), "{{LEGAL}}": escape(b["legal"]),
         "{{DOMAIN}}": escape(b["domain"]), "{{HERO_TAG}}": escape(tag),
         "{{ACCENT}}": b["accent"], "{{ACCENT_INK}}": b["accent_ink"], "{{ACCENT_SOFT}}": b["accent_soft"],
