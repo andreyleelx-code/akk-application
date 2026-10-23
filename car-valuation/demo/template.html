@@ -430,7 +430,7 @@ pre code{background:none;padding:0}
         <span><i class="sev" style="background:var(--severe)"></i>серьёзный</span>
         <span>пунктир — отклонён оценщиком</span>
       </div>
-      <p class="note">Иллюстрации машин нарисованы для показа. В работе здесь будут фото с площадки, рамки рисует та же программа. Показаны 4–5 ключевых ракурсов из 27.</p>
+      <p class="note" id="viewNote">Иллюстрации машин нарисованы для показа. В работе здесь будут фото с площадки, рамки рисует та же программа. Показаны 4–5 ключевых ракурсов из 27.</p>
     </div>
     <div class="card verdict" id="verdict"></div>
   </div>
@@ -876,6 +876,7 @@ function renderStage(){
     return `<button type="button" class="thumb" aria-pressed="${v2.angle===v.angle}" data-a="${v2.angle}" aria-label="${esc(v2.title)}">${v2.svg}${n?`<span class="cnt">${n}</span>`:""}<span class="ttl">${esc(v2.title)}</span></button>`;
   }).join("");
   $("thumbs").querySelectorAll(".thumb").forEach(b => b.onclick = () => { state.view = b.dataset.a; renderStage(); });
+  $("thumbs").hidden = c.views.length < 2;
 }
 function setHl(i){
   state.hl = i;
@@ -944,7 +945,7 @@ function tgReport(ci){
 }
 function renderChats(){
   const ci = state.car, c = DATA[ci], r = calc(ci);
-  const v = a => (c.views.find(x => x.angle === a) || {}).svg || "";
+  const v = a => (c.views.find(x => x.angle === a) || c.views[a === "left" ? 1 : 0] || c.views[0]).svg;
   const marked = Object.entries(c.marked);
   const kbDefects = c.defects.map((d,i) => `<span>✅ ${i+1}</span><span>❌ ${i+1}</span>`).join("");
   const approved = Math.round((r.low + (r.high - r.low) * 0.4) / 10000) * 10000;
@@ -1254,6 +1255,7 @@ function renderRental(){
     return `<button type="button" class="thumb" aria-pressed="${x.angle===v.angle}" data-a="${x.angle}" aria-label="${esc(x.title)}">${x.in}${n?`<span class="cnt">${n}</span>`:""}<span class="ttl">${esc(x.title)}</span></button>`;
   }).join("");
   $("rThumbs").querySelectorAll(".thumb").forEach(b => b.onclick = () => { rstate.view = b.dataset.a; renderRental(); });
+  $("rThumbs").hidden = rc.views.length < 2;
   const st = rc.settlement, t = rc.terms;
   const newRows = rc.defects.map((d,i) => ({d,i})).filter(({d}) => d.is_new).map(({d,i}) =>
     `<tr><td>№${i+1} ${esc(d.name)}<div class="note">${esc(d.location)}${d.option ? ` · ${esc(d.option.kind_ru)}: ${esc(d.option.supplier)}` : " · по прайсу"}</div></td><td class="n">${fmt(d.cost)}</td></tr>`).join("");

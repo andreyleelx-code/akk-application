@@ -76,6 +76,7 @@ class DemoCar:
     review: Review | None = None
     story: str = ""
     worn: bool = False
+    photo: str = ""  # файл фото в папке парка (фирменная версия)
 
 
 def mbox(x, y, w, h):
@@ -184,6 +185,67 @@ RIO = DemoCar(
 
 CARS = [CAMRY, TUCSON, RIO]
 
+FLEET_DIR: Path | None = None  # папка с фото парка, задаётся брендом
+OUT_DIR = DEMO
+
+
+def photo_b64(name: str) -> str:
+    return base64.b64encode((FLEET_DIR / name).read_bytes()).decode()
+
+
+FL = {"front_left": "Спереди-слева 45°"}
+
+LC200 = DemoCar(
+    id="lc200",
+    car=Car(vin_or_plate="880 SWR 02", make="Toyota", model="Land Cruiser 200", year=2018, mileage_km=145_000),
+    color="#111", plate="880 SWR 02", views=FL, photo="lc200.jpg",
+    story="ИИ заметил разнотон переднего крыла — толщиномер подтвердил перекрас. Одна находка оказалась бликом на капоте, оценщик её отклонил.",
+    defects=[
+        D("front_left", "body", "dent", M, 0.86, "левая задняя дверь", "Вмятина ~8 см, ЛКП цел",
+          (574, 230, 62, 42), c.p_dent(605, 250, 26, 16, True), OK),
+        D("front_left", "body", "paint_mismatch", M, 0.57, "левое переднее крыло", "Оттенок крыла отличается от двери",
+          (424, 183, 84, 62), c.p_tint("M430 192 L500 186 L506 240 L436 246 Z", "#7d8ea8", 0.22), OK),
+        D("front_left", "body", "scratch", C, 0.78, "передний бампер слева", "Поверхностная царапина ~15 см",
+          (140, 280, 84, 30), c.p_scratch([(150, 300), (180, 296), (212, 292)], 1.4, True), OK),
+        D("front_left", "wheels", "rim_damage", C, 0.80, "диск переднего левого колеса", "Задиры кромки о бордюр",
+          (428, 262, 106, 104), c.p_curb(481, 312, 48, -0.4, 1.1), OK),
+        D("front_left", "glass_lights", "glass_chip", C, 0.90, "лобовое стекло", "Скол ~4 мм",
+          (316, 104, 34, 32), c.p_chips([(332, 120, 1.9)]), OK),
+        D("front_left", "body", "dent", C, 0.42, "капот", "Возможная вмятина",
+          (228, 148, 76, 30), "", NO),
+    ],
+    not_assessable=["Разнотон переднего крыла — проверить толщиномером", "Рама и подвеска — осмотр на подъёмнике"],
+    manual_notes=["Толщиномер: левое переднее крыло 260 мкм (остальные 120–140) — перекрас", "OBD: ошибок нет"],
+    review=Review(overall_confidence=0.81,
+                  summary="Перекрас крыла подтверждён замером. Остальные повреждения косметические.",
+                  findings=[ReviewFinding(note="Разнотон (57%) подтверждён толщиномером: проверьте геометрию передней части."),
+                            ReviewFinding(note="Находка «вмятина на капоте» (42%) — вероятно блик, оценщик отклонил.")]),
+)
+
+COBALT = DemoCar(
+    id="cobalt",
+    car=Car(vin_or_plate="531 SWR 02", make="Chevrolet", model="Cobalt", year=2022, mileage_km=98_000),
+    color="#fff", plate="531 SWR 02", views=FL, photo="cobalt.jpg",
+    story="Много косметики: вмятина, царапина, потёртый бампер, мутная фара и очаги ржавчины на пороге. Решения ждут оценщика — нажмите ✓ или ✕.",
+    defects=[
+        D("front_left", "body", "dent", M, 0.88, "левая передняя дверь", "Вмятина ~10 см",
+          (508, 278, 64, 44), c.p_dent(540, 300, 26, 17), WAIT),
+        D("front_left", "body", "scratch", M, 0.76, "левая задняя дверь", "Царапина до грунта ~30 см",
+          (602, 310, 128, 30), c.p_scratch([(610, 332), (660, 328), (722, 322)], 1.6), WAIT),
+        D("front_left", "body", "crack_bumper", M, 0.70, "передний бампер, низ слева", "Потёртости и трещина пластика",
+          (70, 336, 74, 42), c.p_scuff(78, 345, 55, 25, 10, dark_paint=False), WAIT),
+        D("front_left", "glass_lights", "headlight_haze", C, 0.73, "левая фара", "Помутнение рассеивателя",
+          (252, 236, 114, 54), c.p_haze(306, 262, 48, 20), WAIT),
+        D("front_left", "body", "rust", M, 0.84, "левый порог", "Очаги коррозии",
+          (506, 350, 66, 28), c.p_rust([(520, 364, 3.5), (536, 367, 2.5), (556, 363, 3)]), WAIT),
+    ],
+    not_assessable=["Пробег 98 000 км: сверить с историей обслуживания"],
+    review=Review(overall_confidence=0.79, summary="Дефекты косметические, признаков ДТП не видно.",
+                  findings=[ReviewFinding(note="Ржавчина на пороге: проверьте снизу, нет ли сквозной коррозии.")]),
+)
+
+PHOTO_CARS = [LC200, COBALT]
+
 
 # ---------------- Прокат: выдача и возврат ----------------
 
@@ -205,6 +267,7 @@ class RentalCase:
     when_out: str
     when_in: str
     story: str
+    photo: str = ""
 
 
 LIXIANG = RentalCase(
@@ -251,11 +314,55 @@ ELANTRA = RentalCase(
 
 RENTALS = [LIXIANG, ELANTRA]
 
+ZEEKR_X = RentalCase(
+    id="zeekrx", car=Car(vin_or_plate="125 SWR 02", make="Zeekr", model="X", year=2024, mileage_km=18_640),
+    color="#fff", plate="125 SWR 02", body_type="suv", rental_body="crossover", views=FL, photo="zeekr_x.jpg",
+    before=[
+        D("front_left", "body", "chip", C, 0.83, "капот, передняя часть", "Мелкие сколы ЛКП",
+          (318, 156, 38, 28), c.p_chips([(330, 168, 1.6), (342, 172, 1.2)]), OK),
+        D("front_left", "body", "scratch", C, 0.78, "передний бампер, нижняя губа слева", "Потёртости",
+          (150, 320, 80, 32), c.p_scuff(160, 330, 60, 14, dark_paint=False), OK),
+    ],
+    new=[
+        D("front_left", "glass_lights", "glass_crack", M, 0.93, "лобовое стекло, сторона пассажира", "Трещина ~20 см от удара камня",
+          (460, 36, 164, 76), c.p_crack((565, 72), [[(530, 80), (498, 92), (470, 99)], [(590, 86), (612, 104)], [(552, 58), (540, 44)]]), OK),
+        D("front_left", "body", "scratch", C, 0.80, "передний бампер справа у арки", "Свежая царапина ~8 см",
+          (404, 294, 72, 36), c.p_scratch([(416, 320), (440, 313), (464, 308)], 1.7), OK),
+    ],
+    out=RentalInfo(client="Д. Сериков", deposit=50_000, days=2, body="crossover", km_out=18_200),
+    back=RentalInfo(km_in=18_640, dirty=False, fuel_missing_l=0),
+    client="Д. Сериков", when_out="21.10 · 09:30", when_in="23.10 · 10:15",
+    story="Трещина лобового стекла дороже депозита: система показывает, сколько доплатить клиенту, и предлагает проверить, покрывает ли случай страховка. Сколы и потёртости были при выдаче — их не выставляем.",
+)
+
+LIXIANG_PHOTO = RentalCase(
+    id="l9", car=Car(vin_or_plate="702 SWR 02", make="Lixiang", model="L9", year=2024, mileage_km=15_880),
+    color="#333", plate="702 SWR 02", body_type="suv", rental_body="suv", views=FL, photo="l9.jpg",
+    before=[
+        D("front_left", "body", "chip", C, 0.82, "капот", "Мелкие сколы ЛКП",
+          (268, 176, 36, 24), c.p_chips([(280, 188, 1.4), (292, 190, 1.1)]), OK),
+    ],
+    new=[
+        D("front_left", "body", "dent", C, 0.87, "левая передняя дверь", "Вмятина ~5 см без повреждения ЛКП",
+          (530, 230, 62, 40), c.p_dent(560, 250, 22, 14, True), OK),
+        D("front_left", "body", "scratch", C, 0.80, "передний бампер слева", "Поверхностная царапина ~15 см",
+          (316, 290, 82, 34), c.p_scratch([(326, 314), (350, 309), (388, 302)], 1.4, True), OK),
+    ],
+    out=RentalInfo(client="А. Ахметов", deposit=50_000, days=3, body="suv", km_out=15_200),
+    back=RentalInfo(km_in=15_880, dirty=True, fuel_missing_l=0),
+    client="А. Ахметов", when_out="20.10 · 10:05", when_in="23.10 · 18:40",
+    story="Клиент вернул машину с двумя мелкими новыми повреждениями, грязной и с перепробегом. Сколы на капоте были при выдаче — их ИИ не выставляет: это видно по акту выдачи.",
+)
+
+PHOTO_RENTALS = [LIXIANG_PHOTO, ZEEKR_X]
+
 
 def rental_view(rc: RentalCase, angle: str, stage: str) -> str:
     items = rc.before + (rc.new if stage == "in" else [])
     dmg = "".join(d.draw for d in items if d.angle == angle)
     uid = f"{rc.id}{stage}{angle}"
+    if rc.photo:
+        return c.photo_scene(uid, photo_b64(rc.photo), dmg)
     if angle == "left":
         return c.side(uid, rc.color, damage=dmg, body_type=rc.body_type)
     if angle == "right":
@@ -344,6 +451,8 @@ def demo_manual_rule(report: Report) -> bool:
 def draw_view(car: DemoCar, angle: str) -> str:
     dmg = "".join(d.draw for d in car.defects if d.angle == angle)
     uid = f"{car.id}{angle}"
+    if car.photo:
+        return c.photo_scene(uid, photo_b64(car.photo), dmg)
     # повреждения внутри зеркального вида нарисованы в исходных координатах
     if angle == "left":
         return c.side(uid, car.color, damage=dmg)
@@ -445,19 +554,27 @@ def apply_brand(html: str) -> str:
 
 
 def build() -> None:
+    global CARS, RENTALS, FLEET_DIR, OUT_DIR
+    OUT_DIR = DEMO
     settings = Settings(_env_file=None)
     catalog = load_catalog(settings)
+    brand = json.loads(BRAND_FILE.read_text("utf-8"))
+    if brand.get("fleet"):
+        # фирменная версия: настоящие фото парка заказчика вместо рисунков
+        FLEET_DIR = BRAND_FILE.parent / brand["fleet"]
+        CARS, RENTALS = PHOTO_CARS, PHOTO_RENTALS
+        OUT_DIR = FLEET_DIR / "build"  # фото заказчика не попадают в общую папку демо
 
     svgs: dict[tuple[str, str], str] = {}
     files: dict[Path, str] = {}
     for car in CARS:
-        (DEMO / "cars" / car.id / "marked").mkdir(parents=True, exist_ok=True)
+        (OUT_DIR / "cars" / car.id / "marked").mkdir(parents=True, exist_ok=True)
         for angle in car.views:
             svgs[(car.id, angle)] = draw_view(car, angle)
-            files[DEMO / "cars" / car.id / f"{angle}.jpg"] = svgs[(car.id, angle)]
+            files[OUT_DIR / "cars" / car.id / f"{angle}.jpg"] = svgs[(car.id, angle)]
     asyncio.run(render_jpegs(files))
 
-    (DEMO / "reports").mkdir(exist_ok=True)
+    (OUT_DIR / "reports").mkdir(exist_ok=True)
     payload = []
     for car in CARS:
         defects = [
@@ -481,13 +598,13 @@ def build() -> None:
                 d.chosen = choose_option(d.options)
         report.estimate = estimate_price(report.car, report.active_defects, catalog.comparables,
                                          catalog.repair_prices, settings.currency)
-        (DEMO / "reports" / f"{car.id}.json").write_text(report.model_dump_json(indent=2), "utf-8")
+        (OUT_DIR / "reports" / f"{car.id}.json").write_text(report.model_dump_json(indent=2), "utf-8")
 
         marked = {}
         for angle, items in defects_by_photo(report).items():
-            raw = (DEMO / "cars" / car.id / f"{angle}.jpg").read_bytes()
+            raw = (OUT_DIR / "cars" / car.id / f"{angle}.jpg").read_bytes()
             out = annotate(raw, items)
-            (DEMO / "cars" / car.id / "marked" / f"{angle}.jpg").write_bytes(out)
+            (OUT_DIR / "cars" / car.id / "marked" / f"{angle}.jpg").write_bytes(out)
             marked[angle] = data_uri(out)
 
         comps = select_comparables(report.car, catalog.comparables)
@@ -521,6 +638,9 @@ def build() -> None:
     template = apply_brand((DEMO / "template.html").read_text("utf-8"))
     html = template.replace("/*__DEMO_DATA__*/null", json.dumps(payload, ensure_ascii=False))
     html = html.replace("/*__RENTAL_DATA__*/null", json.dumps(build_rentals(settings, catalog), ensure_ascii=False))
+    if brand.get("fleet"):
+        html = html.replace("Иллюстрации машин нарисованы для показа. В работе здесь будут фото с площадки, рамки рисует та же программа. Показаны 4–5 ключевых ракурсов из 27.",
+                            "Фото — машины из парка компании, повреждения нанесены для примера. Рамки рисует программа. В работе будет 27 ракурсов, здесь показан один.")
     slug = json.loads(BRAND_FILE.read_text("utf-8")).get("slug")
     if slug:
         # Фирменная версия для конкретного заказчика: только файл, без публикации

@@ -241,3 +241,98 @@ def curb_rash(cx, cy, r, a0, a1) -> str:
         x2, y2 = cx + (r - 9) * math.cos(a + 0.03), cy + (r - 9) * math.sin(a + 0.03)
         out.append(f'<path d="M{x1:.1f} {y1:.1f} L{x2:.1f} {y2:.1f}" stroke="#5a5f62" stroke-width="2.4"/>')
     return "".join(out)
+
+
+# ---------------- Реалистичные повреждения поверх настоящих фото ----------------
+
+
+def photo_scene(uid: str, jpeg_b64: str, damage: str = "") -> str:
+    """Фото 800×450 + повреждения, слегка размытые под фактуру снимка."""
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}">
+<defs>
+  <filter id="soft{uid}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.6"/></filter>
+  <filter id="blur{uid}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2"/></filter>
+  <filter id="glow{uid}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.4"/></filter>
+</defs>
+<image href="data:image/jpeg;base64,{jpeg_b64}" x="0" y="0" width="{W}" height="{H}"/>
+{damage.replace("UID", uid)}
+</svg>"""
+
+
+def p_scratch(pts, width: float = 1.4, dark_paint: bool = False) -> str:
+    d = "M" + " L".join(f"{x} {y}" for x, y in pts)
+    d2 = "M" + " L".join(f"{x + 0.8} {y + 1.6}" for x, y in pts)
+    light = 0.95 if dark_paint else 0.8
+    return (f'<g filter="url(#softUID)"><path d="{d2}" stroke="#000" stroke-width="{width}" opacity="0.35" fill="none" stroke-linecap="round"/>'
+            f'<path d="{d}" stroke="#f4f4f2" stroke-width="{width}" opacity="{light}" fill="none" stroke-linecap="round"/>'
+            f'<path d="{d}" stroke="#ffffff" stroke-width="{width * 2.6}" opacity="0.12" fill="none" stroke-linecap="round"/></g>')
+
+
+def p_dent(cx, cy, rx, ry, dark_paint: bool = False) -> str:
+    """Вмятина: тень полумесяцем снизу и блик сверху — так её видно на фото."""
+    shadow = (f'M{cx - rx} {cy} A{rx} {ry} 0 0 0 {cx + rx} {cy} '
+              f'A{rx} {ry * .55} 0 0 1 {cx - rx} {cy} Z')
+    light = (f'M{cx - rx * .85} {cy - ry * .05} A{rx * .85} {ry * .9} 0 0 1 {cx + rx * .85} {cy - ry * .05} '
+             f'A{rx * .85} {ry * .45} 0 0 0 {cx - rx * .85} {cy - ry * .05} Z')
+    if dark_paint:
+        return (f'<path d="{light}" fill="#fff" opacity="0.38" filter="url(#glowUID)"/>'
+                f'<path d="{shadow}" fill="#000" opacity="0.6" filter="url(#glowUID)"/>'
+                f'<ellipse cx="{cx}" cy="{cy}" rx="{rx * 1.15}" ry="{ry * 1.15}" fill="none" stroke="#fff" stroke-width="0.8" opacity="0.18" filter="url(#softUID)"/>')
+    return (f'<path d="{shadow}" fill="#5a6068" opacity="0.55" filter="url(#glowUID)"/>'
+            f'<path d="{light}" fill="#fff" opacity="0.85" filter="url(#glowUID)"/>'
+            f'<ellipse cx="{cx}" cy="{cy}" rx="{rx * 1.1}" ry="{ry * 1.1}" fill="none" stroke="#8a9098" stroke-width="0.9" opacity="0.35" filter="url(#softUID)"/>')
+
+
+def p_crack(impact, branches) -> str:
+    ix, iy = impact
+    out = [f'<circle cx="{ix}" cy="{iy}" r="3.6" fill="#e9f3f8" opacity="0.85" filter="url(#softUID)"/>']
+    for dx, dy in [(6, -3), (-5, -5), (-6, 4), (4, 6), (1, -7), (7, 3)]:
+        out.append(f'<path d="M{ix} {iy} L{ix + dx} {iy + dy}" stroke="#eef6fa" stroke-width="0.9" opacity="0.9"/>')
+    for b in branches:
+        d = "M" + " L".join(f"{x} {y}" for x, y in [(ix, iy), *b])
+        out.append(f'<path d="{d}" stroke="#f2f7fa" stroke-width="1.1" opacity="0.88" fill="none" stroke-linejoin="bevel" filter="url(#softUID)"/>')
+        out.append(f'<path d="{d}" stroke="#fff" stroke-width="3" opacity="0.1" fill="none"/>')
+    return "".join(out)
+
+
+def p_chips(points) -> str:
+    return "".join(f'<circle cx="{x}" cy="{y}" r="{r}" fill="#f0f0ee" opacity="0.9" filter="url(#softUID)"/>'
+                   f'<circle cx="{x + .6}" cy="{y + .6}" r="{r * .5}" fill="#555" opacity="0.6"/>' for x, y, r in points)
+
+
+def p_scuff(x, y, w, h, n: int = 14, dark_paint: bool = True) -> str:
+    import random
+    rnd = random.Random(int(x * 7 + y))
+    col = "#e8e8e6" if dark_paint else "#6a6e72"
+    out = []
+    for _ in range(n):
+        sx = x + rnd.random() * w * .8
+        sy = y + rnd.random() * h
+        out.append(f'<path d="M{sx:.1f} {sy:.1f} l{w * (.12 + rnd.random() * .25):.1f} {rnd.uniform(-1.5, 1.5):.1f}" '
+                   f'stroke="{col}" stroke-width="{rnd.uniform(.6, 1.4):.1f}" opacity="{rnd.uniform(.35, .75):.2f}"/>')
+    return f'<g filter="url(#softUID)">{"".join(out)}</g>'
+
+
+def p_haze(cx, cy, rx, ry) -> str:
+    return f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" fill="#f1e6bf" opacity="0.5" filter="url(#blurUID)"/>'
+
+
+def p_rust(spots) -> str:
+    return "".join(f'<circle cx="{x}" cy="{y}" r="{r}" fill="#7a3510" opacity="0.8" filter="url(#glowUID)"/>'
+                   f'<circle cx="{x + r * .3}" cy="{y - r * .2}" r="{r * .5:.1f}" fill="#b85a1c" opacity="0.75" filter="url(#softUID)"/>'
+                   for x, y, r in spots)
+
+
+def p_tint(path_d: str, color: str, opacity: float = 0.25) -> str:
+    return f'<path d="{path_d}" fill="{color}" opacity="{opacity}" filter="url(#blurUID)"/>'
+
+
+def p_curb(cx, cy, r, a0, a1, n: int = 16) -> str:
+    import math
+    out = []
+    for i in range(n):
+        a = a0 + (a1 - a0) * i / (n - 1)
+        x1, y1 = cx + r * math.cos(a), cy + r * math.sin(a)
+        x2, y2 = cx + (r - 5) * math.cos(a + .04), cy + (r - 5) * math.sin(a + .04)
+        out.append(f'<path d="M{x1:.1f} {y1:.1f} L{x2:.1f} {y2:.1f}" stroke="#d9dbdc" stroke-width="1.6" opacity="0.8"/>')
+    return f'<g filter="url(#softUID)">{"".join(out)}</g>'

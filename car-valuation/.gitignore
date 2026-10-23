@@ -21,3 +21,4 @@ demo/.artifact.html
 demo/brand-*.json
 demo/presentation-*.html
 demo/logo-*.svg
+demo/fleet-*/
