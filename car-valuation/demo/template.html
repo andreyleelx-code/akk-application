@@ -8,7 +8,7 @@
 /* Макет: левое оглавление + лента разделов, как папка осмотра — титульный лист, демо, акт, расчёты, инструкции */
 :root{
   --bg:#0f161b; --paper:#162129; --ink:#e4ecf0; --muted:#97a7b2; --line:#2a3943; --soft:#1c2a33;
-  --accent:#3fb3c5; --accent-ink:#06232a; --accent-soft:#163a42;
+  --accent:{{ACCENT}}; --accent-ink:{{ACCENT_INK}}; --accent-soft:{{ACCENT_SOFT}};
   --minor:#f2c230; --moderate:#ff8a3d; --severe:#ff5a5a; --ok:#4cc27e; --rej:#7a868e;
   --tg-bg:#0e1621; --tg-in:#182533; --tg-out:#2b5278; --tg-bar:#17212b; --sheet:#1b252c;
   --display:"Onest","Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
@@ -38,6 +38,9 @@ a{color:var(--accent)}
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 80px}
 nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;display:flex;flex-direction:column;gap:2px;font-size:14px}
 nav.toc .brand{font-family:var(--display);font-weight:700;font-size:16px;margin-bottom:12px;line-height:1.25}
+nav.toc .brand .logo-row,.logo-row{display:flex;align-items:center;gap:10px}
+.brand-logo{flex:none;display:block}
+.phone header .av{background:none}
 nav.toc .brand small{display:block;font:500 12px var(--body);color:var(--muted);margin-top:4px}
 nav.toc a{color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:8px;display:flex;gap:10px}
 nav.toc a span{font-family:var(--mono);font-size:12px;color:var(--line);min-width:18px;padding-top:1px}
@@ -305,7 +308,7 @@ pre code{background:none;padding:0}
 
 <div class="layout">
 <nav class="toc" id="toc" aria-label="Разделы">
-  <div class="brand">Второй взгляд оценщика<small>ИИ-помощник для выкупа авто · демо</small></div>
+  <div class="brand"><span class="logo-row">{{LOGO}}<span>{{COMPANY}}</span></span><small>Второй взгляд оценщика · демо</small></div>
   <a href="#top"><span>01</span>Суть</a>
   <a href="#how"><span>02</span>Как работает</a>
   <a href="#demo"><span>03</span>Демо: оценка</a>
@@ -327,7 +330,7 @@ pre code{background:none;padding:0}
 <section id="top">
   <div class="hero">
     <div style="display:flex;flex-direction:column;gap:16px">
-      <span class="tag demo">Демо на примерах · цифры и фото условные</span>
+      <span class="tag demo">{{HERO_TAG}}</span>
       <h1>ИИ осматривает каждую машину <em>второй раз</em> и не пропускает зоны</h1>
       <p class="lead">Оценщик снимает машину по подсказкам бота в Telegram. Через 1–3 минуты получает список дефектов с отметками на фото и расчёт цены. Цену утверждает старший оценщик.</p>
     </div>
@@ -414,8 +417,8 @@ pre code{background:none;padding:0}
   <h2>Как бот общается с оценщиком и со старшим</h2>
   <p class="lead">Слева телефон оценщика на площадке, справа телефон старшего оценщика. Переписка построена по машине, выбранной в демо. Текст отчёта сформирован кодом бота.</p>
   <div class="phones">
-    <div class="phone" aria-label="Чат оценщика"><header><div class="av">ИИ</div><div><b>Оценка авто</b><small>бот · оценщик Ерлан</small></div></header><div class="chat" id="chatA"></div></div>
-    <div class="phone" aria-label="Чат старшего оценщика"><header><div class="av">ИИ</div><div><b>Оценка авто</b><small>бот · старший оценщик Айгерим</small></div></header><div class="chat" id="chatB"></div></div>
+    <div class="phone" aria-label="Чат оценщика"><header><div class="av">{{LOGO}}</div><div><b>{{COMPANY}} · оценка</b><small>бот · оценщик Ерлан</small></div></header><div class="chat" id="chatA"></div></div>
+    <div class="phone" aria-label="Чат старшего оценщика"><header><div class="av">{{LOGO}}</div><div><b>{{COMPANY}} · оценка</b><small>бот · старший оценщик Айгерим</small></div></header><div class="chat" id="chatB"></div></div>
   </div>
 </section>
 
@@ -434,10 +437,10 @@ pre code{background:none;padding:0}
   <p class="lead">Отдельный сайт для владельца и старших оценщиков. Оценщики в нём не работают, у них бот. Здесь видна вся история оценок, точность и риски. Пощёлкайте по разделам слева.</p>
   <span class="tag demo">Макет · данные примерные</span>
   <div class="browser">
-    <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">panel.пример-выкуп.kz / обзор</div><div class="who">Владелец · вход по паролю</div></div>
+    <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">panel.{{DOMAIN}} / обзор</div><div class="who">Владелец · вход по паролю</div></div>
     <div class="app">
       <aside id="panelNav" role="tablist" aria-label="Разделы панели">
-        <div class="logo">Оценка авто</div>
+        <div class="logo logo-row">{{LOGO}}<span>{{COMPANY}}</span></div>
         <button type="button" role="tab" data-p="overview" aria-selected="true">Обзор</button>
         <button type="button" role="tab" data-p="list" aria-selected="false">Оценки</button>
         <button type="button" role="tab" data-p="people" aria-selected="false">Оценщики</button>
@@ -931,7 +934,7 @@ function renderSheet(){
   const marked = Object.entries(c.marked);
   const titles = Object.fromEntries(c.views.map(v => [v.angle, v.title]));
   $("sheet").innerHTML = `
-    <div class="hdr"><div><div class="note">ТОО «Пример Выкуп» · отдел оценки</div><h2 style="font-size:24px;margin-top:4px">Акт оценки № ${String(1040 + ci)}</h2></div>
+    <div class="hdr"><div><div class="logo-row">{{LOGO}}<span class="note">{{LEGAL}} · отдел оценки</span></div><h2 style="font-size:24px;margin-top:4px">Акт оценки № ${String(1040 + ci)}</h2></div>
       <div class="note" style="text-align:right">Дата: ${today}<br>Отчёт: demo-${esc(c.id)}<br><span class="tag demo">Образец</span></div></div>
     <div class="grid2">
       <div><h3 style="margin-bottom:8px">Автомобиль</h3><dl class="kv" style="grid-template-columns:auto 1fr">
@@ -1120,7 +1123,7 @@ function renderPanel(){
 $("panelNav").querySelectorAll("button").forEach(b => b.onclick = () => {
   $("panelNav").querySelectorAll("button").forEach(x => x.setAttribute("aria-selected", x === b));
   document.querySelectorAll(".pane").forEach(p => p.hidden = p.dataset.pane !== b.dataset.p);
-  document.querySelector(".browser .url").textContent = "panel.пример-выкуп.kz / " + b.textContent.replace(/\d+/,"").trim().toLowerCase();
+  document.querySelector(".browser .url").textContent = "panel.{{DOMAIN}} / " + b.textContent.replace(/\d+/,"").trim().toLowerCase();
 });
 $("pFilter").querySelectorAll("button").forEach(b => b.onclick = () => {
   panel.f = b.dataset.f; $("pFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderPanelList();

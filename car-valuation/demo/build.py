@@ -258,6 +258,35 @@ def data_uri(jpeg: bytes, width: int = 560) -> str:
     return "data:image/jpeg;base64," + base64.b64encode(out.getvalue()).decode()
 
 
+# ---------------- Брендинг ----------------
+
+
+def logo_svg(initials: str, accent: str, ink: str, size: int = 34) -> str:
+    """Монограмма: инициалы компании на плашке фирменного цвета с отметкой-«галочкой осмотра»."""
+    from html import escape
+    return (f'<svg class="brand-logo" width="{size}" height="{size}" viewBox="0 0 40 40" aria-hidden="true">'
+            f'<rect width="40" height="40" rx="10" fill="{accent}"/>'
+            f'<path d="M27 29.5 L30 32.5 L35.5 26" stroke="{ink}" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+            f'<text x="18" y="25" text-anchor="middle" font-family="Onest, Golos Text, Arial, sans-serif" '
+            f'font-size="{15 if len(initials) <= 2 else 12}" font-weight="800" fill="{ink}">{escape(initials)}</text></svg>')
+
+
+def apply_brand(html: str) -> str:
+    from html import escape
+    b = json.loads((DEMO / "brand.json").read_text("utf-8"))
+    tag = (f"Демо для {b['company']} · цифры и фото условные" if b.get("for_client")
+           else "Демо на примерах · цифры и фото условные")
+    values = {
+        "{{LOGO}}": logo_svg(b["initials"], b["accent"], b["accent_ink"]),
+        "{{COMPANY}}": escape(b["company"]), "{{LEGAL}}": escape(b["legal"]),
+        "{{DOMAIN}}": escape(b["domain"]), "{{HERO_TAG}}": escape(tag),
+        "{{ACCENT}}": b["accent"], "{{ACCENT_INK}}": b["accent_ink"], "{{ACCENT_SOFT}}": b["accent_soft"],
+    }
+    for k, v in values.items():
+        html = html.replace(k, v)
+    return html
+
+
 # ---------------- Сборка ----------------
 
 
@@ -335,7 +364,7 @@ def build() -> None:
         print(f"{car.id}: {len(defects)} дефектов, предложение "
               f"{report.estimate.offer_low:,}–{report.estimate.offer_high:,} ₸".replace(",", " "))
 
-    template = (DEMO / "template.html").read_text("utf-8")
+    template = apply_brand((DEMO / "template.html").read_text("utf-8"))
     html = template.replace("/*__DEMO_DATA__*/null", json.dumps(payload, ensure_ascii=False))
     # Для публикации ссылкой — фрагмент (обёртку добавляет сервис)
     (DEMO / ".artifact.html").write_text(html, "utf-8")

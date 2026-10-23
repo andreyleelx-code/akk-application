@@ -1,0 +1,11 @@
+{
+  "_comment": "Брендинг демо. Поменяйте поля и запустите python demo/build.py. Цвет accent должен хорошо читаться на тёмном фоне.",
+  "company": "Пример Выкуп",
+  "legal": "ТОО «Пример Выкуп»",
+  "initials": "ПВ",
+  "domain": "пример-выкуп.kz",
+  "accent": "#3fb3c5",
+  "accent_ink": "#06232a",
+  "accent_soft": "#163a42",
+  "for_client": false
+}

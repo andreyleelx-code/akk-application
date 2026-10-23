@@ -27,3 +27,15 @@ python demo/build.py
 ```
 
 Нужен Chromium для Playwright (картинки рендерятся из SVG).
+
+## Брендинг под заказчика
+
+Название, логотип-монограмма и фирменный цвет задаются в `demo/brand.json`:
+
+```json
+{ "company": "Название", "legal": "ТОО «Название»", "initials": "НА",
+  "domain": "nazvanie.kz", "accent": "#f2a33a", "accent_ink": "#1f1300",
+  "accent_soft": "#3a2a12", "for_client": true }
+```
+
+После правки — `python demo/build.py`. Версию с названием и логотипом реальной компании показывайте файлом с ноутбука, а не публичной ссылкой.

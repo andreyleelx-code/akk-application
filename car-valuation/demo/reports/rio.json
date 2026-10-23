@@ -7,7 +7,7 @@
     "year": 2016,
     "mileage_km": 160000
   },
-  "created_at": "2026-10-23T09:15:34.023706Z",
+  "created_at": "2026-10-23T09:40:13.280948Z",
   "photos": [
     {
       "angle_id": "front",
@@ -84,7 +84,7 @@
         }
       ],
       "chosen": 1,
-      "id": "cdd71451"
+      "id": "2c9e8968"
     },
     {
       "zone": "body",
@@ -103,7 +103,7 @@
       "status": "pending",
       "options": [],
       "chosen": null,
-      "id": "7702e9a3"
+      "id": "d964059c"
     },
     {
       "zone": "body",
@@ -134,7 +134,7 @@
         }
       ],
       "chosen": 0,
-      "id": "e8ac37d1"
+      "id": "35b44f4f"
     },
     {
       "zone": "glass_lights",
@@ -187,7 +187,7 @@
         }
       ],
       "chosen": 2,
-      "id": "57fce309"
+      "id": "f343f73e"
     },
     {
       "zone": "body",
@@ -218,7 +218,7 @@
         }
       ],
       "chosen": 0,
-      "id": "0a115031"
+      "id": "36032e50"
     }
   ],
   "not_assessable": [
