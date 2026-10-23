@@ -37,7 +37,9 @@ from carval.models import (  # noqa: E402
     Car, Defect, DefectStatus, Photo, RepairOption, Report, Review, ReviewFinding, Severity,
 )
 from carval.parts import KIND_RU, SOURCE_RU, attach_options, choose_option, needs_parts  # noqa: E402
-from carval.pricing import estimate_price, select_comparables  # noqa: E402
+from carval.pricing import defect_cost, estimate_price, select_comparables  # noqa: E402
+from carval.models import RentalInfo  # noqa: E402
+from carval.rental import load_terms, settle  # noqa: E402
 from carval.report import render  # noqa: E402
 from carval.settings import Settings  # noqa: E402
 
@@ -181,6 +183,124 @@ RIO = DemoCar(
 )
 
 CARS = [CAMRY, TUCSON, RIO]
+
+
+# ---------------- Прокат: выдача и возврат ----------------
+
+
+@dataclass
+class RentalCase:
+    id: str
+    car: Car
+    color: str
+    plate: str
+    body_type: str  # sedan | suv
+    rental_body: str  # sedan | crossover | suv — для мойки
+    views: dict[str, str]
+    before: list[D]  # повреждения при выдаче
+    new: list[D]  # появились за время аренды
+    out: RentalInfo
+    back: RentalInfo
+    client: str
+    when_out: str
+    when_in: str
+    story: str
+
+
+LIXIANG = RentalCase(
+    id="l7", car=Car(vin_or_plate="702 SWR 02", make="Lixiang", model="L7", year=2024, mileage_km=15_880),
+    color="#2b2f33", plate="702 SWR 02", body_type="suv", rental_body="suv",
+    views={"front": "Спереди", "left": "Левый бок", "right": "Правый бок", "rear": "Сзади"},
+    before=[
+        D("front", "body", "chip", C, 0.84, "капот, передняя кромка", "Мелкие сколы ЛКП",
+          (344, 212, 96, 28), c.chips([(358, 226, 2.6), (380, 230, 2.2), (414, 226, 2.6)]), OK),
+        D("rear", "body", "scratch", C, 0.79, "задний бампер слева", "Поверхностная царапина",
+          (176, 310, 88, 26), c.scratch(188, 326, 252, 322, 3), OK),
+    ],
+    new=[
+        D("right", "body", "dent", C, 0.89, "правая задняя дверь", "Вмятина ~5 см без повреждения ЛКП",
+          mbox(470, 258, 76, 52), c.dent("l7in", 508, 282, 28, 18), OK),
+        D("front", "body", "scratch", C, 0.81, "передний бампер справа", "Поверхностная царапина ~20 см",
+          (452, 316, 100, 28), c.scratch(462, 332, 540, 328, 4), OK),
+    ],
+    out=RentalInfo(client="А. Ахметов", deposit=50_000, days=3, body="suv", km_out=15_200),
+    back=RentalInfo(km_in=15_880, dirty=True, fuel_missing_l=0),
+    client="А. Ахметов", when_out="20.10 · 10:05", when_in="23.10 · 18:40",
+    story="Клиент вернул машину с двумя мелкими новыми повреждениями, грязной и с перепробегом. Сколы на капоте и царапина на бампере были при выдаче — их ИИ не выставляет: это видно по акту выдачи.",
+)
+
+ELANTRA = RentalCase(
+    id="elantra", car=Car(vin_or_plate="318 SWR 02", make="Hyundai", model="Elantra", year=2024, mileage_km=42_310),
+    color="#e9ebed", plate="318 SWR 02", body_type="sedan", rental_body="sedan",
+    views={"front": "Спереди", "left": "Левый бок", "right": "Правый бок", "rear": "Сзади"},
+    before=[
+        D("left", "body", "scratch", C, 0.77, "левая задняя дверь", "Лёгкая царапина",
+          (488, 286, 82, 26), c.scratch(498, 300, 560, 298, 2), OK),
+    ],
+    new=[
+        D("front", "glass_lights", "glass_crack", M, 0.93, "лобовое стекло, сторона водителя", "Трещина ~25 см от скола",
+          (404, 128, 92, 78), c.crack([(420, 140), (446, 158), (438, 172), (478, 196)], "#f4f4f4", 1.8), OK),
+        D("left", "body", "dent", C, 0.72, "левое переднее крыло", "Небольшая вмятина без повреждения ЛКП",
+          (218, 270, 66, 40), c.dent("elin", 250, 290, 26, 16), OK),
+    ],
+    out=RentalInfo(client="Д. Сериков", deposit=30_000, days=1, body="sedan", km_out=42_100),
+    back=RentalInfo(km_in=42_310, dirty=False, fuel_missing_l=8),
+    client="Д. Сериков", when_out="22.10 · 09:30", when_in="23.10 · 10:15",
+    story="Трещина лобового стекла дороже депозита: система показывает, сколько доплатить клиенту, и предлагает проверить, покрывает ли случай страховка.",
+)
+
+RENTALS = [LIXIANG, ELANTRA]
+
+
+def rental_view(rc: RentalCase, angle: str, stage: str) -> str:
+    items = rc.before + (rc.new if stage == "in" else [])
+    dmg = "".join(d.draw for d in items if d.angle == angle)
+    uid = f"{rc.id}{stage}{angle}"
+    if angle == "left":
+        return c.side(uid, rc.color, damage=dmg, body_type=rc.body_type)
+    if angle == "right":
+        return c.side(uid, rc.color, mirror=True, damage=dmg, body_type=rc.body_type)
+    if angle == "front":
+        return c.front(uid, rc.color, damage=dmg, plate=rc.plate)
+    return c.rear(uid, rc.color, damage=dmg, plate=rc.plate)
+
+
+def to_defect(d: D) -> Defect:
+    return Defect(zone=d.zone, code=d.code, severity=d.sev, angle_id=d.angle, location=d.location,
+                  description=d.desc, confidence=d.conf, status=d.status,
+                  box=[round(d.box[0] / 800, 4), round(d.box[1] / 450, 4), round(d.box[2] / 800, 4), round(d.box[3] / 450, 4)])
+
+
+def build_rentals(settings: Settings, catalog) -> list[dict]:
+    terms = load_terms(settings)
+    out = []
+    for rc in RENTALS:
+        handover = Report(kind="handover", car=rc.car.model_copy(update={"mileage_km": rc.out.km_out}),
+                          defects=[to_defect(d) for d in rc.before], rental=rc.out)
+        # при возврате ИИ снова находит и старые повреждения: их отделяет сравнение с выдачей
+        ret = Report(kind="return", car=rc.car, defects=[to_defect(d) for d in rc.before + rc.new],
+                     rental=rc.back.model_copy(update={"handover_report_id": handover.id}))
+        attach_options(ret, catalog.suppliers)
+        ret.settlement = settle(ret, handover, catalog, terms)
+        new_ids = set(ret.settlement.new_defect_ids)
+        out.append({
+            "id": rc.id, "story": rc.story, "car": rc.car.model_dump(), "client": rc.client,
+            "when_out": rc.when_out, "when_in": rc.when_in, "km_out": rc.out.km_out, "km_in": rc.back.km_in,
+            "days": rc.out.days, "body": rc.rental_body,
+            "views": [{"angle": a, "title": t, "out": rental_view(rc, a, "out"), "in": rental_view(rc, a, "in")}
+                      for a, t in rc.views.items()],
+            "defects": [{**d.model_dump(mode="json"), "name": catalog.defect_name(d.zone, d.code),
+                         "is_new": d.id in new_ids, "cost": defect_cost(d, catalog.repair_prices),
+                         "option": ({**d.repair_option.model_dump(), "kind_ru": KIND_RU[d.repair_option.kind],
+                                     "source_ru": SOURCE_RU[d.repair_option.source]} if d.repair_option else None)}
+                        for d in ret.defects],
+            "settlement": ret.settlement.model_dump(),
+            "terms": {"km_per_day": terms.km_per_day, "extra_km_kzt": terms.extra_km_kzt,
+                      "fuel_kzt_per_l": terms.fuel_kzt_per_l, "insurance_threshold": terms.insurance_threshold_kzt},
+        })
+        st = ret.settlement
+        print(f"{rc.id}: новых {len(st.new_defect_ids)}, итого {st.total:,} ₸, вернуть {st.refund:,}, доплатить {st.due:,}".replace(",", " "))
+    return out
 
 
 def web(kind, supplier, url, parts, labor, note):
@@ -369,6 +489,7 @@ def build() -> None:
 
     template = apply_brand((DEMO / "template.html").read_text("utf-8"))
     html = template.replace("/*__DEMO_DATA__*/null", json.dumps(payload, ensure_ascii=False))
+    html = html.replace("/*__RENTAL_DATA__*/null", json.dumps(build_rentals(settings, catalog), ensure_ascii=False))
     slug = json.loads(BRAND_FILE.read_text("utf-8")).get("slug")
     if slug:
         # Фирменная версия для конкретного заказчика: только файл, без публикации

@@ -55,7 +55,7 @@ section{display:flex;flex-direction:column;gap:20px;scroll-margin-top:20px}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .tag{width:fit-content;display:inline-flex;align-items:center;gap:6px;font:600 12px var(--body);padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--muted);white-space:nowrap}
-.tag.demo{background:color-mix(in srgb,var(--minor) 18%,transparent);color:var(--ink)}
+.tag.demo{white-space:normal;background:color-mix(in srgb,var(--minor) 18%,transparent);color:var(--ink)}
 .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -157,6 +157,25 @@ button{font:inherit;cursor:pointer}
 .how-web div{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
 .how-web b{color:var(--ink);font-size:14px}
 @media (max-width:860px){.parts-sum,.how-web{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Прокат */
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pair .cap{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-bottom:6px}
+.pair .cap b{color:var(--ink);font-family:var(--display);font-size:15px}
+.boxes g.known rect{stroke:var(--rej)!important;stroke-dasharray:7 5}
+.boxes g.known circle{fill:var(--rej)!important}
+.boxes rect.newtag{fill:var(--severe);stroke:none}
+.rental-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+.settle td.n{white-space:nowrap}
+.settle tr.big td{font:700 16px var(--display);background:var(--soft)}
+.refund{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.refund div{border-radius:12px;padding:12px 14px;border:1px solid var(--line)}
+.refund b{display:block;font:800 22px var(--display)}
+.refund span{font-size:13px;color:var(--muted)}
+.refund .back{background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.refund .due{background:color-mix(in srgb,var(--severe) 12%,transparent)}
+.client-msg{background:var(--tg-bg);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+@media (max-width:860px){.pair,.rental-grid,.refund{grid-template-columns:minmax(0,1fr)}}
 
 /* Telegram */
 .phones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
@@ -311,17 +330,18 @@ pre code{background:none;padding:0}
   <div class="brand"><span class="logo-row">{{LOGO}}<span>{{COMPANY}}</span></span><small>Второй взгляд оценщика · демо</small></div>
   <a href="#top"><span>01</span>Суть</a>
   <a href="#how"><span>02</span>Как работает</a>
-  <a href="#demo"><span>03</span>Демо: оценка</a>
-  <a href="#parts"><span>04</span>Ремонт и запчасти</a>
-  <a href="#telegram"><span>05</span>Бот в Telegram</a>
-  <a href="#act"><span>06</span>Акт оценки</a>
-  <a href="#summary"><span>07</span>Панель руководства</a>
-  <a href="#cost"><span>08</span>Стоимость</a>
-  <a href="#plan"><span>09</span>План и сроки</a>
-  <a href="#setup"><span>10</span>Инструкция</a>
-  <a href="#limits"><span>11</span>Границы и риски</a>
-  <a href="#questions"><span>12</span>Вопросы к встрече</a>
-  <a href="#tech"><span>13</span>Техническая часть</a>
+  <a href="#rental"><span>03</span>Прокат: выдача и возврат</a>
+  <a href="#demo"><span>04</span>Выкуп: оценка</a>
+  <a href="#parts"><span>05</span>Ремонт и запчасти</a>
+  <a href="#telegram"><span>06</span>Бот в Telegram</a>
+  <a href="#act"><span>07</span>Акт оценки</a>
+  <a href="#summary"><span>08</span>Панель руководства</a>
+  <a href="#cost"><span>09</span>Стоимость</a>
+  <a href="#plan"><span>10</span>План и сроки</a>
+  <a href="#setup"><span>11</span>Инструкция</a>
+  <a href="#limits"><span>12</span>Границы и риски</a>
+  <a href="#questions"><span>13</span>Вопросы к встрече</a>
+  <a href="#tech"><span>14</span>Техническая часть</a>
 </nav>
 
 <main>
@@ -332,7 +352,7 @@ pre code{background:none;padding:0}
     <div style="display:flex;flex-direction:column;gap:16px">
       <span class="tag demo">{{HERO_TAG}}</span>
       <h1>ИИ осматривает каждую машину <em>второй раз</em> и не пропускает зоны</h1>
-      <p class="lead">Оценщик снимает машину по подсказкам бота в Telegram. Через 1–3 минуты получает список дефектов с отметками на фото и расчёт цены. Цену утверждает старший оценщик.</p>
+      <p class="lead">Сотрудник снимает машину по подсказкам бота в Telegram: при выдаче клиенту, при возврате и при выкупе. Через 1–3 минуты получает повреждения с отметками на фото и расчёт. Решение принимает человек.</p>
     </div>
     <div class="facts">
       <div class="fact"><b>1–3 мин</b><span>от последнего фото до отчёта</span></div>
@@ -359,6 +379,37 @@ pre code{background:none;padding:0}
     <div class="step"><span class="k">Шаг 3</span><b>Ремонт и цена</b><p>Варианты ремонта из базы поставщиков или из интернета. Цена = рынок минус ремонт.</p><span class="who tag">База + поиск + формула</span></div>
     <div class="step"><span class="k">Шаг 4</span><b>Ревьюер</b><p>Ищет противоречия и признаки ДТП, помечает неуверенные находки.</p><span class="who tag">Claude Opus</span></div>
     <div class="step human"><span class="k">Шаг 5</span><b>Человек</b><p>Оценщик подтверждает дефекты и вносит замеры. Старший утверждает цену.</p><span class="who">Оценщик и старший</span></div>
+  </div>
+</section>
+
+<!-- 03 rental -->
+<section id="rental">
+  <div class="eyebrow">Прокат · выдача и возврат</div>
+  <h2>Спор «эта царапина была до меня» закрывается за минуту</h2>
+  <p class="lead">При выдаче бот фиксирует машину на фото с отметками. При возврате ИИ снимает её снова, сравнивает с актом выдачи и выделяет только новые повреждения. Затем считает ремонт, перепробег, мойку и топливо, и показывает, сколько вернуть из депозита.</p>
+  <span class="tag demo">Машины из парка компании · повреждения и суммы условные · тарифы по условиям проката на сайте</span>
+  <div class="cars" id="rTabs" role="group" aria-label="Машина проката"></div>
+  <p class="story" id="rStory"></p>
+  <div class="pair">
+    <div><div class="cap"><b>Выдача</b><span id="rOut"></span></div><div class="stage" id="rStageOut"></div></div>
+    <div><div class="cap"><b>Возврат</b><span id="rIn"></span></div><div class="stage" id="rStageIn"></div></div>
+  </div>
+  <div class="thumbs" id="rThumbs" style="grid-template-columns:repeat(4,minmax(0,1fr))"></div>
+  <div class="legend"><span><i class="sev" style="background:var(--rej)"></i>было при выдаче — клиенту не выставляется</span><span><i class="sev" style="background:var(--severe)"></i>новое — появилось за время аренды</span></div>
+  <div class="rental-grid">
+    <div class="card" style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <h3>Расчёт с клиентом</h3>
+      <div class="tbl-wrap"><table class="settle" id="rSettle"></table></div>
+      <div class="refund" id="rRefund"></div>
+      <p class="note" id="rTerms"></p>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <h3>Что получает клиент</h3>
+      <p class="note">Сразу после осмотра бот формирует сообщение: фото «до/после» с отметками и расчёт. Клиент видит доказательства, спорить не о чем.</p>
+      <div class="client-msg" id="rMsg"></div>
+      <h3>Акт приёма-передачи</h3>
+      <div class="tbl-wrap"><table id="rAct"></table></div>
+    </div>
   </div>
 </section>
 
@@ -764,6 +815,7 @@ pytest                  # проверка: всё зелёное</code></pre></
 
 <script>
 const DATA = /*__DEMO_DATA__*/null;
+const RENTAL = /*__RENTAL_DATA__*/null;
 const SEV = {minor:"var(--minor)", moderate:"var(--moderate)", severe:"var(--severe)"};
 const SEV_RU = {minor:"лёгкий", moderate:"средний", severe:"серьёзный"};
 const fmt = n => Math.round(n).toLocaleString("ru-RU").replace(/,/g," ");
@@ -1172,7 +1224,62 @@ function renderParts(){
   });
 }
 
+/* ---------- Прокат ---------- */
+const rstate = {car:0, view:null};
+function rBoxes(rc, angle, stage){
+  return rc.defects.map((d,i) => ({d,i})).filter(({d}) => d.angle_id === angle && d.box && (stage === "in" || !d.is_new)).map(({d,i}) => {
+    const [x,y,w,h] = d.box.map((n,k) => n * (k % 2 ? 450 : 800));
+    const known = !d.is_new;
+    const col = known ? "var(--rej)" : "var(--severe)";
+    return `<g class="${known && stage==="in" ? "known" : ""}"><title>${esc(d.name)}: ${esc(d.location)}</title>
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" style="stroke:${stage==="out" ? "var(--minor)" : col}"/>
+      <circle cx="${x}" cy="${y}" r="14" style="fill:${stage==="out" ? "var(--minor)" : col}" stroke="#fff" stroke-width="2"/>
+      <text x="${x}" y="${y+5}" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Golos Text, Arial, sans-serif">${i+1}</text>
+      ${stage==="in" && !known ? `<rect x="${x+w-58}" y="${y+h+4}" width="58" height="20" rx="5" class="newtag"/><text x="${x+w-29}" y="${y+h+18}" text-anchor="middle" font-size="12" font-weight="800" fill="#fff" font-family="Golos Text, Arial, sans-serif">НОВОЕ</text>` : ""}</g>`;
+  }).join("");
+}
+function renderRental(){
+  const rc = RENTAL[rstate.car];
+  if (!rstate.view) rstate.view = (rc.defects.find(d => d.is_new) || rc.defects[0]).angle_id;
+  const v = rc.views.find(x => x.angle === rstate.view) || rc.views[0];
+  $("rTabs").innerHTML = RENTAL.map((c,i) => `<button type="button" aria-pressed="${i===rstate.car}" data-i="${i}"><b>${esc(c.car.make)} ${esc(c.car.model)}</b><small>${esc(c.car.vin_or_plate)} · ${c.days} сут. · ${c.defects.filter(d=>d.is_new).length} новых</small></button>`).join("");
+  $("rTabs").querySelectorAll("button").forEach(b => b.onclick = () => { rstate.car = +b.dataset.i; rstate.view = null; renderRental(); });
+  $("rStory").textContent = rc.story;
+  $("rOut").textContent = `${rc.when_out} · ${fmt(rc.km_out)} км`;
+  $("rIn").textContent = `${rc.when_in} · ${fmt(rc.km_in)} км`;
+  $("rStageOut").innerHTML = v.out + `<svg class="boxes" viewBox="0 0 800 450">${rBoxes(rc, v.angle, "out")}</svg><span class="lbl">${esc(v.title)} · выдача</span>`;
+  $("rStageIn").innerHTML = v.in + `<svg class="boxes" viewBox="0 0 800 450">${rBoxes(rc, v.angle, "in")}</svg><span class="lbl">${esc(v.title)} · возврат</span>`;
+  $("rThumbs").innerHTML = rc.views.map(x => {
+    const n = rc.defects.filter(d => d.is_new && d.angle_id === x.angle).length;
+    return `<button type="button" class="thumb" aria-pressed="${x.angle===v.angle}" data-a="${x.angle}" aria-label="${esc(x.title)}">${x.in}${n?`<span class="cnt">${n}</span>`:""}<span class="ttl">${esc(x.title)}</span></button>`;
+  }).join("");
+  $("rThumbs").querySelectorAll(".thumb").forEach(b => b.onclick = () => { rstate.view = b.dataset.a; renderRental(); });
+  const st = rc.settlement, t = rc.terms;
+  const newRows = rc.defects.map((d,i) => ({d,i})).filter(({d}) => d.is_new).map(({d,i}) =>
+    `<tr><td>№${i+1} ${esc(d.name)}<div class="note">${esc(d.location)}${d.option ? ` · ${esc(d.option.kind_ru)}: ${esc(d.option.supplier)}` : " · по прайсу"}</div></td><td class="n">${fmt(d.cost)}</td></tr>`).join("");
+  const known = rc.defects.filter(d => !d.is_new).length;
+  $("rSettle").innerHTML = `<thead><tr><th>Позиция</th><th class="n">₸</th></tr></thead><tbody>${newRows}
+    <tr><td>Было при выдаче: ${known} повреждения<div class="note">зафиксированы в акте выдачи, не выставляются</div></td><td class="n">0</td></tr>
+    <tr><td>Перепробег: ${fmt(rc.km_in - rc.km_out)} км за ${rc.days} сут., лимит ${fmt(t.km_per_day * rc.days)}${st.extra_km ? ` → ${st.extra_km} км × ${t.extra_km_kzt} ₸` : ""}</td><td class="n">${fmt(st.extra_km_cost)}</td></tr>
+    <tr><td>Мойка${st.wash ? " (машина грязная)" : ""}</td><td class="n">${fmt(st.wash)}</td></tr>
+    <tr><td>Топливо${st.fuel ? ` (${Math.round(st.fuel / t.fuel_kzt_per_l)} л × ${t.fuel_kzt_per_l} ₸)` : ""}</td><td class="n">${fmt(st.fuel)}</td></tr>
+    <tr class="big"><td>Итого к удержанию</td><td class="n">${fmt(st.total)}</td></tr></tbody>`;
+  $("rRefund").innerHTML = `<div class="back"><b>${tenge(st.refund)}</b><span>вернуть клиенту из депозита ${tenge(st.deposit)}</span></div>
+    <div class="${st.due ? "due" : ""}"><b>${tenge(st.due)}</b><span>${st.due ? "доплатить клиенту сверх депозита" : "доплаты нет"}</span></div>`;
+  $("rTerms").innerHTML = (st.insurance_case ? "<b style='color:var(--severe)'>Ремонт дороже порога — предложить страховой случай (КАСКО).</b> " : "") +
+    `Тарифы: лимит ${t.km_per_day} км/сут., ${t.extra_km_kzt} ₸ за км сверх лимита, мойка и депозит — по условиям проката. Цена топлива — пример. Всё настраивается.`;
+  const nums = rc.defects.map((d,i) => d.is_new ? `№${i+1} ${d.name.toLowerCase()} (${d.location})` : null).filter(Boolean);
+  $("rMsg").innerHTML = `<div class="msg in" style="max-width:100%">Здравствуйте, ${esc(rc.client)}! Спасибо, что выбрали нас.\nПри возврате ${esc(rc.car.make)} ${esc(rc.car.model)} (${esc(rc.car.vin_or_plate)}) обнаружены новые повреждения:\n${nums.map(x => "• " + esc(x)).join("\n")}\n\nФото при выдаче и при возврате — во вложении.\nК удержанию: <b>${tenge(st.total)}</b>. Вернём из депозита: <b>${tenge(st.refund)}</b>${st.due ? `, доплата: <b>${tenge(st.due)}</b>` : ""}.</div>`;
+  $("rAct").innerHTML = `<tbody>
+    <tr><td>Автомобиль</td><td>${esc(rc.car.make)} ${esc(rc.car.model)} ${rc.car.year}, ${esc(rc.car.vin_or_plate)}</td></tr>
+    <tr><td>Арендатор</td><td>${esc(rc.client)} (пример)</td></tr>
+    <tr><td>Выдача / возврат</td><td>${esc(rc.when_out)} → ${esc(rc.when_in)}</td></tr>
+    <tr><td>Пробег</td><td class="num">${fmt(rc.km_out)} → ${fmt(rc.km_in)} км</td></tr>
+    <tr><td>Фото</td><td>27 ракурсов при выдаче и при возврате, с отметками</td></tr>
+    <tr><td>Подписи</td><td>Арендатор ________ · Сотрудник ________</td></tr></tbody>`;
+}
+
 function renderAll(){ renderTabs(); renderStage(); renderVerdict(); renderSideNotes(); renderChats(); renderSheet(); renderParts(); }
-renderAll(); renderCharts(); renderCost(); renderPanel();
+renderAll(); renderCharts(); renderCost(); renderPanel(); renderRental();
 if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
 </script>

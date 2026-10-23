@@ -74,18 +74,32 @@ def _wheel(uid: str, cx: float, cy: float, r: float = 52, worn: bool = False) ->
 # ---------------- Виды ----------------
 
 
-def side(uid: str, color: str, mirror: bool = False, damage: str = "", worn_front: bool = False) -> str:
+SEDAN_BODY = ("M95 330 C85 300 90 282 110 276 L245 258 C270 252 290 248 305 244 L380 186 C400 176 430 172 470 172 "
+              "L560 174 C590 176 610 186 630 204 L668 240 L720 246 C735 250 742 262 740 285 L738 320 C736 334 728 338 715 338 "
+              "L648 338 A58 58 0 0 0 532 338 L268 338 A58 58 0 0 0 152 338 L120 338 C100 338 95 336 95 330 Z")
+SEDAN_GLASS = "M318 246 L388 194 C405 186 430 182 470 182 L552 184 C578 186 596 196 612 210 L640 240 Z"
+# Кроссовер/внедорожник (Lixiang, Zeekr): выше, крыша до самой кормы
+SUV_BODY = ("M90 330 C82 296 88 270 112 262 L250 246 C276 240 296 236 312 230 L372 160 C388 148 410 144 440 144 "
+            "L640 146 C676 148 700 158 714 176 L732 214 C744 236 746 262 744 290 L742 322 C740 336 732 340 718 340 "
+            "L652 340 A60 60 0 0 0 532 340 L268 340 A60 60 0 0 0 148 340 L118 340 C98 340 90 338 90 330 Z")
+SUV_GLASS = "M326 234 L382 170 C396 160 414 156 440 156 L636 158 C664 160 684 168 696 184 L712 222 Z"
+
+
+def side(uid: str, color: str, mirror: bool = False, damage: str = "", worn_front: bool = False,
+         body_type: str = "sedan") -> str:
     dark, light = _shade(color, 0.72), _shade(color, 1.25)
+    suv = body_type == "suv"
     body = f"""
 <defs><linearGradient id="paint{uid}" x1="0" y1="0" x2="0" y2="1">
   <stop offset="0" stop-color="{light}"/><stop offset="0.45" stop-color="{color}"/><stop offset="1" stop-color="{dark}"/>
 </linearGradient></defs>
 <ellipse cx="400" cy="388" rx="330" ry="16" fill="#000" opacity="0.28"/>
 <g {'transform="translate(800 0) scale(-1 1)"' if mirror else ''}>
-<path d="M95 330 C85 300 90 282 110 276 L245 258 C270 252 290 248 305 244 L380 186 C400 176 430 172 470 172 L560 174 C590 176 610 186 630 204 L668 240 L720 246 C735 250 742 262 740 285 L738 320 C736 334 728 338 715 338 L648 338 A58 58 0 0 0 532 338 L268 338 A58 58 0 0 0 152 338 L120 338 C100 338 95 336 95 330 Z"
+<path d="{SUV_BODY if suv else SEDAN_BODY}"
   fill="url(#paint{uid})" stroke="{dark}" stroke-width="2"/>
-<path d="M318 246 L388 194 C405 186 430 182 470 182 L552 184 C578 186 596 196 612 210 L640 240 Z" fill="url(#glass{uid})"/>
-<rect x="470" y="182" width="11" height="62" fill="{dark}"/>
+<path d="{SUV_GLASS if suv else SEDAN_GLASS}" fill="url(#glass{uid})"/>
+<rect x="470" y="{156 if suv else 182}" width="11" height="{76 if suv else 62}" fill="{dark}"/>
+{'<rect x="590" y="157" width="10" height="70" fill="' + dark + '"/><path d="M372 150 L700 150" stroke="#2a2e31" stroke-width="4" stroke-linecap="round"/>' if suv else ''}
 <path d="M330 250 L326 334 M478 248 L478 336 M625 245 L632 334" stroke="{dark}" stroke-width="2.2" fill="none"/>
 <path d="M112 292 C300 286 560 282 736 284" stroke="{light}" stroke-width="2" fill="none" opacity="0.8"/>
 <rect x="430" y="262" width="30" height="7" rx="3.5" fill="{dark}"/>
