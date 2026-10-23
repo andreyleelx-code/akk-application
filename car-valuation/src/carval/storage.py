@@ -20,6 +20,7 @@ class Storage(Protocol):
     async def load_photo(self, key: str) -> bytes: ...
     async def save_report(self, report: Report) -> None: ...
     async def get_report(self, report_id: str) -> Report | None: ...
+    async def find_latest(self, plate: str, kind: str) -> Report | None: ...
 
 
 class LocalStorage:
@@ -47,6 +48,15 @@ class LocalStorage:
         if not path.exists():
             return None
         return Report.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+    async def find_latest(self, plate: str, kind: str) -> Report | None:
+        found = [
+            r for r in (Report.model_validate_json(p.read_text(encoding="utf-8"))
+                        for p in (self.root / "reports").glob("*.json"))
+            if r.kind == kind and r.car.vin_or_plate == plate
+        ]
+        return max(found, key=lambda r: r.created_at) if found else None
 
 
 class SupabaseStorage:
@@ -83,6 +93,14 @@ class SupabaseStorage:
     async def get_report(self, report_id: str) -> Report | None:
         res = await asyncio.to_thread(
             lambda: self.client.table("reports").select("payload").eq("id", report_id).execute()
+        )
+        return Report.model_validate(res.data[0]["payload"]) if res.data else None
+
+
+    async def find_latest(self, plate: str, kind: str) -> Report | None:
+        res = await asyncio.to_thread(
+            lambda: self.client.table("reports").select("payload").eq("vin_or_plate", plate)
+            .eq("payload->>kind", kind).order("created_at", desc=True).limit(1).execute()
         )
         return Report.model_validate(res.data[0]["payload"]) if res.data else None
 

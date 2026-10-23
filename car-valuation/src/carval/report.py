@@ -67,6 +67,27 @@ def render(report: Report, catalog: Catalog) -> str:
                 f"{money(opt.total)}{days}" + (f", вариантов: {len(d.options)}" if len(d.options) > 1 else "")
             )
 
+    st = report.settlement
+    if report.kind == "handover" and report.rental:
+        lines += ["", f"<b>Выдача:</b> {escape(report.rental.client)}, депозит {money(report.rental.deposit)}",
+                  "Все повреждения выше зафиксированы при выдаче и клиенту не выставляются."]
+    if st:
+        new_n = {d.id: i for i, d in enumerate(report.defects, 1)}
+        nums = ", ".join(f"№{new_n[x]}" for x in st.new_defect_ids if x in new_n) or "нет"
+        lines += ["", "<b>Расчёт при возврате</b>",
+                  f"Новые повреждения: {nums} (было при выдаче: {len(st.known_defect_ids)})",
+                  f"Ремонт новых повреждений: {money(st.repair)}"]
+        if st.extra_km:
+            lines.append(f"Перепробег {st.extra_km} км: {money(st.extra_km_cost)}")
+        if st.wash:
+            lines.append(f"Мойка: {money(st.wash)}")
+        if st.fuel:
+            lines.append(f"Топливо: {money(st.fuel)}")
+        lines.append(f"<b>Итого: {money(st.total)}</b> · депозит {money(st.deposit)}")
+        lines.append(f"Вернуть клиенту: {money(st.refund)}" + (f" · доплатить: {money(st.due)}" if st.due else ""))
+        if st.insurance_case:
+            lines.append("⚠️ Ремонт дорогой — предложить оформить страховой случай (КАСКО)")
+
     if report.not_assessable:
         lines += ["", "<b>Проверить инструментом:</b>"]
         lines += [f"• {escape(n)}" for n in report.not_assessable]

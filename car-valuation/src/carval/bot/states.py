@@ -6,6 +6,7 @@ class NewCase(StatesGroup):
     make_model = State()
     year = State()
     mileage = State()
+    rental = State()  # прокат: клиент и депозит / состояние при возврате
     photos = State()
 
 

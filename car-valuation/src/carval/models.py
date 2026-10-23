@@ -170,9 +170,43 @@ class PriceEstimate(BaseModel):
     currency: str = "KZT"
 
 
+class RentalInfo(BaseModel):
+    """Данные аренды: заполняются при выдаче, дополняются при возврате."""
+
+    client: str = ""
+    deposit: int = 0
+    days: int = 1
+    body: Literal["sedan", "crossover", "suv"] = "sedan"
+    km_out: int | None = None
+    km_in: int | None = None
+    dirty: bool = False
+    fuel_missing_l: float = 0
+    handover_report_id: str | None = None  # у возврата — ссылка на акт выдачи
+
+
+class Settlement(BaseModel):
+    """Расчёт с арендатором при возврате."""
+
+    new_defect_ids: list[str] = Field(default_factory=list)
+    known_defect_ids: list[str] = Field(default_factory=list)
+    repair: int = 0
+    wash: int = 0
+    extra_km: int = 0
+    extra_km_cost: int = 0
+    fuel: int = 0
+    total: int = 0
+    deposit: int = 0
+    refund: int = 0  # вернуть клиенту из депозита
+    due: int = 0  # доплатить сверх депозита
+    insurance_case: bool = False  # предложить оформить через страховку
+
+
 class Report(BaseModel):
     id: str = Field(default_factory=lambda: uuid4().hex[:12])
+    kind: Literal["buyback", "handover", "return"] = "buyback"
     car: Car
+    rental: RentalInfo | None = None
+    settlement: Settlement | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     photos: list[Photo] = Field(default_factory=list)
     missing_angles: list[str] = Field(default_factory=list)

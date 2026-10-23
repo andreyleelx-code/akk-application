@@ -26,7 +26,8 @@ from ..annotate import annotate, defects_by_photo
 from ..catalog import Catalog
 from ..checklist import next_angle
 from ..llm import LLM, LLMError
-from ..models import Car, DefectStatus, Photo, Report
+from ..models import Car, DefectStatus, Photo, RentalInfo, Report
+from ..rental import load_terms, settle
 from ..pipeline.run import analyze, refresh, reprice
 from ..report import render
 from ..settings import Settings
@@ -40,7 +41,8 @@ router = Router()
 HELP = (
     "Я помогаю оценщику: веду по чек-листу съёмки, ищу видимые дефекты "
     "и считаю диапазон цены.\n\n"
-    "/new — новая оценка\n/cancel — отменить\n\n"
+    "/new — оценка при выкупе\n/vydacha — осмотр при выдаче в прокат\n"
+    "/vozvrat — осмотр при возврате (сравню с выдачей и посчитаю удержание)\n/cancel — отменить\n\n"
     "Я второй взгляд, а не замена оценщику: финальное решение всегда за человеком."
 )
 
@@ -72,11 +74,29 @@ async def cmd_cancel(message: Message, state: FSMContext) -> None:
 # ---------- 1. Карточка автомобиля ----------
 
 
+KIND_TITLE = {"buyback": "Оценка при выкупе", "handover": "Выдача в прокат", "return": "Возврат из проката"}
+
+
+async def start_case(message: Message, state: FSMContext, kind: str) -> None:
+    await state.clear()
+    await state.update_data(kind=kind)
+    await state.set_state(NewCase.vin)
+    await message.answer(f"{KIND_TITLE[kind]}.\nГосномер или VIN:", reply_markup=ReplyKeyboardRemove())
+
+
 @router.message(Command("new"))
 async def cmd_new(message: Message, state: FSMContext) -> None:
-    await state.clear()
-    await state.set_state(NewCase.vin)
-    await message.answer("VIN или госномер:", reply_markup=ReplyKeyboardRemove())
+    await start_case(message, state, "buyback")
+
+
+@router.message(Command("vydacha"))
+async def cmd_handover(message: Message, state: FSMContext) -> None:
+    await start_case(message, state, "handover")
+
+
+@router.message(Command("vozvrat"))
+async def cmd_return(message: Message, state: FSMContext) -> None:
+    await start_case(message, state, "return")
 
 
 @router.message(NewCase.vin, F.text)
@@ -115,6 +135,42 @@ async def got_mileage(message: Message, state: FSMContext, catalog: Catalog) -> 
         await message.answer("Пробег числом, например 120000")
         return
     await state.update_data(mileage=int(text), case_id=uuid4().hex[:12], photos=[], skipped=[])
+    kind = (await state.get_data()).get("kind", "buyback")
+    if kind == "handover":
+        await state.set_state(NewCase.rental)
+        await message.answer("Клиент, депозит и кузов через запятую.\n"
+                             "Например: Иванов А., 50000, кроссовер (кузов: седан / кроссовер / внедорожник)")
+        return
+    if kind == "return":
+        await state.set_state(NewCase.rental)
+        await message.answer("Грязная ли машина и сколько литров топлива не хватает?\nНапример: да, 10  или  нет, 0")
+        return
+    await begin_shooting(message, state, catalog)
+
+
+BODY = {"седан": "sedan", "кроссовер": "crossover", "внедорожник": "suv"}
+
+
+@router.message(NewCase.rental, F.text)
+async def got_rental(message: Message, state: FSMContext, catalog: Catalog) -> None:
+    data = await state.get_data()
+    parts = [p.strip() for p in message.text.split(",")]
+    if data["kind"] == "handover":
+        deposit = int(parts[1].replace(" ", "")) if len(parts) > 1 and parts[1].replace(" ", "").isdigit() else 0
+        body = BODY.get(parts[2].lower(), "sedan") if len(parts) > 2 else "sedan"
+        info = RentalInfo(client=parts[0], deposit=deposit, body=body, km_out=data["mileage"])
+    else:
+        dirty = parts[0].lower().startswith("д")
+        try:
+            fuel = float(parts[1].replace(",", ".")) if len(parts) > 1 else 0
+        except ValueError:
+            fuel = 0
+        info = RentalInfo(dirty=dirty, fuel_missing_l=fuel, km_in=data["mileage"])
+    await state.update_data(rental=info.model_dump())
+    await begin_shooting(message, state, catalog)
+
+
+async def begin_shooting(message: Message, state: FSMContext, catalog: Catalog) -> None:
     await state.set_state(NewCase.photos)
     await message.answer(
         "Начинаем съёмку. Снимайте при хорошем свете, без бликов, вся деталь в кадре. "
@@ -209,6 +265,17 @@ async def finish_shooting(message: Message, state: FSMContext, catalog: Catalog,
         log.exception("analyze failed")
         await message.answer(f"Не удалось построить отчёт: {e}. Фото сохранены, попробуйте позже.")
         return
+    report.kind = data.get("kind", "buyback")
+    if data.get("rental"):
+        report.rental = RentalInfo(**data["rental"])
+    if report.kind == "return":
+        handover = await repo.find_latest(car.vin_or_plate, "handover")
+        if handover is None:
+            await message.answer("Акт выдачи этой машины не найден: новые повреждения выделить не получится, "
+                                 "покажу все найденные.")
+        else:
+            report.rental.handover_report_id = handover.id
+            report.settlement = settle(report, handover, catalog, load_terms(settings))
     await repo.save_report(report)
     await send_annotated(message, report, repo)
     await message.answer(render(report, catalog), reply_markup=report_kb(report))
