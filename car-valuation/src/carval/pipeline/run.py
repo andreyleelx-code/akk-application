@@ -24,7 +24,7 @@ async def analyze(
     storage: Storage,
     settings: Settings,
 ) -> Report:
-    report = Report(car=car)
+    report = Report(car=car, photos=photos)
     report.missing_angles = [a.id for a in missing_required(catalog.angles, photos)]
 
     data = {p.angle_id: await storage.load_photo(p.storage_key) for p in photos}

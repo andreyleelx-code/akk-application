@@ -17,12 +17,16 @@ from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
+from aiogram.types import (
+    BufferedInputFile, CallbackQuery, InputMediaPhoto, Message, ReplyKeyboardRemove,
+)
+
+from ..annotate import annotate, defects_by_photo
 
 from ..catalog import Catalog
 from ..checklist import next_angle
 from ..llm import LLM, LLMError
-from ..models import Car, DefectStatus, Photo
+from ..models import Car, DefectStatus, Photo, Report
 from ..pipeline.run import analyze, refresh, reprice
 from ..report import render
 from ..settings import Settings
@@ -206,7 +210,25 @@ async def finish_shooting(message: Message, state: FSMContext, catalog: Catalog,
         await message.answer(f"Не удалось построить отчёт: {e}. Фото сохранены, попробуйте позже.")
         return
     await repo.save_report(report)
+    await send_annotated(message, report, repo)
     await message.answer(render(report, catalog), reply_markup=report_kb(report))
+
+
+async def send_annotated(message: Message, report: Report, repo: Storage) -> None:
+    """Фото с рамками дефектов: номер на фото = номер в отчёте."""
+    keys = {p.angle_id: p.storage_key for p in report.photos}
+    media = []
+    for angle_id, items in defects_by_photo(report).items():
+        if angle_id not in keys:
+            continue
+        marked = annotate(await repo.load_photo(keys[angle_id]), items)
+        caption = ", ".join(f"№{n}" for n, _ in items) + f" — {angle_id}"
+        media.append(InputMediaPhoto(media=BufferedInputFile(marked, f"{angle_id}.jpg"), caption=caption))
+    for i in range(0, len(media), 10):  # Telegram: до 10 фото в альбоме
+        try:
+            await message.answer_media_group(media[i : i + 10])
+        except TelegramAPIError:
+            log.exception("cannot send annotated photos")
 
 
 # ---------- 4. Правки оценщика ----------

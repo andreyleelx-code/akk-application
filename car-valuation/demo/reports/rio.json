@@ -1,0 +1,158 @@
+{
+  "id": "demo-rio",
+  "car": {
+    "vin_or_plate": "102 KRA 05",
+    "make": "Kia",
+    "model": "Rio",
+    "year": 2016,
+    "mileage_km": 160000
+  },
+  "created_at": "2026-10-23T08:40:16.464859Z",
+  "photos": [
+    {
+      "angle_id": "front",
+      "storage_key": "cars/rio/front.jpg",
+      "media_type": "image/jpeg"
+    },
+    {
+      "angle_id": "left",
+      "storage_key": "cars/rio/left.jpg",
+      "media_type": "image/jpeg"
+    },
+    {
+      "angle_id": "right",
+      "storage_key": "cars/rio/right.jpg",
+      "media_type": "image/jpeg"
+    },
+    {
+      "angle_id": "rear",
+      "storage_key": "cars/rio/rear.jpg",
+      "media_type": "image/jpeg"
+    }
+  ],
+  "missing_angles": [],
+  "photo_issues": [],
+  "defects": [
+    {
+      "zone": "body",
+      "code": "dent",
+      "severity": "severe",
+      "angle_id": "right",
+      "location": "правое переднее крыло над аркой",
+      "description": "Глубокая вмятина с заломом металла",
+      "confidence": 0.9,
+      "box": [
+        0.6125,
+        0.5689,
+        0.1375,
+        0.1467
+      ],
+      "status": "confirmed",
+      "id": "cc89adbd"
+    },
+    {
+      "zone": "body",
+      "code": "panel_gap",
+      "severity": "severe",
+      "angle_id": "front",
+      "location": "зазор капот — левое крыло",
+      "description": "Зазор шире с одной стороны",
+      "confidence": 0.64,
+      "box": [
+        0.21,
+        0.4711,
+        0.1825,
+        0.0756
+      ],
+      "status": "pending",
+      "id": "c9a7d207"
+    },
+    {
+      "zone": "body",
+      "code": "rust",
+      "severity": "moderate",
+      "angle_id": "left",
+      "location": "задняя арка и порог слева",
+      "description": "Очаги коррозии",
+      "confidence": 0.87,
+      "box": [
+        0.765,
+        0.6756,
+        0.0875,
+        0.1156
+      ],
+      "status": "confirmed",
+      "id": "f8022d6c"
+    },
+    {
+      "zone": "glass_lights",
+      "code": "light_crack",
+      "severity": "moderate",
+      "angle_id": "rear",
+      "location": "правый задний фонарь",
+      "description": "Трещина корпуса фонаря",
+      "confidence": 0.8,
+      "box": [
+        0.6575,
+        0.52,
+        0.075,
+        0.0889
+      ],
+      "status": "pending",
+      "id": "ce2cd61d"
+    },
+    {
+      "zone": "body",
+      "code": "scratch",
+      "severity": "moderate",
+      "angle_id": "right",
+      "location": "правая задняя дверь",
+      "description": "Глубокая царапина до грунта ~40 см",
+      "confidence": 0.76,
+      "box": [
+        0.2225,
+        0.6356,
+        0.175,
+        0.0667
+      ],
+      "status": "pending",
+      "id": "75f476a1"
+    }
+  ],
+  "not_assessable": [
+    "Геометрия кузова после возможного ДТП — проверка на стапеле",
+    "Пробег 160 000 км: износ салона сверить с одометром"
+  ],
+  "estimate": {
+    "comparables_count": 6,
+    "market_low": 5500000,
+    "market_median": 5950000,
+    "market_high": 6175000,
+    "repair_cost": 345000,
+    "offer_low": 5155000,
+    "offer_high": 5605000,
+    "currency": "KZT"
+  },
+  "review": {
+    "findings": [
+      {
+        "defect_id": null,
+        "note": "Неровный зазор капота и серьёзная вмятина правого крыла — вероятно ДТП, проверьте лонжероны."
+      },
+      {
+        "defect_id": null,
+        "note": "Зазор капота найден с уверенностью 64%, но сильно влияет на цену — подтвердите вручную."
+      },
+      {
+        "defect_id": null,
+        "note": "Вычет на ремонт ~7% рыночной цены: проверьте прайс на крыло."
+      }
+    ],
+    "overall_confidence": 0.55,
+    "summary": "Признаки ДТП в передней части. Отчёт нельзя утверждать без осмотра."
+  },
+  "manual_notes": [],
+  "needs_manual_review": true,
+  "approved_price": null,
+  "approved_by": null
+}

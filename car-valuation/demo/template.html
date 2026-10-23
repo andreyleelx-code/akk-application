@@ -1,0 +1,871 @@
+<title>Второй взгляд оценщика</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Onest:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Макет: левое оглавление + лента разделов, как папка осмотра — титульный лист, демо, акт, расчёты, инструкции */
+:root{
+  --bg:#f3f5f6; --paper:#ffffff; --ink:#15212a; --muted:#5b6a75; --line:#d9e0e4; --soft:#e9eef1;
+  --accent:#0b6e7f; --accent-ink:#ffffff; --accent-soft:#dcefF2;
+  --minor:#d9a300; --moderate:#e5670f; --severe:#d62828; --ok:#1f8a4c; --rej:#8b959c;
+  --tg-bg:#dfe7ec; --tg-in:#ffffff; --tg-out:#e2f5d9; --tg-bar:#517da2;
+  --sheet:#fffdf8;
+  --display:"Onest","Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --body:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f161b; --paper:#162129; --ink:#e4ecf0; --muted:#97a7b2; --line:#2a3943; --soft:#1c2a33;
+  --accent:#3fb3c5; --accent-ink:#06232a; --accent-soft:#163a42;
+  --minor:#f2c230; --moderate:#ff8a3d; --severe:#ff5a5a; --ok:#4cc27e; --rej:#7a868e;
+  --tg-bg:#0e1621; --tg-in:#182533; --tg-out:#2b5278; --tg-bar:#17212b; --sheet:#1b252c;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f161b; --paper:#162129; --ink:#e4ecf0; --muted:#97a7b2; --line:#2a3943; --soft:#1c2a33;
+  --accent:#3fb3c5; --accent-ink:#06232a; --accent-soft:#163a42;
+  --minor:#f2c230; --moderate:#ff8a3d; --severe:#ff5a5a; --ok:#4cc27e; --rej:#7a868e;
+  --tg-bg:#0e1621; --tg-in:#182533; --tg-out:#2b5278; --tg-bar:#17212b; --sheet:#1b252c;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h2{font-size:clamp(24px,3vw,32px);font-weight:700;letter-spacing:-.01em}
+h3{font-size:18px;font-weight:600}
+p{margin:0;max-width:68ch}
+a{color:var(--accent)}
+.num,td.n,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:40px;max-width:1320px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 80px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;display:flex;flex-direction:column;gap:2px;font-size:14px}
+nav.toc .brand{font-family:var(--display);font-weight:700;font-size:16px;margin-bottom:12px;line-height:1.25}
+nav.toc .brand small{display:block;font:500 12px var(--body);color:var(--muted);margin-top:4px}
+nav.toc a{color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:8px;display:flex;gap:10px}
+nav.toc a span{font-family:var(--mono);font-size:12px;color:var(--line);min-width:18px;padding-top:1px}
+nav.toc a:hover,nav.toc a.on{background:var(--soft);color:var(--ink)}
+nav.toc a.on span{color:var(--accent)}
+main{min-width:0;display:flex;flex-direction:column;gap:72px}
+section{display:flex;flex-direction:column;gap:20px;scroll-margin-top:20px}
+.eyebrow{font:600 12px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--accent)}
+.lead{font-size:17px;color:var(--muted)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tag{width:fit-content;display:inline-flex;align-items:center;gap:6px;font:600 12px var(--body);padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.tag.demo{background:color-mix(in srgb,var(--minor) 18%,transparent);color:var(--ink)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 12px var(--body);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--soft)}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;white-space:nowrap}
+tr.total td{font-weight:700;background:var(--soft)}
+.note{font-size:13px;color:var(--muted)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Титул */
+.hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;align-items:end}
+.hero h1{font-size:clamp(34px,5vw,56px);font-weight:800;letter-spacing:-.025em}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.fact{border-top:3px solid var(--accent);padding-top:10px}
+.fact b{display:block;font:700 24px var(--display)}
+.fact span{font-size:13px;color:var(--muted)}
+.promise{border-left:4px solid var(--accent);padding:14px 18px;background:var(--paper);border-radius:0 12px 12px 0;font-size:16px}
+
+/* Конвейер */
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;counter-reset:st}
+.step{position:relative;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.step:not(:last-child)::after{content:"";position:absolute;right:-10px;top:28px;border:6px solid transparent;border-left:8px solid var(--accent);z-index:1}
+.step .k{font:600 12px var(--mono);color:var(--accent)}
+.step b{font-family:var(--display);font-size:15px}
+.step p{font-size:13px;color:var(--muted)}
+.step .who{margin-top:auto;font-size:12px}
+.step.human{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.step.human p,.step.human .k{color:inherit;opacity:.85}
+
+/* Демо */
+.cars{display:flex;gap:8px;flex-wrap:wrap}
+.cars button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;padding:10px 14px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.cars button small{color:var(--muted);font-size:12px}
+.cars button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.demo{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+.viewer{display:flex;flex-direction:column;gap:10px;position:sticky;top:20px}
+.stage{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#9a9d9f;aspect-ratio:16/9}
+.stage>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage .lbl{position:absolute;left:10px;top:10px;font:600 12px var(--body);background:rgba(10,20,26,.72);color:#fff;padding:4px 9px;border-radius:6px}
+.boxes rect{fill:none;stroke-width:3.5;transition:stroke-width .15s}
+.boxes g{cursor:pointer}
+.boxes g.dim{opacity:.25}
+.boxes g.hl rect{stroke-width:6}
+.boxes g.rej rect{stroke-dasharray:8 6}
+.thumbs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.thumb{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;padding:0;background:var(--paper);aspect-ratio:16/9}
+.thumb svg{width:100%;height:100%;display:block}
+.thumb[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:-3px}
+.thumb .cnt{position:absolute;right:5px;top:5px;font:700 11px var(--body);background:var(--severe);color:#fff;border-radius:999px;padding:1px 7px}
+.thumb .ttl{position:absolute;left:0;right:0;bottom:0;font-size:11px;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.65));padding:10px 6px 3px}
+.story{font-size:14px;color:var(--muted)}
+.verdict{display:flex;flex-direction:column;gap:12px}
+.verdict .flag{display:flex;align-items:center;gap:8px;font:600 13px var(--body);padding:8px 12px;border-radius:10px}
+.flag.warn{background:color-mix(in srgb,var(--severe) 14%,transparent);color:var(--severe)}
+.flag.good{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.offer{font:800 clamp(24px,3vw,30px) var(--display);letter-spacing:-.01em}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;text-align:right;font-family:var(--mono)}
+.trust{height:8px;border-radius:99px;background:var(--soft);overflow:hidden}
+.trust i{display:block;height:100%;background:var(--accent)}
+.dlist{display:flex;flex-direction:column}
+.drow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;padding:10px 4px;border-top:1px solid var(--line);align-items:start;cursor:pointer}
+.drow:hover,.drow.hl{background:var(--soft)}
+.drow .no{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font:700 12px var(--body)}
+.drow .t{font-weight:600;font-size:14px}
+.drow .s{font-size:12px;color:var(--muted)}
+.drow.rej .t{text-decoration:line-through;color:var(--muted)}
+.conf{display:inline-flex;align-items:center;gap:6px;font:500 12px var(--mono)}
+.conf i{display:inline-block;width:46px;height:5px;border-radius:9px;background:var(--soft);position:relative;overflow:hidden}
+.conf i b{position:absolute;inset:0 auto 0 0;background:var(--muted)}
+.acts{display:flex;gap:4px;align-items:center}
+.acts .cost{font:500 12px var(--mono);color:var(--muted);margin-right:6px;white-space:nowrap}
+.acts button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font-weight:700}
+.acts button.on.y{background:var(--ok);border-color:var(--ok);color:#fff}
+.acts button.on.n{background:var(--rej);border-color:var(--rej);color:#fff}
+.side-notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.side-notes ul{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:6px}
+.sev{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+
+/* Telegram */
+.phones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.phone{border-radius:28px;border:8px solid #1d2329;background:var(--tg-bg);overflow:hidden;display:flex;flex-direction:column;max-width:420px;width:100%;justify-self:center;height:720px}
+.phone header{background:var(--tg-bar);color:#fff;padding:12px 14px;display:flex;gap:10px;align-items:center}
+.phone header .av{width:36px;height:36px;border-radius:50%;background:#7fb3d5;display:grid;place-items:center;font-weight:700;color:#0b2a3a}
+.phone header small{display:block;opacity:.75;font-size:12px}
+.chat{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.msg{max-width:86%;padding:7px 10px;border-radius:12px;line-height:1.4;box-shadow:0 1px 1px rgba(0,0,0,.08);white-space:pre-line;overflow-wrap:anywhere}
+.msg.in{background:var(--tg-in);align-self:flex-start;border-bottom-left-radius:4px}
+.msg.out{background:var(--tg-out);align-self:flex-end;border-bottom-right-radius:4px}
+.msg.photo{padding:3px;width:62%}
+.msg.photo img,.msg.photo svg{width:100%;height:auto;display:block;border-radius:9px}
+.msg .cap{font-size:12px;padding:4px 6px 2px;white-space:normal}
+.album{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;width:86%}
+.album img{width:100%;display:block;border-radius:6px}
+.kb{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;max-width:86%;align-self:flex-start;width:86%}
+.kb span{background:color-mix(in srgb,var(--tg-in) 70%,transparent);border-radius:8px;text-align:center;padding:6px 2px;font-size:12px;font-weight:600}
+.kb span.w2{grid-column:span 2}.kb span.w4{grid-column:span 4}
+.sys{align-self:center;font-size:12px;background:rgba(0,0,0,.18);color:#fff;padding:3px 10px;border-radius:99px}
+
+/* Акт */
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:clamp(18px,4vw,44px);display:flex;flex-direction:column;gap:22px;box-shadow:0 10px 30px -18px rgba(0,0,0,.35)}
+.sheet .hdr{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:12px}
+.sheet h3{font-size:15px;text-transform:uppercase;letter-spacing:.06em}
+.strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.strip figure{margin:0;font-size:11px;color:var(--muted)}
+.strip img{width:100%;border-radius:4px;display:block;border:1px solid var(--line)}
+.formula{font-family:var(--mono);font-size:13px;background:var(--soft);padding:12px 14px;border-radius:8px;overflow-x:auto;white-space:pre}
+.sign{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;font-size:13px}
+.sign div{border-top:1px solid var(--ink);padding-top:6px;color:var(--muted)}
+
+/* Сводка */
+.kpi{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpi b{display:block;font:700 26px var(--display)}
+.kpi span{font-size:13px;color:var(--muted)}
+.kpi em{font-style:normal;font-size:12px;color:var(--ok);font-weight:600}
+.chart-wrap{overflow-x:auto}
+.chart-wrap svg text{fill:var(--muted);font:12px var(--body)}
+
+/* Стоимость */
+.calc{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px;align-items:start}
+.field{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.field input,.field select{font:500 15px var(--mono);padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);width:100%}
+.fields{display:flex;flex-direction:column;gap:12px}
+.big{font:800 28px var(--display)}
+.result-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+
+/* План */
+.timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;position:relative}
+.timeline::before{content:"";position:absolute;left:0;right:0;top:15px;height:3px;background:var(--line)}
+.tl{position:relative;padding:36px 12px 0 0;display:flex;flex-direction:column;gap:4px}
+.tl::before{content:"";position:absolute;top:7px;left:0;width:19px;height:19px;border-radius:50%;background:var(--paper);border:3px solid var(--accent)}
+.tl.gate::before{background:var(--accent)}
+.tl b{font-family:var(--display)}
+.tl .when{font:600 12px var(--mono);color:var(--accent)}
+.tl p{font-size:13px;color:var(--muted)}
+
+/* Инструкция */
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:10px}
+ol.steps>li{counter-increment:s;display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px}
+ol.steps>li::before{content:counter(s);width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font:700 14px var(--display)}
+ol.steps li div{display:flex;flex-direction:column;gap:6px;min-width:0}
+code,pre{font-family:var(--mono);font-size:13px}
+pre{background:var(--soft);padding:12px 14px;border-radius:8px;overflow-x:auto;margin:0}
+code{background:var(--soft);padding:1px 5px;border-radius:4px}
+pre code{background:none;padding:0}
+.checks{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.checks label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.checks input{margin-top:4px;accent-color:var(--accent)}
+.tree{white-space:pre;font-family:var(--mono);font-size:13px;line-height:1.6}
+
+@media (max-width:1080px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:24px}
+  nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;flex-direction:row;overflow-x:auto;background:var(--bg);padding-block:8px;margin-inline:-4px}
+  nav.toc .brand{display:none}
+  nav.toc a{white-space:nowrap}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+  .demo,.hero,.calc{grid-template-columns:minmax(0,1fr)}
+  .viewer{position:static}
+  .flow{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .step::after{display:none}
+}
+@media (max-width:720px){
+  .grid2,.grid3,.phones,.side-notes,.result-grid,.sign{grid-template-columns:minmax(0,1fr)}
+  .grid4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .facts{grid-template-columns:minmax(0,1fr)}
+  .timeline{grid-template-columns:minmax(0,1fr)}
+  .timeline::before{left:8px;right:auto;width:3px;top:0;bottom:0;height:auto}
+  .tl{padding:0 0 18px 36px}.tl::before{top:2px}
+  .thumbs{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .phone{height:620px}
+}
+@media print{
+  nav.toc,.cars,.no-print{display:none!important}
+  .layout{display:block;padding:0}
+  body{background:#fff}
+  section:not(#act){display:none}
+  .sheet{box-shadow:none;border:0}
+}
+</style>
+
+<div class="layout">
+<nav class="toc" id="toc" aria-label="Разделы">
+  <div class="brand">Второй взгляд оценщика<small>ИИ-помощник для выкупа авто · демо</small></div>
+  <a href="#top"><span>01</span>Суть</a>
+  <a href="#how"><span>02</span>Как работает</a>
+  <a href="#demo"><span>03</span>Демо: оценка</a>
+  <a href="#telegram"><span>04</span>Бот в Telegram</a>
+  <a href="#act"><span>05</span>Акт оценки</a>
+  <a href="#summary"><span>06</span>Сводка руководству</a>
+  <a href="#cost"><span>07</span>Стоимость</a>
+  <a href="#plan"><span>08</span>План и сроки</a>
+  <a href="#setup"><span>09</span>Инструкция</a>
+  <a href="#limits"><span>10</span>Границы и риски</a>
+  <a href="#questions"><span>11</span>Вопросы к встрече</a>
+  <a href="#tech"><span>12</span>Техническая часть</a>
+</nav>
+
+<main>
+
+<!-- 01 -->
+<section id="top">
+  <div class="hero">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <span class="tag demo">Демо на примерах · цифры и фото условные</span>
+      <h1>ИИ осматривает каждую машину <em>второй раз</em> и не пропускает зоны</h1>
+      <p class="lead">Оценщик снимает машину по подсказкам бота в Telegram. Через 1–3 минуты получает список дефектов с отметками на фото и расчёт цены. Цену утверждает старший оценщик.</p>
+    </div>
+    <div class="facts">
+      <div class="fact"><b>1–3 мин</b><span>от последнего фото до отчёта</span></div>
+      <div class="fact"><b id="factCost">~400 ₸</b><span>расход на ИИ за одну машину</span></div>
+      <div class="fact"><b>100%</b><span>решений принимает человек</span></div>
+    </div>
+  </div>
+  <div class="promise">Мы не обещаем ИИ, который не ошибается. Мы даём <b>второй взгляд, который не устаёт</b>: он проверяет каждую зону на каждой машине и показывает оценщику, куда посмотреть ещё раз.</div>
+  <div class="grid3">
+    <div class="card"><h3>Проблема</h3><p class="note" style="margin-top:6px">Сотни фото за день, спешка. Пропущенный дефект — прямой убыток, и его списывают на конкретного сотрудника.</p></div>
+    <div class="card"><h3>Что меняется</h3><p class="note" style="margin-top:6px">Бот не даёт пропустить ракурс, ИИ размечает видимые дефекты, цена считается по прайсу компании. Ошибки ловятся до сделки.</p></div>
+    <div class="card"><h3>Что не меняется</h3><p class="note" style="margin-top:6px">Толщиномер, OBD-сканер и проверка по VIN остаются. Скрытые дефекты по фото не видны никому, в том числе ИИ.</p></div>
+  </div>
+</section>
+
+<!-- 02 -->
+<section id="how">
+  <div class="eyebrow">Как работает</div>
+  <h2>Пять шагов, человек в конце</h2>
+  <p class="lead">Это не десять автономных агентов, а конвейер: каждый шаг делает одну работу. Деньги считает обычная формула, а не ИИ, поэтому любую цифру можно проверить.</p>
+  <div class="flow">
+    <div class="step"><span class="k">Шаг 1</span><b>Контроль съёмки</b><p>27 ракурсов по чек-листу. Размытое или тёмное фото бот просит переснять.</p><span class="who tag">Код + Claude Haiku</span></div>
+    <div class="step"><span class="k">Шаг 2</span><b>Дефектоскопы</b><p>Пять зон параллельно: кузов, стёкла и оптика, колёса, салон, подкапотное.</p><span class="who tag">Claude Opus</span></div>
+    <div class="step"><span class="k">Шаг 3</span><b>Расчёт цены</b><p>Медиана аналогов минус ремонт по прайсу компании.</p><span class="who tag">Формула</span></div>
+    <div class="step"><span class="k">Шаг 4</span><b>Ревьюер</b><p>Ищет противоречия и признаки ДТП, помечает неуверенные находки.</p><span class="who tag">Claude Opus</span></div>
+    <div class="step human"><span class="k">Шаг 5</span><b>Человек</b><p>Оценщик подтверждает дефекты и вносит замеры. Старший утверждает цену.</p><span class="who">Оценщик и старший</span></div>
+  </div>
+</section>
+
+<!-- 03 -->
+<section id="demo">
+  <div class="eyebrow">Демо · веб-панель</div>
+  <h2>Так программа показывает дефекты</h2>
+  <p class="lead">Выберите машину. Наведите курсор на дефект или нажмите на рамку на фото. Кнопками ✓ и ✕ подтвердите или отклоните находку, и цена пересчитается.</p>
+  <div class="cars" id="carTabs" role="group" aria-label="Машина"></div>
+  <p class="story" id="story"></p>
+  <div class="demo">
+    <div class="viewer">
+      <div class="stage" id="stage"></div>
+      <div class="thumbs" id="thumbs"></div>
+      <div class="legend">
+        <span><i class="sev" style="background:var(--minor)"></i>лёгкий</span>
+        <span><i class="sev" style="background:var(--moderate)"></i>средний</span>
+        <span><i class="sev" style="background:var(--severe)"></i>серьёзный</span>
+        <span>пунктир — отклонён оценщиком</span>
+      </div>
+      <p class="note">Иллюстрации машин нарисованы для показа. В работе здесь будут фото с площадки, рамки рисует та же программа. Показаны 4–5 ключевых ракурсов из 27.</p>
+    </div>
+    <div class="card verdict" id="verdict"></div>
+  </div>
+  <div class="side-notes" id="sideNotes"></div>
+</section>
+
+<!-- 04 -->
+<section id="telegram">
+  <div class="eyebrow">Бот в Telegram</div>
+  <h2>Как бот общается с оценщиком и со старшим</h2>
+  <p class="lead">Слева телефон оценщика на площадке, справа телефон старшего оценщика. Переписка построена по машине, выбранной в демо. Текст отчёта сформирован кодом бота.</p>
+  <div class="phones">
+    <div class="phone" aria-label="Чат оценщика"><header><div class="av">ИИ</div><div><b>Оценка авто</b><small>бот · оценщик Ерлан</small></div></header><div class="chat" id="chatA"></div></div>
+    <div class="phone" aria-label="Чат старшего оценщика"><header><div class="av">ИИ</div><div><b>Оценка авто</b><small>бот · старший оценщик Айгерим</small></div></header><div class="chat" id="chatB"></div></div>
+  </div>
+</section>
+
+<!-- 05 -->
+<section id="act">
+  <div class="eyebrow">Документ</div>
+  <h2>Акт оценки</h2>
+  <p class="lead no-print">Итоговый документ по машине: дефекты с фото, расчёт по аналогам, замеры и подписи. Если открыть этот файл на компьютере, акт печатается в PDF через Ctrl+P.</p>
+  <div class="sheet" id="sheet"></div>
+</section>
+
+<!-- 06 -->
+<section id="summary">
+  <div class="eyebrow">Для руководства</div>
+  <h2>Сводка за неделю</h2>
+  <p class="lead">Главная цифра для владельца: насколько оценка расходится с реальной ценой продажи и сколько дефектов поймано до сделки.</p>
+  <span class="tag demo">Пример данных</span>
+  <div class="grid4">
+    <div class="kpi"><b>54</b><span>оценок за неделю</span></div>
+    <div class="kpi"><b>2,1 мин</b><span>среднее время отчёта</span></div>
+    <div class="kpi"><b>81%</b><span>находок ИИ подтвердили люди</span></div>
+    <div class="kpi"><b>17</b><span>дефектов, которые человек сначала пропустил</span></div>
+  </div>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+    <h3>Оценка против реальной продажи</h3>
+    <p class="note">Для каждой сделки: полоса — диапазон, который предложила система, точка — цена, за которую машину потом продали. Всё в процентах от середины диапазона. Точка внутри полосы значит, что оценка верна.</p>
+    <div class="chart-wrap" id="chartAcc"></div>
+  </div>
+  <div class="grid2">
+    <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3>Где находят дефекты</h3><div id="chartZones"></div></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3>Разбор расхождений</h3>
+      <div class="tbl-wrap"><table><thead><tr><th>Машина</th><th>Что случилось</th><th class="n">Δ, ₸</th></tr></thead><tbody>
+        <tr><td>Nissan Qashqai 2017</td><td>Перекрас двери не виден на фото, толщиномер не применили</td><td class="n">−380 000</td></tr>
+        <tr><td>Kia Sportage 2019</td><td>ИИ отметил ржавчину на пороге, оценщик отклонил — зря</td><td class="n">−210 000</td></tr>
+        <tr><td>Toyota RAV4 2018</td><td>Мало аналогов, диапазон оказался широким</td><td class="n">+150 000</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- 07 -->
+<section id="cost">
+  <div class="eyebrow">Деньги</div>
+  <h2>Сколько стоит запуск и работа</h2>
+  <p class="lead">Все поля можно менять прямо на встрече. Тарифы указаны по прайсам поставщиков на октябрь 2026, курс условный.</p>
+
+  <div class="calc">
+    <div class="card fields">
+      <div class="field"><label for="inCars">Машин в день</label><input id="inCars" type="number" min="1" value="10"></div>
+      <div class="field"><label for="inDays">Рабочих дней в месяц</label><input id="inDays" type="number" min="1" max="31" value="26"></div>
+      <div class="field"><label for="inPhotos">Фото на машину</label><input id="inPhotos" type="number" min="10" value="50"></div>
+      <div class="field"><label for="inModel">Модель для дефектов</label>
+        <select id="inModel"><option value="opus">Claude Opus 5.5 (рекомендуем)</option><option value="fable">Claude Fable 5.1 (максимум)</option></select></div>
+      <div class="field"><label for="inRate">Курс, ₸ за $1</label><input id="inRate" type="number" min="1" value="500"></div>
+      <div class="field"><label for="inFee">Абонентская плата заказчика, ₸/мес</label><input id="inFee" type="number" min="0" step="10000" value="200000"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <div class="result-grid">
+        <div class="kpi"><b id="rCar">—</b><span>ИИ на одну машину</span></div>
+        <div class="kpi"><b id="rMonth">—</b><span>все расходы в месяц</span></div>
+        <div class="kpi"><b id="rMargin">—</b><span>остаётся вам из абонентки</span></div>
+      </div>
+      <div class="tbl-wrap"><table id="tMonth"></table></div>
+      <div class="tbl-wrap"><table id="tCar"></table></div>
+      <p class="note">Как считали: одно фото из Telegram (1280×960) ≈ 1 600 токенов. Контроль съёмки идёт на дешёвой модели Haiku. Дефектоскопы по 5 зонам и ревьюер идут на выбранной модели, с запасом на «размышления» модели. Точную цифру покажет прогон на 10 реальных машинах.</p>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <h3>Разово на запуск</h3>
+      <div class="tbl-wrap"><table><thead><tr><th>Что</th><th>Кто платит</th><th class="n">Сумма</th></tr></thead><tbody>
+        <tr><td>Пополнение Claude API для тестов на прошлых сделках</td><td>Заказчик</td><td class="n">$20 ≈ 10 000 ₸</td></tr>
+        <tr><td>Сервер (VPS) на первый месяц</td><td>Заказчик</td><td class="n">$8 ≈ 4 000 ₸</td></tr>
+        <tr><td>Telegram-бот, Supabase (старт), админ-панель</td><td>—</td><td class="n">0 ₸</td></tr>
+        <tr><td>Толщиномер, если его нет</td><td>Заказчик</td><td class="n">30–80 тыс. ₸</td></tr>
+        <tr class="total"><td>Итого прямых расходов</td><td></td><td class="n">~15 000 ₸</td></tr>
+      </tbody></table></div>
+      <p class="note">Ваша работа в эти расходы не входит, она стоит в договоре отдельно.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <h3>Что предложить заказчику</h3>
+      <div class="tbl-wrap"><table><thead><tr><th>Этап</th><th>Формат</th><th class="n">Ориентир</th></tr></thead><tbody>
+        <tr><td>Тест на прошлых сделках</td><td>Бесплатно, 3–5 дней: показываем, что поймал ИИ</td><td class="n">0 ₸</td></tr>
+        <tr><td>Пилот 2–4 недели</td><td>Фикс: настройка, бот, обучение, разбор расхождений</td><td class="n">150–300 тыс. ₸</td></tr>
+        <tr><td>Работа после пилота</td><td>Абонентская плата: поддержка, калибровка, доработки</td><td class="n">100–250 тыс. ₸/мес</td></tr>
+        <tr><td>Вариант</td><td>Оплата за оценку</td><td class="n">1 500–3 000 ₸ / машина</td></tr>
+      </tbody></table></div>
+      <p class="note">Расходы на ИИ и сервер платит заказчик напрямую со своих аккаунтов. Так у вас чистая позиция, а у них нет привязки к вам.</p>
+    </div>
+  </div>
+
+  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+    <h3>Окупаемость для заказчика</h3>
+    <p class="note">Гипотеза: точные доли проверим на их прошлых сделках. Число машин берётся из калькулятора выше.</p>
+    <div class="grid3">
+      <div class="field"><label for="inMiss">Доля машин с пропущенным дефектом, %</label><input id="inMiss" type="number" min="0" max="100" value="8"></div>
+      <div class="field"><label for="inLoss">Средний убыток от пропуска, ₸</label><input id="inLoss" type="number" min="0" step="10000" value="250000"></div>
+      <div class="field"><label for="inCatch">Какую долю поймает система, %</label><input id="inCatch" type="number" min="0" max="100" value="50"></div>
+    </div>
+    <div class="result-grid">
+      <div class="kpi"><b id="rSave">—</b><span>предотвращённый убыток в месяц</span></div>
+      <div class="kpi"><b id="rSpend">—</b><span>стоимость системы в месяц (расходы + абонентка)</span></div>
+      <div class="kpi"><b id="rRoi">—</b><span>на 1 ₸ затрат</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 -->
+<section id="plan">
+  <div class="eyebrow">План</div>
+  <h2>От встречи до работающей системы — около месяца</h2>
+  <div class="timeline">
+    <div class="tl"><span class="when">Суббота</span><b>Разведка</b><p>Процесс, цена ошибок, объёмы. Забираем 20–50 прошлых сделок, прайс и чек-лист.</p></div>
+    <div class="tl"><span class="when">+3–5 дней</span><b>Тест на их машинах</b><p>Прогон по прошлым сделкам: что поймал ИИ, что пропустил, ошибка цены.</p></div>
+    <div class="tl gate"><span class="when">Решение</span><b>Показ результата</b><p>Цифры по их кейсам. Решают, идти ли в пилот.</p></div>
+    <div class="tl"><span class="when">2 недели</span><b>Пилот</b><p>Бот работает параллельно с оценщиками, расхождения разбираем каждый день.</p></div>
+    <div class="tl gate"><span class="when">Договор</span><b>Передача</b><p>Аккаунты заказчика, документация, видеоинструкция, поддержка.</p></div>
+  </div>
+</section>
+
+<!-- 09 -->
+<section id="setup">
+  <div class="eyebrow">Инструкция</div>
+  <h2>Как собрать и запустить</h2>
+  <p class="lead">Всё создаётся на аккаунтах заказчика. Вам остаётся роль администратора по договору. Полный запуск занимает около двух часов.</p>
+  <ol class="steps">
+    <li><div><b>Telegram-бот · 5 минут</b><p class="note">В Telegram найти @BotFather → <code>/newbot</code> → имя бота. Получить токен вида <code>123456:ABC…</code>. Бота лучше создать с телефона заказчика.</p></div></li>
+    <li><div><b>Ключ Claude API · 10 минут</b><p class="note">console.anthropic.com → организация заказчика → Billing: пополнить $20 → API Keys: создать ключ. Вас пригласить участником.</p></div></li>
+    <li><div><b>Сервер · 20 минут</b><p class="note">VPS в Казахстане или СНГ: 1 ядро, 2 ГБ, Ubuntu 24.04, ~$8/мес. Фото могут содержать персональные данные, поэтому сервер лучше держать ближе.</p></div></li>
+    <li><div><b>База Supabase · 15 минут</b><p class="note">supabase.com → новый проект в аккаунте заказчика → SQL Editor → выполнить файл <code>supabase/migrations/0001_init.sql</code>. Скопировать URL и service_role ключ.</p></div></li>
+    <li><div><b>Установка программы · 15 минут</b>
+<pre><code>git clone https://github.com/andreyleelx-code/akk-application
+cd akk-application/car-valuation
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -e ".[dev]"
+cp .env.example .env    # вписать токен, ключ, Supabase
+pytest                  # проверка: всё зелёное</code></pre></div></li>
+    <li><div><b>Настройки компании · 30 минут</b><p class="note">Прайс ремонта → <code>config/repair_prices.csv</code>. Цены аналогов → <code>config/comparables.csv</code>. Порядок ракурсов → <code>config/checklist.yaml</code>. Telegram ID старших → <code>SENIOR_APPRAISER_IDS</code> в <code>.env</code>.</p></div></li>
+    <li><div><b>Запуск · 5 минут</b><pre><code>python -m carval.bot.main</code></pre><p class="note">Для постоянной работы бот ставится службой (systemd), чтобы сам перезапускался.</p></div></li>
+    <li><div><b>Калибровка · по ходу</b><p class="note">Прошлые сделки положить в <code>data/cases/</code> и запустить <code>python -m carval.backtest</code>. Отчёт покажет пропуски, лишние находки и ошибку цены. По нему правятся промпты и прайс.</p></div></li>
+  </ol>
+  <div class="grid2">
+    <div class="card" style="display:flex;flex-direction:column;gap:8px"><h3>Памятка оценщику</h3>
+      <ul class="checks">
+        <li>• <code>/new</code> → номер, марка и модель, год, пробег</li>
+        <li>• Снимайте по подсказке. Без бликов, вся деталь в кадре</li>
+        <li>• Лучше отправлять фото как файл: так нет сжатия</li>
+        <li>• По каждой находке нажмите ✓ или ✕</li>
+        <li>• Замеры толщиномера и OBD внесите кнопкой «Замер / OBD»</li>
+        <li>• Нажмите «Старшему», когда всё проверено</li>
+      </ul></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px"><h3>Памятка старшему</h3>
+      <ul class="checks">
+        <li>• Отчёт приходит, когда все находки проверены</li>
+        <li>• Красная пометка «Проверить вручную» — смотрите машину сами</li>
+        <li>• «Утвердить цену» → введите итоговую сумму</li>
+        <li>• Утверждённая цена и автор сохраняются в истории</li>
+        <li>• После продажи внесите цену продажи: так считается точность</li>
+      </ul></div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section id="limits">
+  <div class="eyebrow">Честно о границах</div>
+  <h2>Что ИИ видит, а что нет</h2>
+  <div class="tbl-wrap"><table><thead><tr><th>Видит хорошо</th><th>Видит средне (зависит от света)</th><th>По фото не видит никто</th></tr></thead><tbody>
+    <tr><td>Вмятины, царапины, сколы</td><td>Разнотон краски</td><td>Шпатлёвка под краской → толщиномер</td></tr>
+    <tr><td>Трещины стёкол и фар</td><td>Неровные зазоры панелей</td><td>Скрутка пробега → OBD, история по VIN</td></tr>
+    <tr><td>Износ шин, повреждения дисков</td><td>Мелкие царапины на грязной машине</td><td>Двигатель и коробка → OBD, тест-драйв</td></tr>
+    <tr><td>Пропущенные ракурсы (почти без ошибок)</td><td>Салон в тёмном гараже</td><td>Скрытая геометрия кузова → стапель</td></tr>
+  </tbody></table></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Риск</th><th>Что делаем</th></tr></thead><tbody>
+    <tr><td><b>Ответственность за ошибку</b></td><td>В договоре: система вспомогательная, решение за оценщиком. В программе цену утверждает только старший.</td></tr>
+    <tr><td><b>Плохие фото</b></td><td>Правила съёмки, бот просит переснять размытые и тёмные фото.</td></tr>
+    <tr><td><b>Ложные находки</b></td><td>Кнопка ✕ у каждой находки, еженедельный разбор, калибровка промптов.</td></tr>
+    <tr><td><b>Сотрудники против</b></td><td>Подаём как защиту от несправедливых штрафов, а не как контроль.</td></tr>
+    <tr><td><b>Зависимость от разработчика</b></td><td>Все аккаунты на заказчике, документация и резервные копии у них.</td></tr>
+    <tr><td><b>Утечка цен и сделок</b></td><td>Данные только в их Supabase. Фото в закрытом хранилище, доступ по ролям.</td></tr>
+  </tbody></table></div>
+</section>
+
+<!-- 11 -->
+<section id="questions">
+  <div class="eyebrow">Суббота</div>
+  <h2>Что спросить и что забрать</h2>
+  <div class="grid2">
+    <div class="card"><h3 style="margin-bottom:10px">Вопросы</h3><ul class="checks" id="qList"></ul></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3>Забрать со встречи</h3>
+      <ul class="checks">
+        <li><label><input type="checkbox" id="g1">20–50 прошлых сделок: фото, оценка, итоговая цена. Лучше с известными «промахами»</label></li>
+        <li><label><input type="checkbox" id="g2">Их чек-лист осмотра</label></li>
+        <li><label><input type="checkbox" id="g3">Прайс на ремонт и запчасти</label></li>
+        <li><label><input type="checkbox" id="g4">Откуда берут цены аналогов</label></li>
+        <li><label><input type="checkbox" id="g5">Контакт старшего оценщика</label></li>
+      </ul>
+      <p class="note">Ничего не обещаем по точности до теста на их машинах.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section id="tech">
+  <div class="eyebrow">Для технической стороны</div>
+  <h2>Из чего собрано</h2>
+  <div class="tbl-wrap"><table><thead><tr><th>Слой</th><th>Решение</th><th>Зачем так</th></tr></thead><tbody>
+    <tr><td>Интерфейс оценщика</td><td>Telegram-бот (aiogram 3)</td><td>Работает на любом телефоне, ничего не надо устанавливать</td></tr>
+    <tr><td>Анализ фото</td><td>Claude Opus 5.5 (vision), структурированный ответ</td><td>Сильная модель, ответ сразу проверяется по схеме</td></tr>
+    <tr><td>Контроль съёмки</td><td>Claude Haiku 5.5</td><td>Дешёвая быстрая проверка размытости и бликов</td></tr>
+    <tr><td>Расчёт цены</td><td>Python-формула по аналогам и прайсу</td><td>Деньги считает прозрачная формула, а не ИИ</td></tr>
+    <tr><td>База и фото</td><td>Supabase: Postgres + закрытое хранилище</td><td>Готовая база с бэкапами и правами доступа</td></tr>
+    <tr><td>Панель руководства</td><td>Appsmith или ToolJet поверх Supabase</td><td>Собирается без программирования за 1–2 дня</td></tr>
+    <tr><td>Интеграции</td><td>n8n (после пилота)</td><td>CRM, уведомления, обновление аналогов</td></tr>
+  </tbody></table></div>
+  <div class="grid2">
+    <div class="card" style="display:flex;flex-direction:column;gap:8px;min-width:0"><h3>Структура проекта</h3>
+<div class="tree" style="overflow-x:auto">car-valuation/
+├─ demo/          эта страница и примеры машин
+├─ docs/          документация по разделам
+├─ config/        чек-лист, дефекты, прайс, аналоги
+├─ prompts/       тексты заданий для ИИ
+├─ src/carval/
+│  ├─ bot/        Telegram-бот
+│  ├─ pipeline/   шаги конвейера
+│  ├─ pricing.py  расчёт цены
+│  ├─ annotate.py рамки на фото
+│  └─ backtest.py калибровка
+├─ supabase/      схема базы
+└─ tests/         проверки без интернета</div></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px;min-width:0"><h3>Что хранится по каждой оценке</h3>
+      <div class="tbl-wrap"><table><thead><tr><th>Поле</th><th>Пример</th></tr></thead><tbody>
+        <tr><td>Машина</td><td>Toyota Camry 2018, 110 000 км</td></tr>
+        <tr><td>Фото</td><td>27 ракурсов в закрытом хранилище</td></tr>
+        <tr><td>Дефект</td><td>зона, тип, степень, фото, рамка, уверенность, статус</td></tr>
+        <tr><td>Расчёт</td><td>аналоги, рынок, ремонт, диапазон</td></tr>
+        <tr><td>Замеры</td><td>толщиномер, OBD, VIN</td></tr>
+        <tr><td>Решение</td><td>кто и какую цену утвердил</td></tr>
+        <tr><td>Итог продажи</td><td>цена продажи и что всплыло позже</td></tr>
+      </tbody></table></div></div>
+  </div>
+  <p class="note">Код: github.com/andreyleelx-code/akk-application, папка <code>car-valuation</code>. Страница собирается командой <code>python demo/build.py</code>.</p>
+</section>
+
+</main>
+</div>
+
+<script>
+const DATA = /*__DEMO_DATA__*/null;
+const SEV = {minor:"var(--minor)", moderate:"var(--moderate)", severe:"var(--severe)"};
+const SEV_RU = {minor:"лёгкий", moderate:"средний", severe:"серьёзный"};
+const fmt = n => Math.round(n).toLocaleString("ru-RU").replace(/,/g," ");
+const tenge = n => fmt(n) + "\u00a0₸";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const $ = id => document.getElementById(id);
+
+const state = {car:0, view:null, hl:null, status: DATA.map(c => c.defects.map(d => d.status))};
+
+/* ---------- расчёт: та же формула, что в pricing.py ---------- */
+function calc(ci){
+  const c = DATA[ci], st = state.status[ci];
+  const active = c.defects.filter((d,i) => st[i] !== "rejected");
+  const repair = active.reduce((s,d) => s + d.cost, 0);
+  const e = c.estimate;
+  return {repair, low: Math.max(e.market_low - repair, 0), high: Math.max(e.market_median - repair, 0),
+          manual: manualRule(ci)};
+}
+/* пример правила «проверить вручную» (в программе — decision.py) */
+function manualRule(ci){
+  const c = DATA[ci], st = state.status[ci];
+  const serious = c.defects.some((d,i) => d.severity === "severe" && st[i] !== "rejected");
+  const unsure = c.defects.some((d,i) => st[i] === "pending" && d.confidence < 0.6);
+  const lowTrust = c.review && c.review.overall_confidence < 0.7;
+  return serious || unsure || lowTrust;
+}
+const numberOf = (ci, di) => di + 1;
+
+/* ---------- демо ---------- */
+function renderTabs(){
+  $("carTabs").innerHTML = DATA.map((c,i) =>
+    `<button type="button" aria-pressed="${i===state.car}" data-i="${i}"><b>${esc(c.car.make)} ${esc(c.car.model)}</b><small>${c.car.year} · ${fmt(c.car.mileage_km)} км · ${c.defects.length} находок</small></button>`).join("");
+  $("carTabs").querySelectorAll("button").forEach(b => b.onclick = () => { state.car = +b.dataset.i; state.view = null; state.hl = null; renderAll(); });
+}
+function renderStage(){
+  const c = DATA[state.car];
+  if (!state.view) state.view = (c.defects[0] || {}).angle_id || c.views[0].angle;
+  const v = c.views.find(x => x.angle === state.view) || c.views[0];
+  const st = state.status[state.car];
+  const boxes = c.defects.map((d,i) => ({d,i})).filter(x => x.d.angle_id === v.angle && x.d.box).map(({d,i}) => {
+    const [x,y,w,h] = d.box.map((n,k) => n * (k % 2 ? 450 : 800));
+    const cls = [st[i]==="rejected"?"rej":"", state.hl===i?"hl":"", state.hl!==null && state.hl!==i?"dim":""].join(" ");
+    const col = st[i]==="rejected" ? "var(--rej)" : SEV[d.severity];
+    return `<g class="${cls}" data-i="${i}"><title>${esc(d.name)}: ${esc(d.location)}</title>
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" style="stroke:${col}"/>
+      <circle cx="${x}" cy="${y}" r="14" style="fill:${col}" stroke="#fff" stroke-width="2"/>
+      <text x="${x}" y="${y+5}" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="Golos Text, Arial, sans-serif">${i+1}</text></g>`;
+  }).join("");
+  $("stage").innerHTML = v.svg + `<svg class="boxes" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet">${boxes}</svg><span class="lbl">${esc(v.title)}</span>`;
+  $("stage").querySelectorAll(".boxes g").forEach(g => {
+    g.onmouseenter = () => setHl(+g.dataset.i); g.onmouseleave = () => setHl(null);
+    g.onclick = () => document.querySelector(`.drow[data-i="${g.dataset.i}"]`)?.scrollIntoView({block:"nearest", behavior:"smooth"});
+  });
+  $("thumbs").innerHTML = c.views.map(v2 => {
+    const n = c.defects.filter((d,i) => d.angle_id === v2.angle && st[i] !== "rejected").length;
+    return `<button type="button" class="thumb" aria-pressed="${v2.angle===v.angle}" data-a="${v2.angle}" aria-label="${esc(v2.title)}">${v2.svg}${n?`<span class="cnt">${n}</span>`:""}<span class="ttl">${esc(v2.title)}</span></button>`;
+  }).join("");
+  $("thumbs").querySelectorAll(".thumb").forEach(b => b.onclick = () => { state.view = b.dataset.a; renderStage(); });
+}
+function setHl(i){
+  state.hl = i;
+  if (i !== null){ const d = DATA[state.car].defects[i]; if (d.angle_id !== state.view){ state.view = d.angle_id; } }
+  renderStage();
+  document.querySelectorAll(".drow").forEach(r => r.classList.toggle("hl", +r.dataset.i === i));
+}
+function renderVerdict(){
+  const c = DATA[state.car], r = calc(state.car), e = c.estimate, st = state.status[state.car];
+  const pending = st.filter(s => s === "pending").length;
+  const trust = c.review ? Math.round(c.review.overall_confidence * 100) : null;
+  $("verdict").innerHTML = `
+    <div class="flag ${r.manual?"warn":"good"}">${r.manual?"⚠ Проверить вручную":"✓ Можно утверждать по отчёту"}</div>
+    <div><div class="note">Предложение по выкупу</div><div class="offer num">${tenge(r.low)} – ${tenge(r.high)}</div></div>
+    <dl class="kv">
+      <dt>Рынок (${e.comparables_count} аналогов)</dt><dd>${tenge(e.market_low)} – ${tenge(e.market_high)}</dd>
+      <dt>Медиана рынка</dt><dd>${tenge(e.market_median)}</dd>
+      <dt>Вычет на ремонт</dt><dd>− ${tenge(r.repair)}</dd>
+      <dt>Ждут решения</dt><dd>${pending} из ${c.defects.length}</dd>
+    </dl>
+    ${trust!==null?`<div><div class="note" style="display:flex;justify-content:space-between"><span>Уверенность отчёта</span><span class="num">${trust}%</span></div><div class="trust"><i style="width:${trust}%"></i></div></div>`:""}
+    <div class="dlist">${c.defects.map((d,i) => {
+      const s = st[i], col = s==="rejected" ? "var(--rej)" : SEV[d.severity];
+      return `<div class="drow ${s==="rejected"?"rej":""} ${state.hl===i?"hl":""}" data-i="${i}">
+        <span class="no" style="background:${col}">${i+1}</span>
+        <div style="min-width:0"><div class="t">${esc(d.name)}</div>
+          <div class="s">${esc(d.location)} · ${SEV_RU[d.severity]}</div>
+          <span class="conf" title="Уверенность ИИ"><i><b style="width:${d.confidence*100}%"></b></i>${Math.round(d.confidence*100)}%</span></div>
+        <div class="acts"><span class="cost">${d.cost?"− "+fmt(d.cost):"инфо"}</span>
+          <button type="button" class="y ${s==="confirmed"?"on":""}" data-i="${i}" data-s="confirmed" aria-label="Подтвердить">✓</button>
+          <button type="button" class="n ${s==="rejected"?"on":""}" data-i="${i}" data-s="rejected" aria-label="Отклонить">✕</button></div></div>`;
+    }).join("")}</div>`;
+  $("verdict").querySelectorAll(".drow").forEach(row => {
+    row.onmouseenter = () => setHl(+row.dataset.i); row.onmouseleave = () => setHl(null);
+  });
+  $("verdict").querySelectorAll(".acts button").forEach(b => b.onclick = ev => {
+    ev.stopPropagation();
+    const i = +b.dataset.i, arr = state.status[state.car];
+    arr[i] = arr[i] === b.dataset.s ? "pending" : b.dataset.s;
+    renderVerdict(); renderStage(); renderChats(); renderSheet();
+  });
+}
+function renderSideNotes(){
+  const c = DATA[state.car];
+  const list = a => a.length ? `<ul>${a.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<p class="note">—</p>`;
+  $("sideNotes").innerHTML = `
+    <div class="card"><h3 style="margin-bottom:8px">Проверить инструментом</h3>${list(c.not_assessable)}</div>
+    <div class="card"><h3 style="margin-bottom:8px">Замеры оценщика</h3>${list(c.manual_notes)}</div>
+    <div class="card"><h3 style="margin-bottom:8px">Ревьюер</h3>${c.review?`<p style="font-size:14px;margin-bottom:8px">${esc(c.review.summary)}</p>${list(c.review.findings.map(f => f.note))}`:""}</div>`;
+  $("story").textContent = c.story;
+}
+
+/* ---------- Telegram ---------- */
+function tgReport(ci){
+  // текст из report.py, пересобираем строку цены по текущим решениям
+  const c = DATA[ci], r = calc(ci);
+  let t = c.telegram_text;
+  t = t.replace(/<b>Предложение:[^<]*<\/b>/, `<b>Предложение: ${tenge(r.low)} – ${tenge(r.high)}</b>`);
+  t = t.replace(/Вычет на ремонт: [^\n]*/, `Вычет на ремонт: ${tenge(r.repair)}`);
+  t = t.replace("⚠️ <b>Проверить вручную</b>\n", "");
+  if (r.manual) t = t.replace(/(\n\n)/, "\n\n⚠️ <b>Проверить вручную</b>\n");
+  t = t.replace(/\n{3,}/g, "\n\n");
+  const st = state.status[ci], marks = {pending:"❔", confirmed:"✅", rejected:"❌"};
+  t = t.replace(/^(❔|✅|❌|✍️) (\d+)\./gm, (m, _, n) => `${marks[st[n-1]]} ${n}.`);
+  return t;
+}
+function renderChats(){
+  const ci = state.car, c = DATA[ci], r = calc(ci);
+  const v = a => (c.views.find(x => x.angle === a) || {}).svg || "";
+  const marked = Object.entries(c.marked);
+  const kbDefects = c.defects.map((d,i) => `<span>✅ ${i+1}</span><span>❌ ${i+1}</span>`).join("");
+  const approved = Math.round((r.low + (r.high - r.low) * 0.4) / 10000) * 10000;
+  $("chatA").innerHTML = `
+    <div class="sys">сегодня</div>
+    <div class="msg out">/new</div>
+    <div class="msg in">VIN или госномер:</div>
+    <div class="msg out">${esc(c.car.vin_or_plate)}</div>
+    <div class="msg in">Марка и модель (например: Toyota Camry):</div>
+    <div class="msg out">${esc(c.car.make)} ${esc(c.car.model)}</div>
+    <div class="msg in">Год выпуска:</div><div class="msg out">${c.car.year}</div>
+    <div class="msg in">Пробег, км:</div><div class="msg out">${c.car.mileage_km}</div>
+    <div class="msg in">📷 1/27: Спереди, прямо, вся машина в кадре</div>
+    <div class="msg out photo">${v("front")}</div>
+    <div class="msg in">📷 2/27: Спереди-слева под 45°</div>
+    <div class="sys">… ещё 24 ракурса …</div>
+    <div class="msg in">Переснять [rear_left]: блик на двери — снимите под другим углом к солнцу</div>
+    <div class="msg out photo">${v("left")}</div>
+    <div class="msg out">Готово</div>
+    <div class="msg in">⏳ Анализирую фото, это займёт 1–3 минуты…</div>
+    <div class="album">${marked.map(([a,src]) => `<img src="${src}" alt="Фото ${esc(a)} с отмеченными дефектами">`).join("")}</div>
+    <div class="msg in">${tgReport(ci)}</div>
+    <div class="kb">${kbDefects}<span class="w2">✍️ Замер / OBD</span><span class="w2">🔄 Перепроверить</span><span class="w4">📤 Старшему</span></div>
+    ${c.manual_notes.length ? `<div class="msg out">${esc(c.manual_notes[0])}</div>` : ""}
+    <div class="msg in">Отправлено старшему оценщику ✓</div>`;
+  $("chatB").innerHTML = `
+    <div class="sys">сегодня</div>
+    <div class="msg in">${tgReport(ci)}</div>
+    <div class="kb"><span class="w4">🟢 Утвердить цену</span></div>
+    <div class="msg in">Итоговая цена выкупа, ₸:</div>
+    <div class="msg out">${fmt(approved)}</div>
+    <div class="msg in">🟢 <b>Утверждено: ${tenge(approved)}</b>\nОценщик получил уведомление. Отчёт сохранён в истории.</div>`;
+}
+
+/* ---------- Акт ---------- */
+function renderSheet(){
+  const ci = state.car, c = DATA[ci], r = calc(ci), e = c.estimate, st = state.status[ci];
+  const today = new Date().toLocaleDateString("ru-RU");
+  const marked = Object.entries(c.marked);
+  const titles = Object.fromEntries(c.views.map(v => [v.angle, v.title]));
+  $("sheet").innerHTML = `
+    <div class="hdr"><div><div class="note">ТОО «Пример Выкуп» · отдел оценки</div><h2 style="font-size:24px;margin-top:4px">Акт оценки № ${String(1040 + ci)}</h2></div>
+      <div class="note" style="text-align:right">Дата: ${today}<br>Отчёт: demo-${esc(c.id)}<br><span class="tag demo">Образец</span></div></div>
+    <div class="grid2">
+      <div><h3 style="margin-bottom:8px">Автомобиль</h3><dl class="kv" style="grid-template-columns:auto 1fr">
+        <dt>Марка, модель</dt><dd>${esc(c.car.make)} ${esc(c.car.model)}</dd>
+        <dt>Год</dt><dd>${c.car.year}</dd><dt>Пробег</dt><dd>${fmt(c.car.mileage_km)} км</dd>
+        <dt>Госномер</dt><dd>${esc(c.car.vin_or_plate)}</dd><dt>Фото</dt><dd>27 ракурсов</dd></dl></div>
+      <div><h3 style="margin-bottom:8px">Итог</h3>
+        <div class="offer num" style="font-size:24px">${tenge(r.low)} – ${tenge(r.high)}</div>
+        <p class="note" style="margin-top:6px">Диапазон цены выкупа с учётом ремонта. ${r.manual?"<b style='color:var(--severe)'>Требуется ручная проверка.</b>":"Ручная проверка не требуется."}</p></div>
+    </div>
+    <div><h3 style="margin-bottom:8px">Фото с отмеченными дефектами</h3>
+      <div class="strip">${marked.map(([a,src]) => `<figure><img src="${src}" alt=""><figcaption>${esc(titles[a]||a)}</figcaption></figure>`).join("")}</div></div>
+    <div><h3 style="margin-bottom:8px">Дефекты</h3><div class="tbl-wrap"><table>
+      <thead><tr><th>№</th><th>Дефект</th><th>Где</th><th>Степень</th><th class="n">ИИ</th><th>Решение</th><th class="n">Ремонт, ₸</th></tr></thead><tbody>
+      ${c.defects.map((d,i) => `<tr${st[i]==="rejected"?' style="color:var(--muted);text-decoration:line-through"':""}><td>${i+1}</td><td>${esc(d.name)}</td><td>${esc(d.location)}</td><td><i class="sev" style="background:${SEV[d.severity]}"></i>${SEV_RU[d.severity]}</td><td class="n">${Math.round(d.confidence*100)}%</td><td>${{pending:"ждёт",confirmed:"подтверждён",rejected:"отклонён"}[st[i]]}</td><td class="n">${st[i]==="rejected"?"—":fmt(d.cost)}</td></tr>`).join("")}
+      <tr class="total"><td colspan="6">Итого вычет на ремонт</td><td class="n">${fmt(r.repair)}</td></tr></tbody></table></div></div>
+    <div><h3 style="margin-bottom:8px">Расчёт цены</h3>
+      <div class="tbl-wrap" style="margin-bottom:10px"><table><thead><tr><th>Аналог</th><th class="n">Год</th><th class="n">Пробег, км</th><th class="n">Цена, ₸</th></tr></thead><tbody>
+        ${c.comparables.map(x => `<tr><td>${esc(x.make)} ${esc(x.model)}</td><td class="n">${x.year}</td><td class="n">${fmt(x.mileage_km)}</td><td class="n">${fmt(x.price)}</td></tr>`).join("")}</tbody></table></div>
+      <div class="formula">Рынок: нижняя четверть ${tenge(e.market_low)} · медиана ${tenge(e.market_median)} · верхняя четверть ${tenge(e.market_high)}
+Ремонт по прайсу компании: ${tenge(r.repair)}
+Нижняя граница = ${tenge(e.market_low)} − ${tenge(r.repair)} = ${tenge(r.low)}
+Верхняя граница = ${tenge(e.market_median)} − ${tenge(r.repair)} = ${tenge(r.high)}</div>
+      <p class="note" style="margin-top:6px">Маржа компании при выкупе добавляется по её внутренним правилам.</p></div>
+    <div class="grid2">
+      <div><h3 style="margin-bottom:8px">Проверено инструментом</h3><ul style="margin:0;padding-left:18px;font-size:14px">${(c.manual_notes.length?c.manual_notes:["Замеры не внесены"]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+      <div><h3 style="margin-bottom:8px">Требует проверки</h3><ul style="margin:0;padding-left:18px;font-size:14px">${c.not_assessable.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+    </div>
+    <p class="note">Отчёт подготовлен с помощью ИИ-помощника и носит вспомогательный характер. Решение о цене принимает оценщик компании.</p>
+    <div class="sign"><div>Оценщик: ____________ / Ерлан К.</div><div>Старший оценщик: ____________ / Айгерим С.</div></div>`;
+}
+
+/* ---------- Сводка: графики ---------- */
+function renderCharts(){
+  const deals = [
+    ["Camry 18",11.2,11.9,11.6],["Tucson 20",11.6,12.4,12.5],["Rio 16",5.1,5.6,5.4],["Corolla 19",8.9,9.5,9.3],
+    ["Sportage 19",10.1,10.8,10.4],["Elantra 18",6.8,7.3,7.0],["RAV4 18",12.4,13.1,13.25],["Qashqai 17",7.6,8.2,7.3],
+    ["Polo 19",5.2,5.7,5.5],["Sonata 20",10.9,11.6,11.4],["Octavia 18",7.4,7.9,7.8],["Creta 21",9.6,10.2,10.0]];
+  const W = 760, H = 300, L = 56, R = 12, T = 16, B = 46;
+  const lo = -12, hi = 12, y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+  const step = (W - L - R) / deals.length;
+  let g = "";
+  for (let v = lo; v <= hi; v += 4) g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" ${v===0?'stroke-width="2"':''}/><text x="${L-8}" y="${y(v)+4}" text-anchor="end">${v>0?"+":""}${v}%</text>`;
+  deals.forEach(([name,a,b,s],i) => {
+    const mid = (a + b) / 2, pa = (a - mid) / mid * 100, pb = (b - mid) / mid * 100, ps = (s - mid) / mid * 100;
+    const x = L + step * (i + .5), inside = s >= a && s <= b;
+    g += `<rect x="${x-11}" y="${y(pb)}" width="22" height="${y(pa)-y(pb)}" rx="5" fill="var(--accent)" opacity=".25"/>`;
+    g += `<circle cx="${x}" cy="${y(ps)}" r="6" fill="${inside?"var(--accent)":"var(--severe)"}" stroke="var(--paper)" stroke-width="2"><title>${name}: оценка ${a}–${b} млн ₸, продажа ${s} млн ₸ (${ps>0?"+":""}${ps.toFixed(1)}%)</title></circle>`;
+    if (!inside) g += `<text x="${x+10}" y="${y(ps)+4}" style="fill:var(--severe);font-weight:600">${ps>0?"+":""}${ps.toFixed(0)}%</text>`;
+    g += `<text x="${x}" y="${H-B+18}" text-anchor="middle">${name.split(" ")[0]}</text><text x="${x}" y="${H-B+32}" text-anchor="middle">${name.split(" ")[1]}</text>`;
+  });
+  $("chartAcc").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="min-width:600px" role="img" aria-label="Оценка против цены продажи по 12 сделкам">${g}</svg>
+    <p class="note">10 из 12 продаж попали в диапазон. Красные точки разобраны в таблице «Разбор расхождений».</p>`;
+  const zones = [["Кузов",96],["Колёса и шины",41],["Стёкла и оптика",33],["Салон",27],["Подкапотное",15]];
+  const max = 96;
+  $("chartZones").innerHTML = `<svg viewBox="0 0 420 ${zones.length*34}" width="100%" role="img" aria-label="Дефекты по зонам">${zones.map(([n,v],i) =>
+    `<text x="0" y="${i*34+20}">${n}</text><rect x="130" y="${i*34+7}" width="${(v/max)*240}" height="18" rx="4" fill="var(--accent)" opacity="${1 - i*0.13}"/><text x="${136+(v/max)*240}" y="${i*34+21}" style="fill:var(--ink);font-weight:600">${v}</text>`).join("")}</svg>
+    <p class="note">212 находок за неделю, примерные данные.</p>`;
+}
+
+/* ---------- Стоимость ---------- */
+const MODELS = {
+  opus:  {name:"Claude Opus 5.5", in:4, out:20},
+  fable: {name:"Claude Fable 5.1", in:10, out:50},
+  haiku: {name:"Claude Haiku 5.5", in:0.10, out:0.50},
+};
+function perCar(photos, modelKey){
+  const img = photos * 1600, m = MODELS[modelKey], h = MODELS.haiku;
+  const rows = [
+    ["Контроль съёмки", h.name, img + 1000, 1500, h],
+    ["Дефектоскопы, 5 зон", m.name, img + 5000, 20000, m],
+    ["Ревьюер", m.name, 4000, 4000, m],
+  ].map(([step, name, tin, tout, p]) => ({step, name, tin, tout, usd: tin/1e6*p.in + tout/1e6*p.out}));
+  return {rows, usd: rows.reduce((s,r) => s + r.usd, 0)};
+}
+function renderCost(){
+  const v = id => Math.max(0, +$(id).value || 0);
+  const cars = v("inCars"), days = v("inDays"), photos = v("inPhotos"), rate = v("inRate"), fee = v("inFee");
+  const model = $("inModel").value;
+  const pc = perCar(photos, model), monthCars = cars * days;
+  const api = pc.usd * monthCars;
+  const storageGb = monthCars * photos * 0.25 / 1024 * 6; // фото храним 6 месяцев
+  const supa = storageGb > 1 ? 25 : 0, vps = 8;
+  const totalUsd = api + supa + vps, total = totalUsd * rate;
+  $("rCar").textContent = tenge(pc.usd * rate);
+  $("rMonth").textContent = tenge(total);
+  $("rMargin").textContent = tenge(fee);
+  $("factCost").textContent = "~" + fmt(Math.round(perCar(50,"opus").usd * rate / 50) * 50) + " ₸";
+  $("tMonth").innerHTML = `<thead><tr><th>Расход в месяц (${fmt(monthCars)} машин)</th><th class="n">$</th><th class="n">₸</th></tr></thead><tbody>
+    <tr><td>Claude API: ${MODELS[model].name} + Haiku</td><td class="n">${api.toFixed(0)}</td><td class="n">${fmt(api*rate)}</td></tr>
+    <tr><td>Сервер VPS (бот, n8n)</td><td class="n">${vps}</td><td class="n">${fmt(vps*rate)}</td></tr>
+    <tr><td>Supabase ${supa?"Pro: фото за 6 мес ≈ "+storageGb.toFixed(0)+" ГБ":"Free: фото помещаются в 1 ГБ"}</td><td class="n">${supa}</td><td class="n">${fmt(supa*rate)}</td></tr>
+    <tr><td>Telegram, панель Appsmith</td><td class="n">0</td><td class="n">0</td></tr>
+    <tr class="total"><td>Итого расходов (платит заказчик)</td><td class="n">${totalUsd.toFixed(0)}</td><td class="n">${fmt(total)}</td></tr></tbody>`;
+  $("tCar").innerHTML = `<thead><tr><th>Одна машина, ${photos} фото</th><th>Модель</th><th class="n">Токены вход / выход</th><th class="n">₸</th></tr></thead><tbody>
+    ${pc.rows.map(r => `<tr><td>${r.step}</td><td>${r.name}</td><td class="n">${fmt(r.tin)} / ${fmt(r.tout)}</td><td class="n">${fmt(r.usd*rate)}</td></tr>`).join("")}
+    <tr class="total"><td colspan="3">Итого на машину</td><td class="n">${fmt(pc.usd*rate)}</td></tr></tbody>`;
+  const save = monthCars * v("inMiss")/100 * v("inLoss") * v("inCatch")/100;
+  const spend = total + fee;
+  $("rSave").textContent = tenge(save);
+  $("rSpend").textContent = tenge(spend);
+  $("rRoi").textContent = spend ? (save/spend).toFixed(1).replace(".",",") + " ₸" : "—";
+}
+["inCars","inDays","inPhotos","inModel","inRate","inFee","inMiss","inLoss","inCatch"].forEach(id => $(id).addEventListener("input", renderCost));
+
+/* ---------- Вопросы ---------- */
+const QUESTIONS = ["Сколько машин оценивают в день и в пиковый день?","Кто утверждает цену, есть ли старший оценщик?","Есть ли письменный чек-лист осмотра?",
+  "Какие дефекты пропускают чаще всего?","Сколько стоила последняя крупная ошибка и сколько таких в месяц?","Кто платит за ошибку сейчас?",
+  "Есть ли архив сделок с фото и ценой продажи? В каком виде?","Откуда берут цены аналогов?","Есть ли толщиномер и OBD-сканер?",
+  "Кто принимает решение о внедрении?","Готовы завести аккаунты на себя: API, Supabase, сервер?","Есть ли требования к хранению персональных данных?"];
+$("qList").innerHTML = QUESTIONS.map((q,i) => `<li><label><input type="checkbox" id="q${i}">${esc(q)}</label></li>`).join("");
+
+/* ---------- оглавление ---------- */
+const links = [...document.querySelectorAll("#toc a")];
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) links.forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id));
+}), {rootMargin:"-30% 0px -60% 0px"});
+document.querySelectorAll("main section").forEach(s => io.observe(s));
+
+function renderAll(){ renderTabs(); renderStage(); renderVerdict(); renderSideNotes(); renderChats(); renderSheet(); }
+renderAll(); renderCharts(); renderCost();
+if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+</script>

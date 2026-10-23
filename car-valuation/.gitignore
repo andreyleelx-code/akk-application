@@ -12,3 +12,6 @@ data/cases/*
 !data/cases/README.md
 config/repair_prices.csv
 config/comparables.csv
+
+# Служебная копия страницы для публикации ссылкой
+demo/.artifact.html

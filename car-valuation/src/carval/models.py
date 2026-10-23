@@ -65,6 +65,10 @@ class Defect(BaseModel):
     location: str = Field(description="Где именно: 'левое переднее крыло, над аркой'")
     description: str
     confidence: float = Field(ge=0, le=1, description="Уверенность 0..1")
+    box: list[float] | None = Field(
+        None,
+        description="Рамка дефекта на фото в долях от размера кадра: [x, y, ширина, высота], каждое 0..1",
+    )
     status: DefectStatus = DefectStatus.pending
     id: str = Field(default_factory=lambda: uuid4().hex[:8])
 
@@ -78,6 +82,10 @@ class FoundDefect(BaseModel):
     location: str
     description: str
     confidence: float = Field(ge=0, le=1)
+    box: list[float] | None = Field(
+        None,
+        description="Рамка дефекта на фото в долях от размера кадра: [x, y, ширина, высота], каждое 0..1",
+    )
 
 
 class ZoneInspection(BaseModel):
@@ -121,6 +129,7 @@ class Report(BaseModel):
     id: str = Field(default_factory=lambda: uuid4().hex[:12])
     car: Car
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    photos: list[Photo] = Field(default_factory=list)
     missing_angles: list[str] = Field(default_factory=list)
     photo_issues: list[PhotoIssue] = Field(default_factory=list)
     defects: list[Defect] = Field(default_factory=list)
