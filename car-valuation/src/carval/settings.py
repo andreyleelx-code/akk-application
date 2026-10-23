@@ -29,6 +29,13 @@ class Settings(BaseSettings):
     parts_web_search: bool = Field(True, alias="CARVAL_PARTS_WEB_SEARCH")
     city: str = Field("Алматы", alias="CARVAL_CITY")
 
+    # Голос (Yandex SpeechKit). Пусто — голос выключен.
+    yandex_api_key: str = ""
+    yandex_folder_id: str = ""
+    voice_lang: str = Field("ru-RU", alias="CARVAL_VOICE_LANG")  # kk-KK — казахский
+    voice_name: str = Field("alena", alias="CARVAL_VOICE_NAME")
+    voice_replies: bool = Field(True, alias="CARVAL_VOICE_REPLIES")
+
     config_dir: Path = PROJECT_ROOT / "config"
     prompts_dir: Path = PROJECT_ROOT / "prompts"
     data_dir: Path = PROJECT_ROOT / "data"

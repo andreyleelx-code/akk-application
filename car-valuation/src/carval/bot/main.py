@@ -13,6 +13,7 @@ from ..catalog import load_catalog
 from ..llm import LLM
 from ..settings import get_settings
 from ..storage import make_storage
+from ..voice import Voice
 from .handlers import router
 
 
@@ -30,6 +31,7 @@ async def main() -> None:
         catalog=load_catalog(settings),
         repo=make_storage(settings),
         llm=LLM(settings.anthropic_api_key),
+        voice=Voice(settings),
         settings=settings,
     )
     dp.include_router(router)

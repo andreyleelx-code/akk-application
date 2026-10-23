@@ -28,6 +28,8 @@ from ..checklist import next_angle
 from ..llm import LLM, LLMError
 from ..models import Car, DefectStatus, Photo, RentalInfo, Report
 from ..rental import load_terms, settle
+from ..voice import Voice, VoiceError, spoken_summary
+from ..models import GeoPoint
 from ..pipeline.run import analyze, refresh, reprice
 from ..report import render
 from ..settings import Settings
@@ -174,7 +176,9 @@ async def begin_shooting(message: Message, state: FSMContext, catalog: Catalog) 
     await state.set_state(NewCase.photos)
     await message.answer(
         "Начинаем съёмку. Снимайте при хорошем свете, без бликов, вся деталь в кадре. "
-        "Можно отправлять фото как файл: так качество лучше."
+        "Можно отправлять фото как файл: так качество лучше.\n\n"
+        "🎙 Замечания можно говорить голосом прямо во время съёмки.\n"
+        "📍 Отправьте геопозицию (скрепка → Геопозиция), чтобы отметить место осмотра."
     )
     await ask_next_angle(message, state, catalog)
 
@@ -202,7 +206,7 @@ async def ask_next_angle(message: Message, state: FSMContext, catalog: Catalog) 
 @router.message(NewCase.photos, F.photo | F.document)
 async def got_photo(
     message: Message, state: FSMContext, bot: Bot,
-    catalog: Catalog, repo: Storage, llm: LLM, settings: Settings,
+    catalog: Catalog, repo: Storage, llm: LLM, settings: Settings, voice: Voice,
 ) -> None:
     if message.document and not (message.document.mime_type or "").startswith("image/"):
         await message.answer("Это не изображение. Пришлите фото.")
@@ -217,12 +221,12 @@ async def got_photo(
     await state.update_data(photos=photos)
 
     if not await ask_next_angle(message, state, catalog):
-        await finish_shooting(message, state, catalog, repo, llm, settings)
+        await finish_shooting(message, state, catalog, repo, llm, settings, voice)
 
 
 @router.message(NewCase.photos, F.text == SKIP)
 async def skip_angle(message: Message, state: FSMContext, catalog: Catalog,
-                     repo: Storage, llm: LLM, settings: Settings) -> None:
+                     repo: Storage, llm: LLM, settings: Settings, voice: Voice) -> None:
     data = await state.get_data()
     angle = catalog.angle(data["current"])
     if angle and angle.required:
@@ -230,13 +234,46 @@ async def skip_angle(message: Message, state: FSMContext, catalog: Catalog,
         return
     await state.update_data(skipped=[*data["skipped"], data["current"]])
     if not await ask_next_angle(message, state, catalog):
-        await finish_shooting(message, state, catalog, repo, llm, settings)
+        await finish_shooting(message, state, catalog, repo, llm, settings, voice)
 
 
 @router.message(NewCase.photos, F.text == DONE)
 async def done_shooting(message: Message, state: FSMContext, catalog: Catalog,
-                        repo: Storage, llm: LLM, settings: Settings) -> None:
-    await finish_shooting(message, state, catalog, repo, llm, settings)
+                        repo: Storage, llm: LLM, settings: Settings, voice: Voice) -> None:
+    await finish_shooting(message, state, catalog, repo, llm, settings, voice)
+
+
+@router.message(NewCase.photos, F.voice)
+async def voice_during_shooting(message: Message, state: FSMContext, bot: Bot, voice: Voice) -> None:
+    """Мастер говорит замечание голосом — сохраняем текстом в отчёт."""
+    text = await transcribe_message(message, bot, voice)
+    if not text:
+        return
+    data = await state.get_data()
+    angle = data.get("current", "")
+    await state.update_data(voice_notes=[*data.get("voice_notes", []), f"[{angle}] {text}"])
+    await message.reply(f"🎙 Записал: «{text}»")
+
+
+@router.message(F.location)
+async def got_location(message: Message, state: FSMContext) -> None:
+    if await state.get_state() is None:
+        await message.answer("Геопозиция сохраняется во время осмотра: начните /vydacha, /vozvrat или /new.")
+        return
+    await state.update_data(location={"lat": message.location.latitude, "lon": message.location.longitude})
+    await message.reply("📍 Место осмотра отмечено.")
+
+
+async def transcribe_message(message: Message, bot: Bot, voice: Voice) -> str:
+    if not voice.enabled:
+        await message.answer("Голосовые пока не подключены — напишите текстом.")
+        return ""
+    buf = await bot.download(message.voice)
+    try:
+        return await voice.transcribe(buf.read())
+    except VoiceError as e:
+        await message.answer(f"Не разобрал голосовое: {e}. Повторите или напишите текстом.")
+        return ""
 
 
 @router.message(NewCase.photos)
@@ -248,7 +285,7 @@ async def shooting_hint(message: Message) -> None:
 
 
 async def finish_shooting(message: Message, state: FSMContext, catalog: Catalog,
-                          repo: Storage, llm: LLM, settings: Settings) -> None:
+                          repo: Storage, llm: LLM, settings: Settings, voice: Voice | None = None) -> None:
     data = await state.get_data()
     await state.clear()
     photos = [Photo(**p) for p in data["photos"]]
@@ -266,6 +303,9 @@ async def finish_shooting(message: Message, state: FSMContext, catalog: Catalog,
         await message.answer(f"Не удалось построить отчёт: {e}. Фото сохранены, попробуйте позже.")
         return
     report.kind = data.get("kind", "buyback")
+    report.manual_notes.extend(data.get("voice_notes", []))
+    if data.get("location"):
+        report.location = GeoPoint(**data["location"])
     if data.get("rental"):
         report.rental = RentalInfo(**data["rental"])
     if report.kind == "return":
@@ -279,6 +319,12 @@ async def finish_shooting(message: Message, state: FSMContext, catalog: Catalog,
     await repo.save_report(report)
     await send_annotated(message, report, repo)
     await message.answer(render(report, catalog), reply_markup=report_kb(report))
+    if voice and voice.enabled and settings.voice_replies:
+        try:
+            audio = await voice.speak(spoken_summary(report))
+            await message.answer_voice(BufferedInputFile(audio, "report.ogg"))
+        except (VoiceError, TelegramAPIError):
+            log.warning("voice summary failed", exc_info=True)
 
 
 async def send_annotated(message: Message, report: Report, repo: Storage) -> None:
@@ -328,16 +374,30 @@ async def on_note(cb: CallbackQuery, state: FSMContext) -> None:
     await cb.answer()
 
 
+@router.message(ReportEdit.note, F.voice)
+async def got_note_voice(message: Message, state: FSMContext, bot: Bot, voice: Voice,
+                         catalog: Catalog, repo: Storage, settings: Settings) -> None:
+    text = await transcribe_message(message, bot, voice)
+    if text:
+        await message.reply(f"🎙 «{text}»")
+        await save_note(message, state, text, catalog, repo, settings)
+
+
 @router.message(ReportEdit.note, F.text)
 async def got_note(message: Message, state: FSMContext, catalog: Catalog,
                    repo: Storage, settings: Settings) -> None:
+    await save_note(message, state, message.text.strip(), catalog, repo, settings)
+
+
+async def save_note(message: Message, state: FSMContext, text: str, catalog: Catalog,
+                    repo: Storage, settings: Settings) -> None:
     report_id = (await state.get_data())["report_id"]
     await state.clear()
     report = await repo.get_report(report_id)
     if report is None:
         await message.answer("Отчёт не найден")
         return
-    report.manual_notes.append(message.text.strip())
+    report.manual_notes.append(text)
     reprice(report, catalog=catalog, settings=settings)
     await repo.save_report(report)
     await message.answer(render(report, catalog), reply_markup=report_kb(report))

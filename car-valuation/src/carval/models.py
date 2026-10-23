@@ -170,6 +170,11 @@ class PriceEstimate(BaseModel):
     currency: str = "KZT"
 
 
+class GeoPoint(BaseModel):
+    lat: float
+    lon: float
+
+
 class RentalInfo(BaseModel):
     """Данные аренды: заполняются при выдаче, дополняются при возврате."""
 
@@ -207,6 +212,7 @@ class Report(BaseModel):
     car: Car
     rental: RentalInfo | None = None
     settlement: Settlement | None = None
+    location: GeoPoint | None = None  # где сделан осмотр (геолокация из Telegram)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     photos: list[Photo] = Field(default_factory=list)
     missing_angles: list[str] = Field(default_factory=list)
