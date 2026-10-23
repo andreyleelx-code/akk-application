@@ -7,7 +7,7 @@
     "year": 2018,
     "mileage_km": 110000
   },
-  "created_at": "2026-10-23T08:40:16.219291Z",
+  "created_at": "2026-10-23T09:06:42.323392Z",
   "photos": [
     {
       "angle_id": "front",
@@ -53,7 +53,7 @@
         0.1378
       ],
       "status": "confirmed",
-      "id": "53344460"
+      "id": "6233c411"
     },
     {
       "zone": "body",
@@ -70,7 +70,7 @@
         0.1333
       ],
       "status": "confirmed",
-      "id": "100b4bda"
+      "id": "49bbcb90"
     },
     {
       "zone": "body",
@@ -87,7 +87,7 @@
         0.0622
       ],
       "status": "confirmed",
-      "id": "5dace79c"
+      "id": "07dcab2d"
     },
     {
       "zone": "glass_lights",
@@ -104,7 +104,7 @@
         0.0933
       ],
       "status": "confirmed",
-      "id": "8fedb197"
+      "id": "6dde68a4"
     },
     {
       "zone": "wheels",
@@ -121,7 +121,7 @@
         0.3333
       ],
       "status": "confirmed",
-      "id": "7ba2f5de"
+      "id": "3ed08126"
     },
     {
       "zone": "body",
@@ -138,7 +138,7 @@
         0.0667
       ],
       "status": "rejected",
-      "id": "4c9a5d88"
+      "id": "49db40dc"
     }
   ],
   "not_assessable": [

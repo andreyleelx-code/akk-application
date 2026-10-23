@@ -7,28 +7,24 @@
 <style>
 /* Макет: левое оглавление + лента разделов, как папка осмотра — титульный лист, демо, акт, расчёты, инструкции */
 :root{
+  --bg:#0f161b; --paper:#162129; --ink:#e4ecf0; --muted:#97a7b2; --line:#2a3943; --soft:#1c2a33;
+  --accent:#3fb3c5; --accent-ink:#06232a; --accent-soft:#163a42;
+  --minor:#f2c230; --moderate:#ff8a3d; --severe:#ff5a5a; --ok:#4cc27e; --rej:#7a868e;
+  --tg-bg:#0e1621; --tg-in:#182533; --tg-out:#2b5278; --tg-bar:#17212b; --sheet:#1b252c;
+  --display:"Onest","Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --body:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:dark}
+/* Страница всегда тёмная, во всех браузерах. Для печати акта — светлая бумага. */
+@media print{:root{
   --bg:#f3f5f6; --paper:#ffffff; --ink:#15212a; --muted:#5b6a75; --line:#d9e0e4; --soft:#e9eef1;
   --accent:#0b6e7f; --accent-ink:#ffffff; --accent-soft:#dcefF2;
   --minor:#d9a300; --moderate:#e5670f; --severe:#d62828; --ok:#1f8a4c; --rej:#8b959c;
   --tg-bg:#dfe7ec; --tg-in:#ffffff; --tg-out:#e2f5d9; --tg-bar:#517da2;
   --sheet:#fffdf8;
-  --display:"Onest","Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-  --body:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0f161b; --paper:#162129; --ink:#e4ecf0; --muted:#97a7b2; --line:#2a3943; --soft:#1c2a33;
-  --accent:#3fb3c5; --accent-ink:#06232a; --accent-soft:#163a42;
-  --minor:#f2c230; --moderate:#ff8a3d; --severe:#ff5a5a; --ok:#4cc27e; --rej:#7a868e;
-  --tg-bg:#0e1621; --tg-in:#182533; --tg-out:#2b5278; --tg-bar:#17212b; --sheet:#1b252c;
-  color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0f161b; --paper:#162129; --ink:#e4ecf0; --muted:#97a7b2; --line:#2a3943; --soft:#1c2a33;
-  --accent:#3fb3c5; --accent-ink:#06232a; --accent-soft:#163a42;
-  --minor:#f2c230; --moderate:#ff8a3d; --severe:#ff5a5a; --ok:#4cc27e; --rej:#7a868e;
-  --tg-bg:#0e1621; --tg-in:#182533; --tg-out:#2b5278; --tg-bar:#17212b; --sheet:#1b252c;
-  color-scheme:dark}
+  color-scheme:light}}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important}}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);-webkit-font-smoothing:antialiased}
@@ -171,6 +167,53 @@ button{font:inherit;cursor:pointer}
 .sign{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;font-size:13px}
 .sign div{border-top:1px solid var(--ink);padding-top:6px;color:var(--muted)}
 
+
+/* Панель руководства (макет сайта) */
+.browser{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--paper);box-shadow:0 18px 40px -28px rgba(0,0,0,.45)}
+.browser .bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--soft);border-bottom:1px solid var(--line)}
+.browser .dots{display:flex;gap:6px}.browser .dots i{width:11px;height:11px;border-radius:50%;background:var(--line)}
+.browser .url{flex:1;min-width:0;font:500 12px var(--mono);color:var(--muted);background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:5px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.browser .who{font-size:12px;color:var(--muted);white-space:nowrap}
+.app{display:grid;grid-template-columns:190px minmax(0,1fr);min-height:620px}
+.app aside{border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:2px;background:color-mix(in srgb,var(--soft) 45%,var(--paper))}
+.app aside .logo{font:700 14px var(--display);padding:4px 10px 14px}
+.app aside button{border:0;background:none;color:var(--muted);text-align:left;padding:8px 10px;border-radius:8px;font-size:14px;display:flex;justify-content:space-between;align-items:center}
+.app aside button:hover{background:var(--soft);color:var(--ink)}
+.app aside button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.app aside .badge{font:700 11px var(--body);background:var(--severe);color:#fff;border-radius:99px;padding:1px 7px}
+.app .pane{padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.app .pane h3{font-size:20px}
+.pane-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:99px;padding:5px 12px;font-size:13px}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.search{font:inherit;font-size:14px;padding:7px 11px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);min-width:0;width:220px;max-width:100%}
+.st{display:inline-block;font:600 12px var(--body);padding:2px 9px;border-radius:99px;white-space:nowrap}
+.st.wait{background:color-mix(in srgb,var(--minor) 22%,transparent);color:var(--ink)}
+.st.manual{background:color-mix(in srgb,var(--severe) 16%,transparent);color:var(--severe)}
+.st.ok{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.st.sold{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--soft)}
+.alerts{display:flex;flex-direction:column;gap:8px}
+.alert{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--paper)}
+.alert>i{width:10px;align-self:stretch;border-radius:4px}
+.alert b{font-size:14px}.alert p{font-size:13px;color:var(--muted)}
+.alert .when{font:500 12px var(--mono);color:var(--muted);white-space:nowrap}
+.bar-in{display:inline-block;height:6px;border-radius:9px;background:var(--accent);vertical-align:middle;margin-right:6px}
+.app table{font-size:13px}.app th,.app td{padding:8px 10px}.app th{font-size:11px}
+.app td b{white-space:nowrap}
+.setgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.setgrid .card{padding:14px;display:flex;flex-direction:column;gap:6px}
+.setgrid .card p{font-size:13px;color:var(--muted)}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .app aside{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .app aside .logo{display:none}
+  .app aside button{white-space:nowrap}
+  .setgrid{grid-template-columns:minmax(0,1fr)}
+  .browser .who{display:none}
+}
+
 /* Сводка */
 .kpi{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px}
 .kpi b{display:block;font:700 26px var(--display)}
@@ -249,7 +292,7 @@ pre code{background:none;padding:0}
   <a href="#demo"><span>03</span>Демо: оценка</a>
   <a href="#telegram"><span>04</span>Бот в Telegram</a>
   <a href="#act"><span>05</span>Акт оценки</a>
-  <a href="#summary"><span>06</span>Сводка руководству</a>
+  <a href="#summary"><span>06</span>Панель руководства</a>
   <a href="#cost"><span>07</span>Стоимость</a>
   <a href="#plan"><span>08</span>План и сроки</a>
   <a href="#setup"><span>09</span>Инструкция</a>
@@ -341,30 +384,124 @@ pre code{background:none;padding:0}
 
 <!-- 06 -->
 <section id="summary">
-  <div class="eyebrow">Для руководства</div>
-  <h2>Сводка за неделю</h2>
-  <p class="lead">Главная цифра для владельца: насколько оценка расходится с реальной ценой продажи и сколько дефектов поймано до сделки.</p>
-  <span class="tag demo">Пример данных</span>
-  <div class="grid4">
-    <div class="kpi"><b>54</b><span>оценок за неделю</span></div>
-    <div class="kpi"><b>2,1 мин</b><span>среднее время отчёта</span></div>
-    <div class="kpi"><b>81%</b><span>находок ИИ подтвердили люди</span></div>
-    <div class="kpi"><b>17</b><span>дефектов, которые человек сначала пропустил</span></div>
-  </div>
-  <div class="card" style="display:flex;flex-direction:column;gap:10px">
-    <h3>Оценка против реальной продажи</h3>
-    <p class="note">Для каждой сделки: полоса — диапазон, который предложила система, точка — цена, за которую машину потом продали. Всё в процентах от середины диапазона. Точка внутри полосы значит, что оценка верна.</p>
-    <div class="chart-wrap" id="chartAcc"></div>
-  </div>
-  <div class="grid2">
-    <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3>Где находят дефекты</h3><div id="chartZones"></div></div>
-    <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3>Разбор расхождений</h3>
-      <div class="tbl-wrap"><table><thead><tr><th>Машина</th><th>Что случилось</th><th class="n">Δ, ₸</th></tr></thead><tbody>
-        <tr><td>Nissan Qashqai 2017</td><td>Перекрас двери не виден на фото, толщиномер не применили</td><td class="n">−380 000</td></tr>
-        <tr><td>Kia Sportage 2019</td><td>ИИ отметил ржавчину на пороге, оценщик отклонил — зря</td><td class="n">−210 000</td></tr>
-        <tr><td>Toyota RAV4 2018</td><td>Мало аналогов, диапазон оказался широким</td><td class="n">+150 000</td></tr>
-      </tbody></table></div>
+  <div class="eyebrow">Сайт для руководства</div>
+  <h2>Панель руководства</h2>
+  <p class="lead">Отдельный сайт для владельца и старших оценщиков. Оценщики в нём не работают, у них бот. Здесь видна вся история оценок, точность и риски. Пощёлкайте по разделам слева.</p>
+  <span class="tag demo">Макет · данные примерные</span>
+  <div class="browser">
+    <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">panel.пример-выкуп.kz / обзор</div><div class="who">Владелец · вход по паролю</div></div>
+    <div class="app">
+      <aside id="panelNav" role="tablist" aria-label="Разделы панели">
+        <div class="logo">Оценка авто</div>
+        <button type="button" role="tab" data-p="overview" aria-selected="true">Обзор</button>
+        <button type="button" role="tab" data-p="list" aria-selected="false">Оценки</button>
+        <button type="button" role="tab" data-p="people" aria-selected="false">Оценщики</button>
+        <button type="button" role="tab" data-p="accuracy" aria-selected="false">Точность</button>
+        <button type="button" role="tab" data-p="risks" aria-selected="false">Риски <span class="badge">4</span></button>
+        <button type="button" role="tab" data-p="settings" aria-selected="false">Настройки</button>
+      </aside>
+
+      <div class="pane" data-pane="overview">
+        <div class="pane-head"><h3>Обзор за неделю</h3><span class="note">16–22 октября</span></div>
+        <div class="grid4">
+          <div class="kpi"><b>54</b><span>оценки</span></div>
+          <div class="kpi"><b>2,1 мин</b><span>среднее время отчёта</span></div>
+          <div class="kpi"><b>81%</b><span>находок ИИ подтвердили люди</span></div>
+          <div class="kpi"><b>17</b><span>дефектов поймано до сделки</span></div>
+        </div>
+        <div class="grid2">
+          <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3 style="font-size:16px">Требует внимания</h3><div class="alerts" id="ovAlerts"></div></div>
+          <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3 style="font-size:16px">Последние оценки</h3><div class="tbl-wrap"><table id="ovLast"></table></div></div>
+        </div>
+      </div>
+
+      <div class="pane" data-pane="list" hidden>
+        <div class="pane-head"><h3>Все оценки</h3><input class="search" id="pSearch" type="search" placeholder="Номер, марка, оценщик" aria-label="Поиск по оценкам"></div>
+        <div class="chips" id="pFilter">
+          <button type="button" data-f="all" aria-pressed="true">Все</button>
+          <button type="button" data-f="wait" aria-pressed="false">Ждут старшего</button>
+          <button type="button" data-f="manual" aria-pressed="false">Ручная проверка</button>
+          <button type="button" data-f="ok" aria-pressed="false">Утверждены</button>
+          <button type="button" data-f="sold" aria-pressed="false">Проданы</button>
+        </div>
+        <div class="tbl-wrap"><table id="pTable"></table></div>
+        <p class="note">Строки трёх демо-машин открывают их полный отчёт выше на странице.</p>
+      </div>
+
+      <div class="pane" data-pane="people" hidden>
+        <div class="pane-head"><h3>Оценщики</h3><span class="note">за 30 дней</span></div>
+        <div class="tbl-wrap"><table id="pPeople"></table></div>
+        <p class="note">Эти цифры нужны для обучения, а не для штрафов. Если оценщик часто отклоняет верные находки ИИ, ему стоит разобрать примеры со старшим. Если ИИ часто ошибается в его зоне, нужно переснять правила съёмки или поправить промпт.</p>
+      </div>
+
+      <div class="pane" data-pane="accuracy" hidden>
+        <div class="pane-head"><h3>Точность оценки</h3><span class="note">по проданным машинам</span></div>
+        <div class="card" style="display:flex;flex-direction:column;gap:10px">
+          <h3 style="font-size:16px">Оценка против реальной продажи</h3>
+          <p class="note">Полоса — диапазон, который предложила система, точка — цена продажи. Всё в процентах от середины диапазона. Точка внутри полосы значит, что оценка верна.</p>
+          <div class="chart-wrap" id="chartAcc"></div>
+        </div>
+        <div class="grid2">
+          <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3 style="font-size:16px">Где находят дефекты</h3><div id="chartZones"></div></div>
+          <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3 style="font-size:16px">Разбор расхождений</h3>
+            <div class="tbl-wrap"><table><thead><tr><th>Машина</th><th>Что случилось</th><th class="n">Δ, ₸</th></tr></thead><tbody>
+              <tr><td>Nissan Qashqai 2017</td><td>Перекрас двери не виден на фото, толщиномер не применили</td><td class="n">−380 000</td></tr>
+              <tr><td>Kia Sportage 2019</td><td>ИИ отметил ржавчину на пороге, оценщик отклонил — зря</td><td class="n">−210 000</td></tr>
+              <tr><td>Toyota RAV4 2018</td><td>Мало аналогов, диапазон оказался узким</td><td class="n">+150 000</td></tr>
+            </tbody></table></div></div>
+        </div>
+      </div>
+
+      <div class="pane" data-pane="risks" hidden>
+        <div class="pane-head"><h3>Риски и сигналы</h3><span class="note">обновляется при каждой оценке</span></div>
+        <div class="alerts" id="riskAlerts"></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Состояние системы</th><th>Сейчас</th><th>Норма</th></tr></thead><tbody>
+          <tr><td>Расход на ИИ в этом месяце</td><td class="num">71 000 ₸ из 150 000 ₸</td><td>Лимит задаёт владелец</td></tr>
+          <tr><td>Среднее время отчёта</td><td class="num">2,1 мин</td><td>до 3 мин</td></tr>
+          <tr><td>Сбои анализа за неделю</td><td class="num">1 из 54</td><td>фото сохраняются, анализ повторяется</td></tr>
+          <tr><td>Последняя резервная копия базы</td><td class="num">сегодня, 03:00</td><td>ежедневно</td></tr>
+        </tbody></table></div>
+      </div>
+
+      <div class="pane" data-pane="settings" hidden>
+        <div class="pane-head"><h3>Настройки</h3><span class="note">меняет владелец или старший</span></div>
+        <div class="setgrid">
+          <div class="card"><b>Прайс ремонта</b><p>Цена ремонта по каждому типу дефекта и степени. ИИ сразу считает по новым ценам.</p></div>
+          <div class="card"><b>Цены аналогов</b><p>База объявлений и прошлых продаж, по которой считается рынок.</p></div>
+          <div class="card"><b>Чек-лист съёмки</b><p>Какие ракурсы обязательны и в каком порядке их просит бот.</p></div>
+          <div class="card"><b>Правило «Проверить вручную»</b><p>Например: серьёзный дефект, уверенность ниже 60% или признаки ДТП.</p></div>
+          <div class="card"><b>Пользователи и роли</b><p>Кто оценщик, кто старший, кто видит панель. Telegram ID и доступы.</p></div>
+          <div class="card"><b>Лимит расходов</b><p>Месячный потолок на ИИ, при приближении к нему приходит уведомление.</p></div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <div class="grid2">
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0"><h3>Кто что видит</h3>
+      <div class="tbl-wrap"><table><thead><tr><th>Роль</th><th>Где работает</th><th>Что может</th></tr></thead><tbody>
+        <tr><td><b>Оценщик</b></td><td>Telegram-бот</td><td>Снимает, подтверждает находки, вносит замеры. Видит только свои оценки</td></tr>
+        <tr><td><b>Старший оценщик</b></td><td>Бот + панель</td><td>Утверждает цену, видит все оценки и разборы, вносит цену продажи</td></tr>
+        <tr><td><b>Владелец</b></td><td>Панель</td><td>Всё, плюс настройки, прайс, роли и лимит расходов</td></tr>
+      </tbody></table></div></div>
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0"><h3>Как устроена панель</h3>
+      <div class="tbl-wrap"><table><tbody>
+        <tr><td>На чём собрана</td><td>Appsmith или ToolJet, конструкторы панелей без программирования</td></tr>
+        <tr><td>Откуда данные</td><td>Та же база Supabase, куда пишет бот. Ничего не дублируется</td></tr>
+        <tr><td>Где живёт</td><td>На сервере заказчика рядом с ботом или в облаке конструктора</td></tr>
+        <tr><td>Вход</td><td>Логин и пароль, у каждой роли свои права</td></tr>
+        <tr><td>Стоимость</td><td>0 ₸ на своём сервере, облачные тарифы — по числу пользователей</td></tr>
+        <tr><td>Срок</td><td>1–2 дня после пилота, когда в базе есть реальные оценки</td></tr>
+      </tbody></table></div></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px"><h3>Риски панели</h3>
+    <div class="tbl-wrap"><table><thead><tr><th>Риск</th><th>Что делаем</th></tr></thead><tbody>
+      <tr><td><b>Утечка цен и сделок</b></td><td>Вход только по паролю, права по ролям, защита на уровне строк в базе. Фото в закрытом хранилище</td></tr>
+      <tr><td><b>Оценщики видят в панели слежку</b></td><td>Оценщики панель не видят. Статистику подаём как обучение и защиту от несправедливых штрафов</td></tr>
+      <tr><td><b>Цену продажи забывают вносить</b></td><td>Без неё нет точности. Напоминание старшему через неделю после утверждения, позже — подтягивать из CRM через n8n</td></tr>
+      <tr><td><b>Решения по неполным данным</b></td><td>Первые 2–4 недели цифр мало. Выводы о точности делаем от 30 проданных машин</td></tr>
+      <tr><td><b>Зависимость от конструктора</b></td><td>Данные лежат в базе заказчика. Панель можно пересобрать в другом инструменте</td></tr>
+    </tbody></table></div>
   </div>
 </section>
 
@@ -865,7 +1002,81 @@ const io = new IntersectionObserver(es => es.forEach(e => {
 }), {rootMargin:"-30% 0px -60% 0px"});
 document.querySelectorAll("main section").forEach(s => io.observe(s));
 
+
+/* ---------- Панель руководства ---------- */
+const STATUS_RU = {wait:"ждёт старшего", manual:"ручная проверка", ok:"утверждено", sold:"продано"};
+const PANEL_ROWS = (() => {
+  const demo = DATA.map((c,i) => {
+    const r = calc(i);
+    return {date:"22.10", car:`${c.car.make} ${c.car.model} ${c.car.year}`, plate:c.car.vin_or_plate,
+      who:["Ерлан К.","Дана М.","Ерлан К."][i], defects:c.defects.length, low:r.low, high:r.high,
+      approved:null, status: r.manual ? "manual" : "wait", demo:i};
+  });
+  const other = [
+    ["21.10","Toyota Corolla 2019","218 TCA 02","Дана М.",3,8.9e6,9.5e6,9.2e6,"ok"],
+    ["21.10","Kia Sportage 2019","377 KSA 02","Арман Т.",5,10.1e6,10.8e6,10.3e6,"sold"],
+    ["20.10","Hyundai Elantra 2018","604 HEA 01","Ерлан К.",2,6.8e6,7.3e6,7.1e6,"sold"],
+    ["20.10","Nissan Qashqai 2017","512 NQA 02","Арман Т.",4,7.6e6,8.2e6,7.9e6,"sold"],
+    ["19.10","Volkswagen Polo 2019","733 VPA 05","Дана М.",1,5.2e6,5.7e6,5.5e6,"ok"],
+    ["19.10","Toyota RAV4 2018","090 TRA 02","Ерлан К.",3,12.4e6,13.1e6,12.9e6,"sold"],
+    ["18.10","Hyundai Creta 2021","845 HCA 01","Арман Т.",2,9.6e6,10.2e6,9.9e6,"ok"],
+    ["18.10","Skoda Octavia 2018","166 SOA 02","Дана М.",3,7.4e6,7.9e6,7.7e6,"sold"],
+    ["17.10","Hyundai Sonata 2020","421 HSA 02","Ерлан К.",4,10.9e6,11.6e6,11.2e6,"sold"],
+  ].map(([date,car,plate,who,defects,low,high,approved,status]) => ({date,car,plate,who,defects,low,high,approved,status}));
+  return [...demo, ...other];
+})();
+const panel = {f:"all", q:""};
+const mln = n => (n/1e6).toFixed(2).replace(".",",") + " млн";
+const mlnR = (a,b) => `${(a/1e6).toFixed(2).replace(".",",")}–${(b/1e6).toFixed(2).replace(".",",")} млн`;
+function rowHtml(r){
+  return `<tr class="${r.demo!==undefined?"click":""}" ${r.demo!==undefined?`data-demo="${r.demo}" tabindex="0"`:""}>
+    <td class="num">${r.date}</td><td><b>${esc(r.car)}</b><div class="note">${esc(r.plate)}</div></td><td>${esc(r.who)}</td>
+    <td class="n">${r.defects}</td><td class="n">${mlnR(r.low,r.high)}</td><td class="n">${r.approved?mln(r.approved):"—"}</td>
+    <td><span class="st ${r.status}">${STATUS_RU[r.status]}</span></td></tr>`;
+}
+const HEAD = `<thead><tr><th>Дата</th><th>Машина</th><th>Оценщик</th><th class="n">Дефектов</th><th class="n">Диапазон ИИ</th><th class="n">Утверждено</th><th>Статус</th></tr></thead>`;
+function bindDemoRows(root){
+  root.querySelectorAll("tr[data-demo]").forEach(tr => {
+    const go = () => { state.car = +tr.dataset.demo; state.view = null; state.hl = null; renderAll(); document.getElementById("demo").scrollIntoView({behavior:"smooth"}); };
+    tr.onclick = go; tr.onkeydown = e => { if (e.key === "Enter") go(); };
+  });
+}
+function renderPanelList(){
+  const q = panel.q.trim().toLowerCase();
+  const rows = PANEL_ROWS.filter(r => (panel.f === "all" || r.status === panel.f) &&
+    (!q || `${r.car} ${r.plate} ${r.who}`.toLowerCase().includes(q)));
+  $("pTable").innerHTML = HEAD + `<tbody>${rows.length ? rows.map(rowHtml).join("") : `<tr><td colspan="7" class="note">Ничего не найдено. Сбросьте фильтр или измените запрос.</td></tr>`}</tbody>`;
+  bindDemoRows($("pTable"));
+}
+function renderPanel(){
+  const alerts = [
+    ["var(--severe)","Kia Rio 2016 · 102 KRA 05","Признаки ДТП: серьёзная вмятина и неровный зазор капота. Ждёт осмотра старшим.","сегодня 11:40"],
+    ["var(--moderate)","Toyota Camry 2018 · 731 KZA 02","Толщиномер подтвердил перекрас крыла. Проверить лонжерон перед утверждением.","сегодня 10:15"],
+    ["var(--minor)","Nissan Qashqai 2017 · продана","Продажа на 8% ниже оценки: перекрас двери пропустили. Нужен разбор.","вчера"],
+    ["var(--minor)","Оценщик Арман Т.","Отклонил 6 находок ИИ за неделю, 3 потом подтвердились. Разобрать со старшим.","вчера"],
+  ];
+  const al = a => a.map(([c,t,p,w]) => `<div class="alert"><i style="background:${c}"></i><div><b>${esc(t)}</b><p>${esc(p)}</p></div><span class="when">${w}</span></div>`).join("");
+  $("ovAlerts").innerHTML = al(alerts.slice(0,3));
+  $("riskAlerts").innerHTML = al(alerts);
+  $("ovLast").innerHTML = `<thead><tr><th>Машина</th><th>Статус</th></tr></thead><tbody>${PANEL_ROWS.slice(0,5).map(r =>
+    `<tr class="${r.demo!==undefined?"click":""}" ${r.demo!==undefined?`data-demo="${r.demo}" tabindex="0"`:""}><td><b>${esc(r.car)}</b><div class="note">${esc(r.who)} · ${mlnR(r.low,r.high)}</div></td><td><span class="st ${r.status}">${STATUS_RU[r.status]}</span></td></tr>`).join("")}</tbody>`;
+  bindDemoRows($("ovLast"));
+  const people = [["Ерлан К.",24,"2,0 мин",86,9,7,"2,1%"],["Дана М.",19,"2,3 мин",83,11,5,"2,6%"],["Арман Т.",11,"2,4 мин",64,32,2,"4,8%"]];
+  $("pPeople").innerHTML = `<thead><tr><th>Оценщик</th><th class="n">Оценок</th><th class="n">Время</th><th>Принял ИИ</th><th class="n">Отклонил</th><th class="n">Добавил сам</th><th class="n">Δ с продажей</th></tr></thead><tbody>${people.map(([n,c,t,a,rj,ad,d]) =>
+    `<tr><td><b>${n}</b></td><td class="n">${c}</td><td class="n">${t}</td><td style="white-space:nowrap"><span class="bar-in" style="width:${a*0.6}px"></span><span class="num">${a}%</span></td><td class="n">${rj}%</td><td class="n">${ad}</td><td class="n">${d}</td></tr>`).join("")}</tbody>`;
+  renderPanelList();
+}
+$("panelNav").querySelectorAll("button").forEach(b => b.onclick = () => {
+  $("panelNav").querySelectorAll("button").forEach(x => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll(".pane").forEach(p => p.hidden = p.dataset.pane !== b.dataset.p);
+  document.querySelector(".browser .url").textContent = "panel.пример-выкуп.kz / " + b.textContent.replace(/\d+/,"").trim().toLowerCase();
+});
+$("pFilter").querySelectorAll("button").forEach(b => b.onclick = () => {
+  panel.f = b.dataset.f; $("pFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderPanelList();
+});
+$("pSearch").addEventListener("input", e => { panel.q = e.target.value; renderPanelList(); });
+
 function renderAll(){ renderTabs(); renderStage(); renderVerdict(); renderSideNotes(); renderChats(); renderSheet(); }
-renderAll(); renderCharts(); renderCost();
+renderAll(); renderCharts(); renderCost(); renderPanel();
 if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
 </script>
