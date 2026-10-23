@@ -40,6 +40,7 @@ from carval.parts import KIND_RU, SOURCE_RU, attach_options, choose_option, need
 from carval.pricing import defect_cost, estimate_price, select_comparables  # noqa: E402
 from carval.models import RentalInfo  # noqa: E402
 from carval.rental import load_terms, settle  # noqa: E402
+from carval.pipeline.decision import needs_manual_review  # noqa: E402
 from carval.report import render  # noqa: E402
 from carval.settings import Settings  # noqa: E402
 
@@ -427,7 +428,18 @@ def build_rentals(settings: Settings, catalog) -> list[dict]:
                      rental=rc.back.model_copy(update={"handover_report_id": handover.id}))
         attach_options(ret, catalog.suppliers)
         ret.settlement = settle(ret, handover, catalog, terms)
+        ret.needs_manual_review = needs_manual_review(ret)
         new_ids = set(ret.settlement.new_defect_ids)
+        # фото возврата с рамками новых повреждений — как их пришлёт бот
+        rdir = OUT_DIR / "cars" / f"rent_{rc.id}"
+        rdir.mkdir(parents=True, exist_ok=True)
+        asyncio.run(render_jpegs({rdir / f"{a}.jpg": rental_view(rc, a, "in") for a in rc.views}))
+        ret.photos = [Photo(angle_id=a, storage_key=str(rdir / f"{a}.jpg")) for a in rc.views]
+        groups: dict[str, list] = {}
+        for i, d in enumerate(ret.defects, 1):  # номера как в отчёте
+            if d.id in new_ids and d.box:
+                groups.setdefault(d.angle_id, []).append((i, d))
+        marked = {a: data_uri(annotate((rdir / f"{a}.jpg").read_bytes(), items)) for a, items in groups.items()}
         out.append({
             "id": rc.id, "story": rc.story, "car": rc.car.model_dump(), "client": rc.client,
             "when_out": rc.when_out, "when_in": rc.when_in, "km_out": rc.out.km_out, "km_in": rc.back.km_in,
@@ -441,6 +453,8 @@ def build_rentals(settings: Settings, catalog) -> list[dict]:
                         for d in ret.defects],
             "settlement": ret.settlement.model_dump(),
             "interior": [{"zone": z, "out": o, "in": i, "new": n} for z, o, i, n in rc.interior_check],
+            "telegram_text": render(ret, catalog),
+            "marked": marked,
             "terms": {"km_per_day": terms.km_per_day, "extra_km_kzt": terms.extra_km_kzt,
                       "fuel_kzt_per_l": terms.fuel_kzt_per_l, "insurance_threshold": terms.insurance_threshold_kzt},
         })

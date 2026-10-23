@@ -575,11 +575,15 @@ pre code{background:none;padding:0}
 <!-- 04 -->
 <section id="telegram">
   <div class="eyebrow">Бот в Telegram</div>
-  <h2>Как бот общается с оценщиком и со старшим</h2>
-  <p class="lead">Слева телефон оценщика на площадке, справа телефон старшего оценщика. Переписка построена по машине, выбранной в демо. Текст отчёта сформирован кодом бота.</p>
+  <h2>Как бот общается с сотрудником и с клиентом</h2>
+  <p class="lead">Переписка построена по машине, выбранной в демо выше. Текст отчёта сформирован кодом бота, рамки на фото нарисовала программа.</p>
+  <div class="cars" id="tgMode" role="group" aria-label="Сценарий">
+    <button type="button" aria-pressed="true" data-m="rent"><b>Прокат: возврат</b><small>сотрудник и клиент</small></button>
+    <button type="button" aria-pressed="false" data-m="buy"><b>Выкуп: оценка</b><small>оценщик и старший</small></button>
+  </div>
   <div class="phones">
-    <div class="phone" aria-label="Чат оценщика"><header><div class="av">{{ICON}}</div><div><b>{{COMPANY}} · оценка</b><small>бот · оценщик Ерлан</small></div></header><div class="chat" id="chatA"></div></div>
-    <div class="phone" aria-label="Чат старшего оценщика"><header><div class="av">{{ICON}}</div><div><b>{{COMPANY}} · оценка</b><small>бот · старший оценщик Айгерим</small></div></header><div class="chat" id="chatB"></div></div>
+    <div class="phone" aria-label="Чат сотрудника"><header><div class="av">{{ICON}}</div><div><b>{{COMPANY}} · оценка</b><small id="tgA">бот · сотрудник Ерлан</small></div></header><div class="chat" id="chatA"></div></div>
+    <div class="phone" aria-label="Второй чат"><header><div class="av">{{ICON}}</div><div><b id="tgBt">{{COMPANY}}</b><small id="tgB">сообщение клиенту</small></div></header><div class="chat" id="chatB"></div></div>
   </div>
 </section>
 
@@ -1112,7 +1116,37 @@ function tgReport(ci){
   t = t.replace(/^(❔|✅|❌|✍️) (\d+)\./gm, (m, _, n) => `${marks[st[n-1]]} ${n}.`);
   return t;
 }
+let tgMode = "rent";
+function renderRentChats(){
+  const rc = RENTAL[rstate.car], st = rc.settlement;
+  $("tgA").textContent = "бот · сотрудник Ерлан"; $("tgB").textContent = "клиент · WhatsApp"; $("tgBt").textContent = rc.client;
+  const marked = Object.entries(rc.marked || {});
+  const newD = rc.defects.filter(d => d.is_new);
+  $("chatA").innerHTML = `<div class="sys">сегодня</div>
+    <div class="msg out">/vozvrat</div>
+    <div class="msg in">Возврат из проката.\nГосномер или VIN:</div><div class="msg out">${esc(rc.car.vin_or_plate)}</div>
+    <div class="msg in">Марка и модель:</div><div class="msg out">${esc(rc.car.make)} ${esc(rc.car.model)}</div>
+    <div class="msg in">Пробег, км:</div><div class="msg out">${rc.km_in}</div>
+    <div class="msg in">Грязная ли машина и сколько литров не хватает?</div><div class="msg out">${st.wash ? "да" : "нет"}, ${st.fuel ? Math.round(st.fuel / rc.terms.fuel_kzt_per_l) : 0}</div>
+    <div class="msg in">📷 1/27: Спереди-слева под 45°</div>
+    <div class="msg out photo">${(rc.views[0] || {}).in || ""}</div>
+    <div class="sys">… ещё 26 ракурсов, салон …</div>
+    <div class="msg out">Готово</div>
+    <div class="msg in">⏳ Сравниваю с актом выдачи от ${esc(rc.when_out)}…</div>
+    ${marked.map(([a,src]) => `<div class="msg in photo"><img src="${src}" alt="Новые повреждения"><div class="cap">Новые повреждения: ${newD.filter(d => d.angle_id === a && d.box).length}</div></div>`).join("")}
+    <div class="msg in">${rc.telegram_text.replace(/\n{3,}/g, "\n\n")}</div>
+    <div class="kb"><span class="w2">✍️ Замер / OBD</span><span class="w2">🔄 Перепроверить</span><span class="w4">📤 Отправить клиенту</span></div>
+    <div class="msg in">Отправлено клиенту ✓</div>`;
+  $("chatB").innerHTML = `<div class="sys">сегодня</div>
+    <div class="msg in">${($("rMsg").querySelector(".msg") || {}).innerHTML || ""}</div>
+    ${marked.map(([a,src]) => `<div class="msg in photo"><img src="${src}" alt=""><div class="cap">Возврат ${esc(rc.when_in)} · отмечены новые повреждения</div></div>`).join("")}
+    <div class="msg in photo">${(rc.views[0] || {}).out || ""}<div class="cap">Выдача ${esc(rc.when_out)} · для сравнения</div></div>
+    <div class="msg out">Понял, согласен. Оплачу разницу</div>
+    <div class="msg in">Спасибо! Акт приёма-передачи — во вложении 📎</div>`;
+}
 function renderChats(){
+  if (tgMode === "rent") return renderRentChats();
+  $("tgA").textContent = "бот · оценщик Ерлан"; $("tgB").textContent = "бот · старший оценщик Айгерим"; $("tgBt").textContent = "{{COMPANY}} · оценка";
   const ci = state.car, c = DATA[ci], r = calc(ci);
   const v = a => (c.views.find(x => x.angle === a) || c.views[a === "left" ? 1 : 0] || c.views[0]).svg;
   const marked = Object.entries(c.marked);
@@ -1449,6 +1483,7 @@ function renderRental(){
     <tr><td>Пробег</td><td class="num">${fmt(rc.km_out)} → ${fmt(rc.km_in)} км</td></tr>
     <tr><td>Фото</td><td>27 ракурсов при выдаче и при возврате, с отметками</td></tr>
     <tr><td>Подписи</td><td>Арендатор ________ · Сотрудник ________</td></tr></tbody>`;
+  if (typeof tgMode !== "undefined" && tgMode === "rent") renderChats();
 }
 
 /* ---------- салон (прокат) ---------- */
@@ -1541,6 +1576,7 @@ function renderMap(){
 }
 
 function renderAll(){ renderTabs(); renderStage(); renderVerdict(); renderSideNotes(); renderChats(); renderSheet(); renderParts(); }
-renderAll(); renderCharts(); renderCost(); renderPanel(); renderRental(); renderMap(); setupSpeech();
+$("tgMode").querySelectorAll("button").forEach(b => b.onclick = () => { tgMode = b.dataset.m; $("tgMode").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); renderChats(); });
+renderAll(); renderCharts(); renderCost(); renderPanel(); renderRental(); renderMap(); setupSpeech(); renderChats();
 if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
 </script>
