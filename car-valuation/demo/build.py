@@ -58,7 +58,7 @@ class D:
     conf: float
     location: str
     desc: str
-    box: tuple[int, int, int, int]
+    box: tuple[int, int, int, int] | None
     draw: str = ""
     status: DefectStatus = WAIT
 
@@ -195,6 +195,35 @@ def photo_b64(name: str) -> str:
 
 FL = {"front_left": "Спереди-слева 45°"}
 
+L9_INTERIOR = dict(
+    interior_before=[D("driver_seat", "interior", "seat_wear", C, 0.81, "водительское сиденье, боковина",
+                       "Лёгкая потёртость", None, "", OK)],
+    interior_check=[
+        ("Передние сиденья", "потёртость боковины водительского", "без изменений", False),
+        ("Задний ряд", "чисто", "чисто", False),
+        ("Пол и коврики", "чисто", "песок и грязь — в мойку", False),
+        ("Багажник", "пусто, шторка на месте", "пусто, шторка на месте", False),
+        ("Приборная панель", "ошибок нет", "ошибок нет", False),
+        ("Запах", "нейтральный", "нейтральный", False),
+        ("Топливо / заряд", "бак полный", "бак полный", False),
+        ("Вещи клиента", "—", "не найдены", False),
+    ],
+)
+ZEEKR_INTERIOR = dict(
+    interior_new=[D("rear_seats", "interior", "stain", M, 0.86, "задний ряд, левое сиденье",
+                    "Пятно ~10 см (похоже на кофе)", None, "", OK)],
+    interior_check=[
+        ("Передние сиденья", "чисто", "чисто", False),
+        ("Задний ряд", "чисто", "пятно ~10 см на левом сиденье", True),
+        ("Пол и коврики", "чисто", "чисто", False),
+        ("Багажник", "пусто", "пусто", False),
+        ("Приборная панель", "ошибок нет", "ошибок нет", False),
+        ("Запах", "нейтральный", "нейтральный", False),
+        ("Заряд батареи", "92%", "35% — по договору не ниже 20%", False),
+        ("Вещи клиента", "—", "забыт зарядный кабель — сообщить клиенту", False),
+    ],
+)
+
 LC200 = DemoCar(
     id="lc200",
     car=Car(vin_or_plate="880 SWR 02", make="Toyota", model="Land Cruiser 200", year=2018, mileage_km=145_000),
@@ -268,6 +297,9 @@ class RentalCase:
     when_in: str
     story: str
     photo: str = ""
+    interior_before: list[D] = field(default_factory=list)  # салон при выдаче
+    interior_new: list[D] = field(default_factory=list)  # новое в салоне при возврате
+    interior_check: list[tuple[str, str, str, bool]] = field(default_factory=list)  # зона, выдача, возврат, новое?
 
 
 LIXIANG = RentalCase(
@@ -290,6 +322,7 @@ LIXIANG = RentalCase(
     back=RentalInfo(km_in=15_880, dirty=True, fuel_missing_l=0),
     client="А. Ахметов", when_out="20.10 · 10:05", when_in="23.10 · 18:40",
     story="Клиент вернул машину с двумя мелкими новыми повреждениями, грязной и с перепробегом. Сколы на капоте и царапина на бампере были при выдаче — их ИИ не выставляет: это видно по акту выдачи.",
+    **L9_INTERIOR,
 )
 
 ELANTRA = RentalCase(
@@ -308,6 +341,7 @@ ELANTRA = RentalCase(
     ],
     out=RentalInfo(client="Д. Сериков", deposit=30_000, days=1, body="sedan", km_out=42_100),
     back=RentalInfo(km_in=42_310, dirty=False, fuel_missing_l=8),
+    **ZEEKR_INTERIOR,
     client="Д. Сериков", when_out="22.10 · 09:30", when_in="23.10 · 10:15",
     story="Трещина лобового стекла дороже депозита: система показывает, сколько доплатить клиенту, и предлагает проверить, покрывает ли случай страховка.",
 )
@@ -331,6 +365,7 @@ ZEEKR_X = RentalCase(
     ],
     out=RentalInfo(client="Д. Сериков", deposit=50_000, days=2, body="crossover", km_out=18_200),
     back=RentalInfo(km_in=18_640, dirty=False, fuel_missing_l=0),
+    **ZEEKR_INTERIOR,
     client="Д. Сериков", when_out="21.10 · 09:30", when_in="23.10 · 10:15",
     story="Трещина лобового стекла дороже депозита: система показывает, сколько доплатить клиенту, и предлагает проверить, покрывает ли случай страховка. Сколы и потёртости были при выдаче — их не выставляем.",
 )
@@ -350,6 +385,7 @@ LIXIANG_PHOTO = RentalCase(
     ],
     out=RentalInfo(client="А. Ахметов", deposit=50_000, days=3, body="suv", km_out=15_200),
     back=RentalInfo(km_in=15_880, dirty=True, fuel_missing_l=0),
+    **L9_INTERIOR,
     client="А. Ахметов", when_out="20.10 · 10:05", when_in="23.10 · 18:40",
     story="Клиент вернул машину с двумя мелкими новыми повреждениями, грязной и с перепробегом. Сколы на капоте были при выдаче — их ИИ не выставляет: это видно по акту выдачи.",
 )
@@ -375,7 +411,8 @@ def rental_view(rc: RentalCase, angle: str, stage: str) -> str:
 def to_defect(d: D) -> Defect:
     return Defect(zone=d.zone, code=d.code, severity=d.sev, angle_id=d.angle, location=d.location,
                   description=d.desc, confidence=d.conf, status=d.status,
-                  box=[round(d.box[0] / 800, 4), round(d.box[1] / 450, 4), round(d.box[2] / 800, 4), round(d.box[3] / 450, 4)])
+                  box=[round(d.box[0] / 800, 4), round(d.box[1] / 450, 4), round(d.box[2] / 800, 4), round(d.box[3] / 450, 4)]
+                  if d.box else None)
 
 
 def build_rentals(settings: Settings, catalog) -> list[dict]:
@@ -383,9 +420,10 @@ def build_rentals(settings: Settings, catalog) -> list[dict]:
     out = []
     for rc in RENTALS:
         handover = Report(kind="handover", car=rc.car.model_copy(update={"mileage_km": rc.out.km_out}),
-                          defects=[to_defect(d) for d in rc.before], rental=rc.out)
+                          defects=[to_defect(d) for d in rc.before + rc.interior_before], rental=rc.out)
         # при возврате ИИ снова находит и старые повреждения: их отделяет сравнение с выдачей
-        ret = Report(kind="return", car=rc.car, defects=[to_defect(d) for d in rc.before + rc.new],
+        ret = Report(kind="return", car=rc.car,
+                     defects=[to_defect(d) for d in rc.before + rc.new + rc.interior_before + rc.interior_new],
                      rental=rc.back.model_copy(update={"handover_report_id": handover.id}))
         attach_options(ret, catalog.suppliers)
         ret.settlement = settle(ret, handover, catalog, terms)
@@ -402,6 +440,7 @@ def build_rentals(settings: Settings, catalog) -> list[dict]:
                                      "source_ru": SOURCE_RU[d.repair_option.source]} if d.repair_option else None)}
                         for d in ret.defects],
             "settlement": ret.settlement.model_dump(),
+            "interior": [{"zone": z, "out": o, "in": i, "new": n} for z, o, i, n in rc.interior_check],
             "terms": {"km_per_day": terms.km_per_day, "extra_km_kzt": terms.extra_km_kzt,
                       "fuel_kzt_per_l": terms.fuel_kzt_per_l, "insurance_threshold": terms.insurance_threshold_kzt},
         })

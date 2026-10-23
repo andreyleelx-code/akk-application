@@ -177,6 +177,57 @@ button{font:inherit;cursor:pointer}
 .client-msg{background:var(--tg-bg);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
 @media (max-width:860px){.pair,.rental-grid,.refund{grid-template-columns:minmax(0,1fr)}}
 
+/* Салон */
+.interior td.new{color:var(--severe);font-weight:600}
+.interior tr.isnew td{background:color-mix(in srgb,var(--severe) 8%,transparent)}
+/* Голос */
+.voice-grid{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:24px;align-items:start}
+.vmsg{display:flex;align-items:center;gap:10px;min-width:210px}
+.vmsg .play{width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:12px;flex:none}
+.vmsg .wave{flex:1;height:22px;background:repeating-linear-gradient(90deg,currentColor 0 2px,transparent 2px 5px);opacity:.55;-webkit-mask:linear-gradient(90deg,#000 0 100%);mask:radial-gradient(ellipse at center,#000 55%,transparent 75%)}
+.vmsg small{font-size:11px;opacity:.7}
+.vtext{font-size:12px;opacity:.75;font-style:italic;margin-top:4px;white-space:normal}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:11px 20px;font-size:15px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+/* Карта */
+.map-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;align-items:start}
+.map{border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#0e1210}
+.map svg{display:block;width:100%;height:auto}
+.map text{font-family:var(--body)}
+.pin{cursor:pointer}
+.pin:hover circle.dot,.pin.on circle.dot{stroke-width:4}
+.st-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:0}
+/* Точность */
+.lvl{display:inline-block;font:600 12px var(--body);padding:2px 9px;border-radius:99px}
+.lvl.hi{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.lvl.mid{background:color-mix(in srgb,var(--minor) 20%,transparent);color:var(--minor)}
+.lvl.lo{background:color-mix(in srgb,var(--severe) 16%,transparent);color:var(--severe)}
+.ok-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.ok-list li{display:grid;grid-template-columns:22px 1fr;gap:6px}
+.ok-list li::before{content:"✓";color:var(--accent);font-weight:800}
+.no-list li::before{content:"✕";color:var(--severe)}
+/* План — извилистая дорога */
+.road{position:relative;display:grid;grid-template-columns:1fr 1fr;column-gap:96px;row-gap:18px}
+.road svg.path{position:absolute;left:50%;top:0;height:100%;width:120px;transform:translateX(-50%);overflow:visible;pointer-events:none}
+.road .stop{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;position:relative}
+.road .stop:nth-of-type(odd){grid-column:1}
+.road .stop:nth-of-type(even){grid-column:2;margin-top:70px}
+.road .stop::after{content:"";position:absolute;top:34px;width:16px;height:16px;border-radius:50%;border:3px solid var(--accent);background:var(--bg)}
+.road .stop:nth-of-type(odd)::after{right:-59px}
+.road .stop:nth-of-type(even)::after{left:-59px}
+.road .stop .k{font:700 13px var(--mono);color:var(--muted)}
+.road .stop b{font:800 20px var(--display);color:var(--accent);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.road .stop p{font-size:14px;color:var(--muted)}
+.road .stop .meta{font-size:13px;color:var(--ink);display:flex;gap:8px}
+.road .stop .meta::before{content:"⁄!\\";color:var(--accent);font-weight:800}
+@media (max-width:860px){
+  .voice-grid,.map-grid{grid-template-columns:minmax(0,1fr)}
+  .road{grid-template-columns:minmax(0,1fr);padding-left:34px}
+  .road .stop:nth-of-type(n){grid-column:1;margin-top:0}
+  .road .stop:nth-of-type(n)::after{left:-43px;right:auto}
+  .road svg.path{left:0;transform:none;width:40px}
+}
+
 /* Telegram */
 .phones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
 .phone{border-radius:28px;border:8px solid #1d2329;background:var(--tg-bg);overflow:hidden;display:flex;flex-direction:column;max-width:420px;width:100%;justify-self:center;height:720px}
@@ -333,15 +384,18 @@ pre code{background:none;padding:0}
   <a href="#rental"><span>03</span>Прокат: выдача и возврат</a>
   <a href="#demo"><span>04</span>Выкуп: оценка</a>
   <a href="#parts"><span>05</span>Ремонт и запчасти</a>
-  <a href="#telegram"><span>06</span>Бот в Telegram</a>
-  <a href="#act"><span>07</span>Акт оценки</a>
-  <a href="#summary"><span>08</span>Панель руководства</a>
-  <a href="#cost"><span>09</span>Стоимость</a>
-  <a href="#plan"><span>10</span>План и сроки</a>
-  <a href="#setup"><span>11</span>Инструкция</a>
-  <a href="#limits"><span>12</span>Границы и риски</a>
-  <a href="#questions"><span>13</span>Вопросы к встрече</a>
-  <a href="#tech"><span>14</span>Техническая часть</a>
+  <a href="#voice"><span>06</span>Голосовой помощник</a>
+  <a href="#map"><span>07</span>Карта парка</a>
+  <a href="#telegram"><span>08</span>Бот в Telegram</a>
+  <a href="#act"><span>09</span>Акт оценки</a>
+  <a href="#summary"><span>10</span>Панель руководства</a>
+  <a href="#cost"><span>11</span>Стоимость</a>
+  <a href="#accuracy"><span>12</span>Точность и гарантии</a>
+  <a href="#plan"><span>13</span>План и сроки</a>
+  <a href="#setup"><span>14</span>Инструкция</a>
+  <a href="#limits"><span>15</span>Границы и риски</a>
+  <a href="#questions"><span>16</span>Вопросы к встрече</a>
+  <a href="#tech"><span>17</span>Техническая часть</a>
 </nav>
 
 <main>
@@ -396,6 +450,11 @@ pre code{background:none;padding:0}
   </div>
   <div class="thumbs" id="rThumbs" style="grid-template-columns:repeat(4,minmax(0,1fr))"></div>
   <div class="legend"><span><i class="sev" style="background:var(--rej)"></i>было при выдаче — клиенту не выставляется</span><span><i class="sev" style="background:var(--severe)"></i>новое — появилось за время аренды</span></div>
+  <div class="card" style="display:flex;flex-direction:column;gap:10px">
+    <h3>Салон: выдача → возврат</h3>
+    <p class="note">Бот снимает салон по тем же правилам: сиденья, пол, потолок, багажник, приборная панель с пробегом и ошибками. Новое в салоне идёт в расчёт так же, как кузов.</p>
+    <div class="tbl-wrap"><table class="interior" id="rInterior"></table></div>
+  </div>
   <div class="rental-grid">
     <div class="card" style="display:flex;flex-direction:column;gap:12px;min-width:0">
       <h3>Расчёт с клиентом</h3>
@@ -459,6 +518,57 @@ pre code{background:none;padding:0}
     <tr><td>Самый дешёвый из своей базы и подрядчиков, при равной цене — быстрее</td><td>Цены и сроки там проверены, с этими людьми уже работают</td></tr>
     <tr><td>Цены из интернета берутся, только если в базе ничего нет</td><td>Их ещё нужно подтвердить: наличие, совместимость, реальная цена</td></tr>
     <tr><td>Оценщик или старший может выбрать любой другой вариант</td><td>Например, б/у деталь дешевле, но клиенту важен оригинал</td></tr>
+  </tbody></table></div>
+</section>
+
+<!-- voice -->
+<section id="voice">
+  <div class="eyebrow">Голосовой помощник</div>
+  <h2>Руки заняты — мастер говорит голосом</h2>
+  <p class="lead">Во время осмотра не нужно печатать. Мастер говорит замечание, бот распознаёт речь и кладёт её в отчёт текстом. В конце бот сам зачитывает итог: что нашёл и сколько удержать. Работает на русском и казахском.</p>
+  <div class="voice-grid">
+    <div class="phone" style="height:620px" aria-label="Голосовой чат"><header><div class="av">{{ICON}}</div><div><b>{{COMPANY}} · оценка</b><small>бот · мастер Ерлан</small></div></header>
+      <div class="chat" id="voiceChat"></div></div>
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <div class="card" style="display:flex;flex-direction:column;gap:10px">
+        <h3>Послушайте, как бот зачитывает отчёт</h3>
+        <p class="note">Кнопка озвучивает итог выбранной в демо машины голосом вашего компьютера. В боте будет голос Yandex SpeechKit.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="speakBtn">▶ Озвучить отчёт</button><button type="button" class="btn ghost" id="stopBtn">■ Стоп</button></div>
+        <p class="note" id="speakText"></p>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;gap:8px">
+        <h3>Что можно сказать голосом</h3>
+        <ul class="ok-list">
+          <li>«Царапина на заднем бампере справа, сантиметров десять»</li>
+          <li>«Толщиномер: левое крыло двести шестьдесят»</li>
+          <li>«Салон: пятно на заднем сиденье, запаха нет»</li>
+          <li>«Ошибок на панели нет, заряд тридцать пять процентов»</li>
+          <li>«Дальше» — следующий ракурс, «готово» — закончить</li>
+        </ul>
+        <p class="note">Распознавание и озвучка — Yandex SpeechKit (Claude не принимает звук). Стоит копейки за сообщение, настраивается ключом в конфигурации.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- map -->
+<section id="map">
+  <div class="eyebrow">Карта парка</div>
+  <h2>Где сейчас каждая машина</h2>
+  <p class="lead">Каждый осмотр отмечается геопозицией, а GPS-трекеры показывают машины в реальном времени. На одной карте видно, кто в аренде, кто на мойке, кто опаздывает с возвратом и кто выехал за город.</p>
+  <span class="tag demo">Схема и положения машин условные</span>
+  <div class="map-grid">
+    <div class="map" id="mapBox"></div>
+    <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div class="legend" id="mapLegend"></div>
+      <div class="tbl-wrap"><table id="mapTable"></table></div>
+      <div class="card" style="display:flex;flex-direction:column;gap:6px"><h3 id="mapInfoT">Выберите машину</h3><p class="note" id="mapInfo">Нажмите на точку на карте или строку в таблице.</p></div>
+    </div>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>Откуда координаты</th><th>Что даёт</th><th>Когда</th></tr></thead><tbody>
+    <tr><td>Геопозиция из Telegram при осмотре</td><td>Где выдали и где приняли машину — в акте и на карте</td><td>Уже в программе</td></tr>
+    <tr><td>GPS-трекеры (Wialon, Navixy и др.)</td><td>Положение в реальном времени, пробег, выезд за город, скорость</td><td>Второй этап: подключение по API трекера</td></tr>
+    <tr><td>Геозоны</td><td>Сигнал, если машина выехала за разрешённую зону или стоит у чужого СТО</td><td>После трекеров</td></tr>
   </tbody></table></div>
 </section>
 
@@ -673,16 +783,75 @@ pre code{background:none;padding:0}
   </div>
 </section>
 
+<!-- accuracy -->
+<section id="accuracy">
+  <div class="eyebrow">Точность и гарантии</div>
+  <h2>Насколько точно ИИ находит дефекты</h2>
+  <p class="lead">Честный ответ: точную цифру назовём после теста на ваших 20–50 машинах. До этого мы не обещаем процентов. Ниже — где ИИ надёжен, что мы гарантируем и что будет, если результат не устроит.</p>
+  <div class="tbl-wrap"><table><thead><tr><th>Что ищет</th><th>Надёжность по фото</th><th>Как усиливаем</th></tr></thead><tbody>
+    <tr><td>Пропущенный ракурс, размытое фото</td><td><span class="lvl hi">высокая</span></td><td>Бот не даст закончить без обязательных фото</td></tr>
+    <tr><td>Трещины стёкол и фар, крупные вмятины, разбитые детали</td><td><span class="lvl hi">высокая</span></td><td>Крупный план зоны, ровный свет</td></tr>
+    <tr><td>Новые повреждения при возврате (сравнение с выдачей)</td><td><span class="lvl hi">высокая</span></td><td>Есть эталон «до» — ИИ сравнивает, а не гадает</td></tr>
+    <tr><td>Царапины, сколы, пятна в салоне</td><td><span class="lvl mid">средняя</span></td><td>Чистая машина, съёмка под углом к свету, фото как файл</td></tr>
+    <tr><td>Разнотон, неровные зазоры</td><td><span class="lvl mid">средняя</span></td><td>Подтверждение толщиномером, голосом в отчёт</td></tr>
+    <tr><td>Шпатлёвка, скрытые повреждения, двигатель</td><td><span class="lvl lo">по фото нельзя</span></td><td>Толщиномер, OBD, осмотр — ИИ напомнит проверить</td></tr>
+  </tbody></table></div>
+  <div class="grid3">
+    <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3>Что гарантируем</h3>
+      <ul class="ok-list">
+        <li>Каждая машина снята полностью — ни одного пропущенного ракурса</li>
+        <li>Каждая находка — с фото, рамкой и уверенностью</li>
+        <li>Отчёт за 1–3 минуты</li>
+        <li>Все фото и акты хранятся — доказательство в споре с клиентом</li>
+        <li>Точность считаем открыто на ваших данных</li>
+        <li>Решение всегда за человеком</li>
+      </ul></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3>Чего не обещаем</h3>
+      <ul class="ok-list no-list">
+        <li>Найти 100% дефектов — так не может ни человек, ни ИИ</li>
+        <li>Увидеть скрытое под краской и внутри агрегатов</li>
+        <li>Одинаковую точность в темноте, под дождём и на грязной машине</li>
+      </ul>
+      <p class="note">Поэтому ИИ — второй взгляд, а цену и удержание утверждает сотрудник.</p></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px"><h3>Если не получится</h3>
+      <ul class="ok-list">
+        <li>Тест на прошлых машинах — бесплатно. Не устроит — расходимся</li>
+        <li>Пилот: часть оплаты — после достижения согласованных цифр</li>
+        <li>Даже без ИИ остаётся польза: единая фотофиксация и акты закрывают споры «было до меня»</li>
+      </ul></div>
+  </div>
+  <div class="grid2">
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0"><h3>Цели для пилота — согласуем до старта</h3>
+      <div class="tbl-wrap"><table><thead><tr><th>Показатель</th><th>Цель</th></tr></thead><tbody>
+        <tr><td>Видимые повреждения от ~2 см при хорошем свете</td><td>находит ≥ 9 из 10</td></tr>
+        <tr><td>Ложные находки (оценщик нажал ✕)</td><td>не больше 2 из 10</td></tr>
+        <tr><td>Пропущенные ракурсы</td><td>0</td></tr>
+        <tr><td>Время осмотра и отчёта</td><td>не дольше, чем сейчас</td></tr>
+        <tr><td>Споры с клиентами при возврате</td><td>меньше, чем сейчас</td></tr>
+      </tbody></table></div>
+      <p class="note">Это цели, а не обещание: проверим их на тесте и в пилоте, цифры увидите в панели руководства.</p></div>
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0"><h3>Как повышаем точность</h3>
+      <ol class="steps" style="gap:8px">
+        <li><div><b>Место и свет</b><p class="note">Навес или постоянное место осмотра со светом — самый большой прирост.</p></div></li>
+        <li><div><b>Фото без сжатия и крупные планы</b><p class="note">Отправка файлом, отдельные кадры проблемных зон.</p></div></li>
+        <li><div><b>Калибровка на ваших машинах</b><p class="note">Примеры ваших дефектов в задании ИИ, пороги уверенности.</p></div></li>
+        <li><div><b>Обратная связь ✓/✕ каждую неделю</b><p class="note">Разбираем ошибки и правим задание — точность растёт с каждой неделей.</p></div></li>
+        <li><div><b>Сильнее модель для спорных случаев</b><p class="note">Claude Fable для машин с пометкой «проверить вручную».</p></div></li>
+      </ol></div>
+  </div>
+</section>
+
 <!-- 08 -->
 <section id="plan">
   <div class="eyebrow">План</div>
   <h2>От встречи до работающей системы — около месяца</h2>
-  <div class="timeline">
-    <div class="tl"><span class="when">Суббота</span><b>Разведка</b><p>Процесс, цена ошибок, объёмы. Забираем 20–50 прошлых сделок, прайс и чек-лист.</p></div>
-    <div class="tl"><span class="when">+3–5 дней</span><b>Тест на их машинах</b><p>Прогон по прошлым сделкам: что поймал ИИ, что пропустил, ошибка цены.</p></div>
-    <div class="tl gate"><span class="when">Решение</span><b>Показ результата</b><p>Цифры по их кейсам. Решают, идти ли в пилот.</p></div>
-    <div class="tl"><span class="when">2 недели</span><b>Пилот</b><p>Бот работает параллельно с оценщиками, расхождения разбираем каждый день.</p></div>
-    <div class="tl gate"><span class="when">Договор</span><b>Передача</b><p>Аккаунты заказчика, документация, видеоинструкция, поддержка.</p></div>
+  <div class="road" id="road">
+    <svg class="path" viewBox="0 0 120 1000" preserveAspectRatio="none" aria-hidden="true"><path d="M60 0 C110 120 10 200 60 320 C110 440 10 520 60 640 C110 760 10 840 60 1000" fill="none" stroke="var(--accent)" stroke-width="3" vector-effect="non-scaling-stroke"/></svg>
+    <div class="stop"><span class="k">01</span><b>Встреча</b><p>Процесс, цена ошибок, объёмы. Забираем 20–50 прошлых осмотров, прайс и условия.</p><span class="meta">Суббота</span></div>
+    <div class="stop"><span class="k">02</span><b>Тест на ваших машинах</b><p>Прогон по прошлым осмотрам: что поймал ИИ, что пропустил.</p><span class="meta">3–5 дней · бесплатно</span></div>
+    <div class="stop"><span class="k">03</span><b>Показ результата</b><p>Цифры по вашим машинам. Решаете, идти ли в пилот.</p><span class="meta">1 встреча</span></div>
+    <div class="stop"><span class="k">04</span><b>Пилот</b><p>Бот работает параллельно с сотрудниками, ошибки разбираем каждый день.</p><span class="meta">2 недели</span></div>
+    <div class="stop"><span class="k">05</span><b>Запуск и передача</b><p>Аккаунты на компанию, обучение, документация, поддержка.</p><span class="meta">после пилота</span></div>
   </div>
 </section>
 
@@ -1245,6 +1414,7 @@ function renderRental(){
   const v = rc.views.find(x => x.angle === rstate.view) || rc.views[0];
   $("rTabs").innerHTML = RENTAL.map((c,i) => `<button type="button" aria-pressed="${i===rstate.car}" data-i="${i}"><b>${esc(c.car.make)} ${esc(c.car.model)}</b><small>${esc(c.car.vin_or_plate)} · ${c.days} сут. · ${c.defects.filter(d=>d.is_new).length} новых</small></button>`).join("");
   $("rTabs").querySelectorAll("button").forEach(b => b.onclick = () => { rstate.car = +b.dataset.i; rstate.view = null; renderRental(); });
+  renderInterior(); renderVoice();
   $("rStory").textContent = rc.story;
   $("rOut").textContent = `${rc.when_out} · ${fmt(rc.km_out)} км`;
   $("rIn").textContent = `${rc.when_in} · ${fmt(rc.km_in)} км`;
@@ -1281,7 +1451,96 @@ function renderRental(){
     <tr><td>Подписи</td><td>Арендатор ________ · Сотрудник ________</td></tr></tbody>`;
 }
 
+/* ---------- салон (прокат) ---------- */
+function renderInterior(){
+  const rc = RENTAL[rstate.car];
+  $("rInterior").innerHTML = `<thead><tr><th>Зона</th><th>При выдаче</th><th>При возврате</th></tr></thead><tbody>${(rc.interior||[]).map(r =>
+    `<tr class="${r.new?"isnew":""}"><td>${esc(r.zone)}</td><td>${esc(r.out)}</td><td class="${r.new?"new":""}">${esc(r.in)}${r.new?" · НОВОЕ":""}</td></tr>`).join("")}</tbody>`;
+}
+
+/* ---------- голос ---------- */
+function speechFor(){
+  const rc = RENTAL[rstate.car], st = rc.settlement;
+  const n = rc.defects.filter(d => d.is_new).length;
+  return `${rc.car.make} ${rc.car.model}, возврат. Новых повреждений: ${n}. ` +
+    rc.defects.filter(d => d.is_new).map(d => `${d.name}, ${d.location}.`).join(" ") +
+    ` К удержанию ${fmt(st.total).replace(/\s/g," ")} тенге. ` + (st.due ? `Доплата сверх депозита ${fmt(st.due).replace(/\s/g," ")} тенге.` : `Вернуть из депозита ${fmt(st.refund).replace(/\s/g," ")} тенге.`);
+}
+function renderVoice(){
+  const rc = RENTAL[rstate.car];
+  const wav = (sec, text, out) => `<div class="msg ${out?"out":"in"}" style="max-width:88%"><div class="vmsg"><span class="play">▶</span><span class="wave"></span><small>0:${String(sec).padStart(2,"0")}</small></div>${text?`<div class="vtext">${esc(text)}</div>`:""}</div>`;
+  const newD = rc.defects.filter(d => d.is_new);
+  $("voiceChat").innerHTML = `<div class="sys">возврат · ${esc(rc.car.make)} ${esc(rc.car.model)}</div>
+    <div class="msg in">📷 Снимите: спереди-слева под 45°</div>
+    ${wav(4, "Дальше", true)}
+    ${newD[0] ? wav(7, `${newD[0].name.split(" (")[0]}, ${newD[0].location}`, true) + `<div class="msg in">🎙 Записал: «${esc(newD[0].name.split(" (")[0].toLowerCase())}, ${esc(newD[0].location)}»</div>` : ""}
+    ${wav(6, "Салон: пятна нет, запаха нет, ошибок на панели нет", true)}
+    <div class="msg in">🎙 Записал в салон</div>
+    ${wav(2, "Готово", true)}
+    <div class="msg in">⏳ Сравниваю с актом выдачи…</div>
+    ${wav(14, speechFor(), false)}`;
+  $("speakText").textContent = "Текст озвучки: " + speechFor();
+}
+function setupSpeech(){
+  const ok = "speechSynthesis" in window;
+  $("speakBtn").onclick = () => {
+    if (!ok){ $("speakText").textContent = "Этот браузер не умеет озвучивать текст. Откройте файл в Chrome или Edge."; return; }
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(speechFor());
+      u.lang = "ru-RU";
+      const v = speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith("ru"));
+      if (v) u.voice = v;
+      speechSynthesis.speak(u);
+    } catch(e) { $("speakText").textContent = "Озвучка недоступна в этом окне. Откройте файл с компьютера в Chrome или Edge."; }
+  };
+  $("stopBtn").onclick = () => { try { speechSynthesis.cancel(); } catch(e){} };
+}
+
+/* ---------- карта ---------- */
+const MAP_ST = {rent:["в аренде","var(--accent)"], base:["на базе","#e8e8e8"], wash:["на мойке","#4aa8ff"], repair:["в ремонте","#ff9f2e"], late:["опаздывает","var(--severe)"]};
+const FLEET = [
+  {m:"Lixiang L9", p:"702 SWR 02", st:"rent", x:620, y:170, info:"Клиент А. Ахметов · до 23.10 18:00 · выехал в Капчагай, разрешено договором"},
+  {m:"Zeekr X", p:"125 SWR 02", st:"base", x:420, y:266, info:"Принята 23.10 10:15 · новое: трещина лобового, пятно в салоне · ждёт стекольщика"},
+  {m:"Zeekr 001", p:"411 SWR 02", st:"rent", x:300, y:330, info:"Клиент · до 25.10 · Аль-Фараби / Достык"},
+  {m:"Land Cruiser 200", p:"880 SWR 02", st:"late", x:760, y:95, info:"Возврат был в 12:00, опоздание 1 ч 40 мин · бот напомнил клиенту"},
+  {m:"Chevrolet Cobalt", p:"531 SWR 02", st:"wash", x:405, y:205, info:"Мойка на Сейфуллина · готова через 30 мин"},
+  {m:"Hyundai Tucson", p:"264 SWR 02", st:"repair", x:200, y:210, info:"Кузовной цех подрядчика · рихтовка двери · готов 24.10"},
+  {m:"Zeekr 009", p:"909 SWR 02", st:"rent", x:540, y:390, info:"VIP · с водителем · Медеу"},
+  {m:"Chery Tiggo 7", p:"117 SWR 02", st:"base", x:455, y:284, info:"Готова к выдаче"},
+];
+let mapSel = null;
+function renderMap(){
+  const W = 900, H = 520;
+  const streets = [];
+  for (let x = 60; x < W; x += 70) streets.push(`<path d="M${x} 0 L${x - 30} ${H - 120}" stroke="#202622" stroke-width="2"/>`);
+  for (let y = 40; y < H - 120; y += 55) streets.push(`<path d="M0 ${y} L${W} ${y + 10}" stroke="#202622" stroke-width="2"/>`);
+  const roads = [["M0 180 L900 190","Абая"],["M0 300 L900 312","Аль-Фараби"],["M0 90 L900 98","Райымбека"],["M450 0 L428 400","Сейфуллина"],["M560 0 L540 400","Достык"],["M330 0 L310 400","Байтурсынова"]];
+  const mountains = `<path d="M0 520 L0 430 L90 380 L160 410 L250 350 L330 400 L420 330 L520 395 L610 340 L700 390 L790 345 L900 400 L900 520 Z" fill="#1d2a2a"/>
+    <path d="M250 350 L272 368 L262 366 L250 380 L238 366 L228 368 Z M420 330 L444 350 L432 348 L420 362 L408 348 L396 350 Z M610 340 L632 358 L620 356 L610 368 L598 356 L588 358 Z" fill="#e8eef0"/>
+    <path d="M0 520 L0 470 L120 440 L260 470 L400 445 L560 472 L720 448 L900 470 L900 520 Z" fill="#14201f"/>`;
+  const office = `<g><circle cx="436" cy="232" r="10" fill="var(--accent)"/><circle cx="436" cy="232" r="20" fill="none" stroke="var(--accent)" stroke-opacity=".4" stroke-width="2"/><text x="452" y="226" font-size="13" font-weight="700" fill="#fff">{{COMPANY}}</text><text x="452" y="242" font-size="11" fill="#9aa">Сейфуллина 356 · база</text></g>`;
+  const pins = FLEET.map((c,i) => `<g class="pin ${mapSel===i?"on":""}" data-i="${i}"><title>${c.m} · ${MAP_ST[c.st][0]}</title>
+    <circle class="dot" cx="${c.x}" cy="${c.y}" r="9" fill="${MAP_ST[c.st][1]}" stroke="#0e1210" stroke-width="2"/>
+    <text x="${c.x + 13}" y="${c.y + 4}" font-size="11" fill="#cfd6d2">${c.m}</text></g>`).join("");
+  $("mapBox").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Схема Алматы с машинами">
+    <rect width="${W}" height="${H}" fill="#0e1210"/>${streets.join("")}
+    ${roads.map(([d,n]) => `<path d="${d}" stroke="#2f3a33" stroke-width="7"/>`).join("")}
+    <path d="M0 40 C200 20 300 60 450 30 C600 0 750 40 900 20" stroke="#2f3a33" stroke-width="7" fill="none"/>
+    ${roads.map(([d,n]) => { const m = d.match(/M(\d+) (\d+) L(\d+) (\d+)/); const x = (+m[1] + +m[3]) / 2, y = (+m[2] + +m[4]) / 2; const vert = Math.abs(m[1]-m[3]) < 100; return vert ? `<text x="${+m[1] - 2}" y="230" font-size="11" fill="#6f7d74" transform="rotate(-87 ${+m[1] - 2} 230)">${n}</text>` : `<text x="20" y="${+m[2] - 8}" font-size="11" fill="#6f7d74">${n}</text>`; }).join("")}
+    <text x="20" y="32" font-size="11" fill="#6f7d74">ВОАД</text>
+    ${mountains}${office}${pins}
+    <text x="${W - 14}" y="${H - 14}" text-anchor="end" font-size="11" fill="#7d8a84">схема · Алматы</text></svg>`;
+  $("mapBox").querySelectorAll(".pin").forEach(g => g.onclick = () => { mapSel = +g.dataset.i; renderMap(); });
+  const counts = Object.keys(MAP_ST).map(k => [k, FLEET.filter(c => c.st === k).length]);
+  $("mapLegend").innerHTML = counts.map(([k,n]) => `<span><i class="st-dot" style="background:${MAP_ST[k][1]}"></i>${MAP_ST[k][0]}: ${n}</span>`).join("");
+  $("mapTable").innerHTML = `<thead><tr><th>Машина</th><th>Статус</th></tr></thead><tbody>${FLEET.map((c,i) =>
+    `<tr class="click ${mapSel===i?"sel":""}" data-i="${i}" tabindex="0"><td><b>${esc(c.m)}</b><div class="note">${esc(c.p)}</div></td><td><i class="st-dot" style="background:${MAP_ST[c.st][1]}"></i>${MAP_ST[c.st][0]}</td></tr>`).join("")}</tbody>`;
+  $("mapTable").querySelectorAll("tr[data-i]").forEach(tr => tr.onclick = () => { mapSel = +tr.dataset.i; renderMap(); });
+  if (mapSel !== null){ const c = FLEET[mapSel]; $("mapInfoT").textContent = `${c.m} · ${c.p}`; $("mapInfo").textContent = `${MAP_ST[c.st][0]}. ${c.info}`; }
+}
+
 function renderAll(){ renderTabs(); renderStage(); renderVerdict(); renderSideNotes(); renderChats(); renderSheet(); renderParts(); }
-renderAll(); renderCharts(); renderCost(); renderPanel(); renderRental();
+renderAll(); renderCharts(); renderCost(); renderPanel(); renderRental(); renderMap(); setupSpeech();
 if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
 </script>
