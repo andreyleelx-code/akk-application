@@ -25,7 +25,33 @@ def sniff_media_type(data: bytes) -> str:
     return "image/jpeg"
 
 
+MAX_SIDE = 1568  # больше Claude всё равно уменьшит; лишние пиксели — лишние деньги
+MAX_BYTES = 3_500_000  # лимит API на картинку — 5 МБ (с запасом на base64)
+
+
+def prepare_image(data: bytes) -> bytes:
+    """Фото «файлом» с телефона бывает 12 Мп и 6 МБ: уменьшаем и поворачиваем по EXIF."""
+    from io import BytesIO
+
+    from PIL import Image, ImageOps
+
+    try:
+        img = Image.open(BytesIO(data))
+    except Exception:
+        return data
+    if max(img.size) <= MAX_SIDE and len(data) <= MAX_BYTES and not img.getexif().get(0x0112):
+        return data
+    img = ImageOps.exif_transpose(img).convert("RGB")
+    img.thumbnail((MAX_SIDE, MAX_SIDE))
+    out = BytesIO()
+    img.save(out, format="JPEG", quality=88)
+    return out.getvalue()
+
+
 def image_block(data: bytes, media_type: str | None = None) -> dict:
+    prepared = prepare_image(data)
+    if prepared is not data:
+        data, media_type = prepared, "image/jpeg"
     media_type = media_type or sniff_media_type(data)
     return {
         "type": "image",

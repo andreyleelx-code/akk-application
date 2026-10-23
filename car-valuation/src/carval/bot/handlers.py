@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import date
 from uuid import uuid4
@@ -30,6 +31,7 @@ from ..models import Car, DefectStatus, Photo, RentalInfo, Report
 from ..rental import load_terms, settle
 from ..voice import Voice, VoiceError, spoken_summary
 from ..models import GeoPoint
+from ..pipeline.decision import needs_manual_review
 from ..pipeline.run import analyze, refresh, reprice
 from ..report import render
 from ..settings import Settings
@@ -39,6 +41,11 @@ from .states import NewCase, ReportEdit
 
 log = logging.getLogger(__name__)
 router = Router()
+_locks: dict[int, asyncio.Lock] = {}
+
+
+def _chat_lock(chat_id: int) -> asyncio.Lock:
+    return _locks.setdefault(chat_id, asyncio.Lock())
 
 HELP = (
     "Я помогаю оценщику: веду по чек-листу съёмки, ищу видимые дефекты "
@@ -211,16 +218,23 @@ async def got_photo(
     if message.document and not (message.document.mime_type or "").startswith("image/"):
         await message.answer("Это не изображение. Пришлите фото.")
         return
-    data = await state.get_data()
-    file = message.photo[-1] if message.photo else message.document
-    buf = await bot.download(file)
-    key = await repo.save_photo(data["case_id"], data["current"], buf.read())
+    # Альбом из нескольких фото приходит пачкой сообщений одновременно.
+    # Без блокировки они читали бы один и тот же «текущий ракурс» и затирали друг друга.
+    async with _chat_lock(message.chat.id):
+        data = await state.get_data()
+        if not data.get("current"):  # съёмка уже завершена другим сообщением из альбома
+            return
+        file = message.photo[-1] if message.photo else message.document
+        buf = await bot.download(file)
+        key = await repo.save_photo(data["case_id"], data["current"], buf.read())
 
-    photos = [p for p in data["photos"] if p["angle_id"] != data["current"]]
-    photos.append(Photo(angle_id=data["current"], storage_key=key).model_dump())
-    await state.update_data(photos=photos)
-
-    if not await ask_next_angle(message, state, catalog):
+        photos = [p for p in data["photos"] if p["angle_id"] != data["current"]]
+        photos.append(Photo(angle_id=data["current"], storage_key=key).model_dump())
+        await state.update_data(photos=photos)
+        more = await ask_next_angle(message, state, catalog)
+        if not more:
+            await state.update_data(current=None)
+    if not more:
         await finish_shooting(message, state, catalog, repo, llm, settings, voice)
 
 
@@ -315,7 +329,7 @@ async def finish_shooting(message: Message, state: FSMContext, catalog: Catalog,
                                  "покажу все найденные.")
         else:
             report.rental.handover_report_id = handover.id
-            report.settlement = settle(report, handover, catalog, load_terms(settings))
+            await resettle(report, repo, catalog, settings)
     await repo.save_report(report)
     await send_annotated(message, report, repo)
     await message.answer(render(report, catalog), reply_markup=report_kb(report))
@@ -325,6 +339,16 @@ async def finish_shooting(message: Message, state: FSMContext, catalog: Catalog,
             await message.answer_voice(BufferedInputFile(audio, "report.ogg"))
         except (VoiceError, TelegramAPIError):
             log.warning("voice summary failed", exc_info=True)
+
+
+async def resettle(report: Report, repo: Storage, catalog: Catalog, settings: Settings) -> None:
+    """Возврат: пересчитать удержание по текущим решениям оценщика (✓/✕, замеры)."""
+    if report.kind != "return" or not report.rental or not report.rental.handover_report_id:
+        return
+    handover = await repo.get_report(report.rental.handover_report_id)
+    if handover is not None:
+        report.settlement = settle(report, handover, catalog, load_terms(settings))
+        report.needs_manual_review = needs_manual_review(report)
 
 
 async def send_annotated(message: Message, report: Report, repo: Storage) -> None:
@@ -358,6 +382,7 @@ async def on_defect(cb: CallbackQuery, catalog: Catalog, repo: Storage, settings
         if d.id == defect_id:
             d.status = DefectStatus.confirmed if action == "c" else DefectStatus.rejected
     reprice(report, catalog=catalog, settings=settings)
+    await resettle(report, repo, catalog, settings)
     await repo.save_report(report)
     await safe_edit(cb, render(report, catalog), reply_markup=report_kb(report))
     await cb.answer()
@@ -399,6 +424,7 @@ async def save_note(message: Message, state: FSMContext, text: str, catalog: Cat
         return
     report.manual_notes.append(text)
     reprice(report, catalog=catalog, settings=settings)
+    await resettle(report, repo, catalog, settings)
     await repo.save_report(report)
     await message.answer(render(report, catalog), reply_markup=report_kb(report))
 
