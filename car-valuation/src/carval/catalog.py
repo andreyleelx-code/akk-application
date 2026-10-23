@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import csv
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
@@ -28,6 +28,7 @@ class Catalog:
     defects: dict[str, dict[str, str]]  # zone_id -> {code: название}
     repair_prices: dict[tuple[str, Severity], int]  # (code, severity) -> цена
     comparables: list[Comparable]
+    suppliers: list = field(default_factory=list)  # parts.SupplierRow
 
     def angle(self, angle_id: str) -> AngleSpec | None:
         return next((a for a in self.angles if a.id == angle_id), None)
@@ -42,6 +43,8 @@ def _read_csv(path: Path) -> list[dict[str, str]]:
 
 
 def load_catalog(settings: Settings) -> Catalog:
+    from .parts import load_suppliers
+
     checklist = yaml.safe_load(settings.config_file("checklist.yaml").read_text("utf-8"))
     defects = yaml.safe_load(settings.config_file("defects.yaml").read_text("utf-8"))
 
@@ -59,4 +62,5 @@ def load_catalog(settings: Settings) -> Catalog:
         defects=defects,
         repair_prices=prices,
         comparables=comparables,
+        suppliers=load_suppliers(settings),
     )

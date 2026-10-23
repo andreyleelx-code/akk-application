@@ -6,6 +6,7 @@ from html import escape
 
 from .catalog import Catalog
 from .models import DefectStatus, Report, Severity
+from .parts import KIND_RU, SOURCE_RU
 
 SEVERITY_RU = {Severity.minor: "лёгкий", Severity.moderate: "средний", Severity.severe: "серьёзный"}
 STATUS_MARK = {
@@ -58,6 +59,13 @@ def render(report: Report, catalog: Catalog) -> str:
             f"{STATUS_MARK[d.status]} {i}. {escape(name)}, {SEVERITY_RU[d.severity]} — "
             f"{escape(d.location)} [{escape(d.angle_id)}], {round(d.confidence * 100)}%"
         )
+        opt = d.repair_option
+        if opt and d.status != DefectStatus.rejected:
+            days = f", {opt.days} дн." if opt.days else ""
+            lines.append(
+                f"    ↳ {KIND_RU[opt.kind]}: {escape(opt.supplier)} ({SOURCE_RU[opt.source]}) — "
+                f"{money(opt.total)}{days}" + (f", вариантов: {len(d.options)}" if len(d.options) > 1 else "")
+            )
 
     if report.not_assessable:
         lines += ["", "<b>Проверить инструментом:</b>"]

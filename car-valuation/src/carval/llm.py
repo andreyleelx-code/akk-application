@@ -76,3 +76,60 @@ class LLM:
         if resp.stop_reason == "max_tokens" or resp.parsed_output is None:
             raise LLMError("Ответ модели обрезан или не прошёл проверку схемы")
         return resp.parsed_output
+
+
+    async def search(
+        self,
+        *,
+        model: str,
+        system: str,
+        prompt: str,
+        city: str = "Almaty",
+        country: str = "KZ",
+        max_uses: int = 6,
+        max_continuations: int = 3,
+    ) -> tuple[str, list[str]]:
+        """Запрос с веб-поиском Claude. Возвращает (текст ответа, адреса найденных страниц).
+
+        Проверенный формат ответа несовместим с цитатами, которые даёт поиск,
+        поэтому разбор в таблицу делается вторым запросом (parse).
+        """
+        tools = [{
+            "type": "web_search_20260209",
+            "name": "web_search",
+            "max_uses": max_uses,
+            "user_location": {"type": "approximate", "city": city, "country": country},
+        }]
+        messages: list[dict] = [{"role": "user", "content": prompt}]
+        try:
+            resp = await self.client.messages.create(
+                model=model, max_tokens=16000, system=system, messages=messages, tools=tools,
+                output_config={"effort": "medium"},
+            )
+            blocks = list(resp.content)
+            for _ in range(max_continuations):
+                if resp.stop_reason != "pause_turn":
+                    break
+                # сервер продолжит поиск с того места, где остановился
+                messages = [messages[0], {"role": "assistant", "content": blocks}]
+                resp = await self.client.messages.create(
+                    model=model, max_tokens=16000, system=system, messages=messages, tools=tools,
+                    output_config={"effort": "medium"},
+                )
+                blocks.extend(resp.content)
+        except anthropic.RateLimitError as e:
+            raise LLMError("Превышен лимит запросов к Claude, повторите позже") from e
+        except anthropic.APIStatusError as e:
+            raise LLMError(f"Claude API вернул ошибку {e.status_code}") from e
+        except anthropic.APIConnectionError as e:
+            raise LLMError("Нет связи с Claude API") from e
+        if resp.stop_reason == "refusal":
+            raise LLMError("Модель отказалась обрабатывать запрос")
+
+        text, urls = [], []
+        for block in blocks:
+            if block.type == "text":
+                text.append(block.text)
+            elif block.type == "web_search_tool_result" and isinstance(block.content, list):
+                urls.extend(r.url for r in block.content if getattr(r, "url", None))
+        return "\n".join(text), urls

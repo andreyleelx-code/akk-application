@@ -7,7 +7,7 @@
     "year": 2020,
     "mileage_km": 85000
   },
-  "created_at": "2026-10-23T09:06:42.422295Z",
+  "created_at": "2026-10-23T09:15:33.957583Z",
   "photos": [
     {
       "angle_id": "front",
@@ -53,7 +53,32 @@
         0.1156
       ],
       "status": "pending",
-      "id": "8e177c9c"
+      "options": [
+        {
+          "kind": "repair",
+          "supplier": "Свой кузовной цех",
+          "source": "own",
+          "parts_cost": 6000,
+          "labor_cost": 30000,
+          "days": 2,
+          "url": null,
+          "note": "пайка и покраска бампера",
+          "total": 36000
+        },
+        {
+          "kind": "analog",
+          "supplier": "Кузов-Сервис (подрядчик)",
+          "source": "contractor",
+          "parts_cost": 55000,
+          "labor_cost": 25000,
+          "days": 3,
+          "url": null,
+          "note": "бампер аналог с покраской",
+          "total": 80000
+        }
+      ],
+      "chosen": 0,
+      "id": "05c0787f"
     },
     {
       "zone": "glass_lights",
@@ -70,7 +95,21 @@
         0.1111
       ],
       "status": "pending",
-      "id": "70887d68"
+      "options": [
+        {
+          "kind": "repair",
+          "supplier": "Оптика-Сервис (подрядчик)",
+          "source": "contractor",
+          "parts_cost": 0,
+          "labor_cost": 12000,
+          "days": 1,
+          "url": null,
+          "note": "полировка фары",
+          "total": 12000
+        }
+      ],
+      "chosen": 0,
+      "id": "1e88fa70"
     },
     {
       "zone": "body",
@@ -87,7 +126,21 @@
         0.0578
       ],
       "status": "pending",
-      "id": "df6677d6"
+      "options": [
+        {
+          "kind": "repair",
+          "supplier": "Свой кузовной цех",
+          "source": "own",
+          "parts_cost": 2000,
+          "labor_cost": 6000,
+          "days": 1,
+          "url": null,
+          "note": "подкраска",
+          "total": 8000
+        }
+      ],
+      "chosen": 0,
+      "id": "11d6c473"
     },
     {
       "zone": "wheels",
@@ -104,7 +157,21 @@
         0.2933
       ],
       "status": "pending",
-      "id": "6a5d1667"
+      "options": [
+        {
+          "kind": "repair",
+          "supplier": "Шинный центр (подрядчик)",
+          "source": "contractor",
+          "parts_cost": 0,
+          "labor_cost": 15000,
+          "days": 1,
+          "url": null,
+          "note": "восстановление кромки диска",
+          "total": 15000
+        }
+      ],
+      "chosen": 0,
+      "id": "e45824f3"
     }
   ],
   "not_assessable": [
@@ -115,9 +182,9 @@
     "market_low": 11475000,
     "market_median": 12600000,
     "market_high": 13425000,
-    "repair_cost": 85000,
-    "offer_low": 11390000,
-    "offer_high": 12515000,
+    "repair_cost": 71000,
+    "offer_low": 11404000,
+    "offer_high": 12529000,
     "currency": "KZT"
   },
   "review": {

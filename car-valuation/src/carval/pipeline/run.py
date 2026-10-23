@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from ..catalog import Catalog
 from ..checklist import missing_required, photos_by_zone
-from ..llm import LLM
+from ..llm import LLM, LLMError
 from ..models import Car, Photo, Report
 from ..pricing import estimate_price
 from ..settings import Settings
 from ..storage import Storage
 from .decision import needs_manual_review
 from .inspector import inspect_all
+from .parts_scout import scout
+from ..parts import attach_options, needs_parts
 from .reviewer import review
 from .shot_controller import check_quality
 
@@ -44,7 +46,17 @@ async def analyze(
         zone_photos, car=car, catalog=catalog, llm=llm, settings=settings
     )
 
-    # 3–5. Цена, ревью, пометка
+    # 3. Варианты ремонта: своя база и подрядчики, а чего нет — поиск в интернете
+    uncovered = attach_options(report, catalog.suppliers)
+    uncovered = [d for d in uncovered if needs_parts(d, catalog.repair_prices)]
+    if uncovered and settings.parts_web_search:
+        try:
+            await scout(uncovered, car=car, llm=llm, settings=settings,
+                        defect_names={d.id: catalog.defect_name(d.zone, d.code) for d in uncovered})
+        except LLMError:
+            report.not_assessable.append("Цены запчастей в интернете найти не удалось — расчёт по прайсу")
+
+    # 4–5. Цена, ревью, пометка
     await refresh(report, catalog=catalog, llm=llm, settings=settings)
     return report
 

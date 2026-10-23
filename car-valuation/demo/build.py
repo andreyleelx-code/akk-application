@@ -34,8 +34,9 @@ from PIL import Image  # noqa: E402
 from carval.annotate import annotate, defects_by_photo  # noqa: E402
 from carval.catalog import load_catalog  # noqa: E402
 from carval.models import (  # noqa: E402
-    Car, Defect, DefectStatus, Photo, Report, Review, ReviewFinding, Severity,
+    Car, Defect, DefectStatus, Photo, RepairOption, Report, Review, ReviewFinding, Severity,
 )
+from carval.parts import KIND_RU, SOURCE_RU, attach_options, choose_option, needs_parts  # noqa: E402
 from carval.pricing import estimate_price, select_comparables  # noqa: E402
 from carval.report import render  # noqa: E402
 from carval.settings import Settings  # noqa: E402
@@ -182,6 +183,32 @@ RIO = DemoCar(
 CARS = [CAMRY, TUCSON, RIO]
 
 
+def web(kind, supplier, url, parts, labor, note):
+    """Пример того, что найдёт поиск в интернете. Сайты настоящие, цены условные."""
+    return RepairOption(kind=kind, supplier=supplier, source="web", url=url,
+                        parts_cost=parts, labor_cost=labor, note=note)
+
+
+KOLESA, OLX, EZY, GIS = ("https://kolesa.kz/zapchasti/", "https://www.olx.kz/zapchasti/",
+                         "https://ezyparts.kz", "https://2gis.kz/almaty")
+
+# (машина, код дефекта) -> что «нашёл» поиск, если в базе пусто или для сравнения
+WEB_OFFERS = {
+    ("camry", "tire_wear"): [
+        web("used", "kolesa.kz — объявления", KOLESA, 45_000, 0, "пара шин б/у 215/55 R17, Алматы · работа не найдена, уточнить"),
+        web("analog", "Шинный магазин из 2GIS", GIS, 78_000, 8_000, "пара новых шин, бюджетный бренд, с монтажом"),
+    ],
+    ("rio", "light_crack"): [
+        web("used", "kolesa.kz — авторазбор", KOLESA, 18_000, 0, "фонарь правый б/у, Kia Rio 2015–2017 · работа не найдена, уточнить"),
+        web("analog", "Ezy Parts", EZY, 32_000, 0, "фонарь аналог, подбор по VIN · работа не найдена, уточнить"),
+        web("used", "OLX.kz — объявления", OLX, 15_000, 0, "фонарь б/у, требует проверки креплений"),
+    ],
+    ("rio", "dent"): [
+        web("used", "kolesa.kz — авторазбор", KOLESA, 25_000, 45_000, "крыло б/у в цвет + покраска у своего цеха"),
+    ],
+}
+
+
 def demo_manual_rule(report: Report) -> bool:
     """Пример правила для показа (то же правило повторено на странице).
     В программе правило задаётся в src/carval/pipeline/decision.py."""
@@ -262,6 +289,13 @@ def build() -> None:
                         not_assessable=car.not_assessable, manual_notes=car.manual_notes,
                         review=car.review)
         report.needs_manual_review = demo_manual_rule(report)
+        # варианты ремонта: база поставщиков + примеры из интернета
+        attach_options(report, catalog.suppliers)
+        for d in report.defects:
+            extra = WEB_OFFERS.get((car.id, d.code), [])
+            if extra and needs_parts(d, catalog.repair_prices):
+                d.options.extend(extra)
+                d.chosen = choose_option(d.options)
         report.estimate = estimate_price(report.car, report.active_defects, catalog.comparables,
                                          catalog.repair_prices, settings.currency)
         (DEMO / "reports" / f"{car.id}.json").write_text(report.model_dump_json(indent=2), "utf-8")
@@ -284,6 +318,8 @@ def build() -> None:
                  "name": catalog.defect_name(d.zone, d.code),
                  "zone_name": catalog.zones[d.zone],
                  "cost": catalog.repair_prices.get((d.code, d.severity), 0),
+                 "options": [{**o.model_dump(), "kind_ru": KIND_RU[o.kind], "source_ru": SOURCE_RU[o.source]} for o in d.options],
+                 "chosen": d.chosen,
                  "status": d.status.value}
                 for d in report.defects
             ],

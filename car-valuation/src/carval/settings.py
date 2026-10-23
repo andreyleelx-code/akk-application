@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     supabase_bucket: str = "car-photos"
 
     currency: str = Field("KZT", alias="CARVAL_CURRENCY")
+    parts_web_search: bool = Field(True, alias="CARVAL_PARTS_WEB_SEARCH")
+    city: str = Field("Алматы", alias="CARVAL_CITY")
 
     config_dir: Path = PROJECT_ROOT / "config"
     prompts_dir: Path = PROJECT_ROOT / "prompts"

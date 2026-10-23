@@ -7,7 +7,7 @@
     "year": 2016,
     "mileage_km": 160000
   },
-  "created_at": "2026-10-23T09:06:42.490260Z",
+  "created_at": "2026-10-23T09:15:34.023706Z",
   "photos": [
     {
       "angle_id": "front",
@@ -48,7 +48,43 @@
         0.1467
       ],
       "status": "confirmed",
-      "id": "7af6b726"
+      "options": [
+        {
+          "kind": "repair",
+          "supplier": "Свой кузовной цех",
+          "source": "own",
+          "parts_cost": 15000,
+          "labor_cost": 95000,
+          "days": 4,
+          "url": null,
+          "note": "рихтовка с заломом",
+          "total": 110000
+        },
+        {
+          "kind": "analog",
+          "supplier": "Кузов-Сервис (подрядчик)",
+          "source": "contractor",
+          "parts_cost": 48000,
+          "labor_cost": 30000,
+          "days": 3,
+          "url": null,
+          "note": "замена крыла аналогом с покраской",
+          "total": 78000
+        },
+        {
+          "kind": "used",
+          "supplier": "kolesa.kz — авторазбор",
+          "source": "web",
+          "parts_cost": 25000,
+          "labor_cost": 45000,
+          "days": null,
+          "url": "https://kolesa.kz/zapchasti/",
+          "note": "крыло б/у в цвет + покраска у своего цеха",
+          "total": 70000
+        }
+      ],
+      "chosen": 1,
+      "id": "cdd71451"
     },
     {
       "zone": "body",
@@ -65,7 +101,9 @@
         0.0756
       ],
       "status": "pending",
-      "id": "322b558e"
+      "options": [],
+      "chosen": null,
+      "id": "7702e9a3"
     },
     {
       "zone": "body",
@@ -82,7 +120,21 @@
         0.1156
       ],
       "status": "confirmed",
-      "id": "c58ea09f"
+      "options": [
+        {
+          "kind": "repair",
+          "supplier": "Свой кузовной цех",
+          "source": "own",
+          "parts_cost": 12000,
+          "labor_cost": 48000,
+          "days": 3,
+          "url": null,
+          "note": "зачистка и покраска",
+          "total": 60000
+        }
+      ],
+      "chosen": 0,
+      "id": "e8ac37d1"
     },
     {
       "zone": "glass_lights",
@@ -99,7 +151,43 @@
         0.0889
       ],
       "status": "pending",
-      "id": "65c6a29a"
+      "options": [
+        {
+          "kind": "used",
+          "supplier": "kolesa.kz — авторазбор",
+          "source": "web",
+          "parts_cost": 18000,
+          "labor_cost": 0,
+          "days": null,
+          "url": "https://kolesa.kz/zapchasti/",
+          "note": "фонарь правый б/у, Kia Rio 2015–2017 · работа не найдена, уточнить",
+          "total": 18000
+        },
+        {
+          "kind": "analog",
+          "supplier": "Ezy Parts",
+          "source": "web",
+          "parts_cost": 32000,
+          "labor_cost": 0,
+          "days": null,
+          "url": "https://ezyparts.kz",
+          "note": "фонарь аналог, подбор по VIN · работа не найдена, уточнить",
+          "total": 32000
+        },
+        {
+          "kind": "used",
+          "supplier": "OLX.kz — объявления",
+          "source": "web",
+          "parts_cost": 15000,
+          "labor_cost": 0,
+          "days": null,
+          "url": "https://www.olx.kz/zapchasti/",
+          "note": "фонарь б/у, требует проверки креплений",
+          "total": 15000
+        }
+      ],
+      "chosen": 2,
+      "id": "57fce309"
     },
     {
       "zone": "body",
@@ -116,7 +204,21 @@
         0.0667
       ],
       "status": "pending",
-      "id": "51886887"
+      "options": [
+        {
+          "kind": "repair",
+          "supplier": "Свой кузовной цех",
+          "source": "own",
+          "parts_cost": 8000,
+          "labor_cost": 32000,
+          "days": 2,
+          "url": null,
+          "note": "локальная покраска",
+          "total": 40000
+        }
+      ],
+      "chosen": 0,
+      "id": "0a115031"
     }
   ],
   "not_assessable": [
@@ -128,9 +230,9 @@
     "market_low": 5500000,
     "market_median": 5950000,
     "market_high": 6175000,
-    "repair_cost": 345000,
-    "offer_low": 5155000,
-    "offer_high": 5605000,
+    "repair_cost": 193000,
+    "offer_low": 5307000,
+    "offer_high": 5757000,
     "currency": "KZT"
   },
   "review": {

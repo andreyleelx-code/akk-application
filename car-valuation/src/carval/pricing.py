@@ -28,8 +28,14 @@ def select_comparables(car: Car, pool: list[Comparable]) -> list[Comparable]:
     return close or same_model
 
 
+def defect_cost(d: Defect, prices: dict[tuple[str, Severity], int]) -> int:
+    """Выбранный вариант ремонта (база/подрядчик/интернет), иначе — прайс."""
+    option = d.repair_option
+    return option.total if option else prices.get((d.code, d.severity), 0)
+
+
 def repair_cost(defects: list[Defect], prices: dict[tuple[str, Severity], int]) -> int:
-    return sum(prices.get((d.code, d.severity), 0) for d in defects)
+    return sum(defect_cost(d, prices) for d in defects)
 
 
 def estimate_price(

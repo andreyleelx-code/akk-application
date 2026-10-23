@@ -7,7 +7,7 @@
     "year": 2018,
     "mileage_km": 110000
   },
-  "created_at": "2026-10-23T09:06:42.323392Z",
+  "created_at": "2026-10-23T09:15:33.859184Z",
   "photos": [
     {
       "angle_id": "front",
@@ -53,7 +53,21 @@
         0.1378
       ],
       "status": "confirmed",
-      "id": "6233c411"
+      "options": [
+        {
+          "kind": "repair",
+          "supplier": "Свой кузовной цех",
+          "source": "own",
+          "parts_cost": 8000,
+          "labor_cost": 42000,
+          "days": 2,
+          "url": null,
+          "note": "рихтовка и покраска элемента",
+          "total": 50000
+        }
+      ],
+      "chosen": 0,
+      "id": "87f6eef8"
     },
     {
       "zone": "body",
@@ -70,7 +84,9 @@
         0.1333
       ],
       "status": "confirmed",
-      "id": "49bbcb90"
+      "options": [],
+      "chosen": null,
+      "id": "98751369"
     },
     {
       "zone": "body",
@@ -87,7 +103,21 @@
         0.0622
       ],
       "status": "confirmed",
-      "id": "07dcab2d"
+      "options": [
+        {
+          "kind": "repair",
+          "supplier": "Свой кузовной цех",
+          "source": "own",
+          "parts_cost": 2000,
+          "labor_cost": 8000,
+          "days": 1,
+          "url": null,
+          "note": "полировка",
+          "total": 10000
+        }
+      ],
+      "chosen": 0,
+      "id": "befd03f3"
     },
     {
       "zone": "glass_lights",
@@ -104,7 +134,21 @@
         0.0933
       ],
       "status": "confirmed",
-      "id": "6dde68a4"
+      "options": [
+        {
+          "kind": "repair",
+          "supplier": "Автостекло (подрядчик)",
+          "source": "contractor",
+          "parts_cost": 0,
+          "labor_cost": 8000,
+          "days": 1,
+          "url": null,
+          "note": "ремонт скола полимером",
+          "total": 8000
+        }
+      ],
+      "chosen": 0,
+      "id": "1bd0a5e9"
     },
     {
       "zone": "wheels",
@@ -121,7 +165,32 @@
         0.3333
       ],
       "status": "confirmed",
-      "id": "3ed08126"
+      "options": [
+        {
+          "kind": "used",
+          "supplier": "kolesa.kz — объявления",
+          "source": "web",
+          "parts_cost": 45000,
+          "labor_cost": 0,
+          "days": null,
+          "url": "https://kolesa.kz/zapchasti/",
+          "note": "пара шин б/у 215/55 R17, Алматы · работа не найдена, уточнить",
+          "total": 45000
+        },
+        {
+          "kind": "analog",
+          "supplier": "Шинный магазин из 2GIS",
+          "source": "web",
+          "parts_cost": 78000,
+          "labor_cost": 8000,
+          "days": null,
+          "url": "https://2gis.kz/almaty",
+          "note": "пара новых шин, бюджетный бренд, с монтажом",
+          "total": 86000
+        }
+      ],
+      "chosen": 0,
+      "id": "bde1110d"
     },
     {
       "zone": "body",
@@ -138,7 +207,21 @@
         0.0667
       ],
       "status": "rejected",
-      "id": "49db40dc"
+      "options": [
+        {
+          "kind": "repair",
+          "supplier": "Свой кузовной цех",
+          "source": "own",
+          "parts_cost": 2000,
+          "labor_cost": 8000,
+          "days": 1,
+          "url": null,
+          "note": "полировка",
+          "total": 10000
+        }
+      ],
+      "chosen": 0,
+      "id": "1d4c773d"
     }
   ],
   "not_assessable": [
@@ -150,9 +233,9 @@
     "market_low": 11100000,
     "market_median": 11800000,
     "market_high": 12950000,
-    "repair_cost": 138000,
-    "offer_low": 10962000,
-    "offer_high": 11662000,
+    "repair_cost": 113000,
+    "offer_low": 10987000,
+    "offer_high": 11687000,
     "currency": "KZT"
   },
   "review": {

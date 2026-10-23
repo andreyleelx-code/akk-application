@@ -6,7 +6,9 @@ from datetime import datetime, timezone
 from enum import Enum
 from uuid import uuid4
 
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from pydantic import BaseModel, Field, computed_field
 
 
 class Severity(str, Enum):
@@ -57,6 +59,24 @@ class ShotQuality(BaseModel):
     unusable: list[PhotoIssue] = Field(default_factory=list)
 
 
+class RepairOption(BaseModel):
+    """Вариант устранения дефекта: ремонт, замена оригиналом, аналогом или б/у."""
+
+    kind: Literal["repair", "oem", "analog", "used"]
+    supplier: str
+    source: Literal["own", "contractor", "web"]  # своя база, подрядчик, найдено в интернете
+    parts_cost: int = 0
+    labor_cost: int = 0
+    days: int | None = None
+    url: str | None = None
+    note: str = ""
+
+    @computed_field
+    @property
+    def total(self) -> int:
+        return self.parts_cost + self.labor_cost
+
+
 class Defect(BaseModel):
     zone: str
     code: str = Field(description="Код дефекта из справочника зоны")
@@ -70,7 +90,16 @@ class Defect(BaseModel):
         description="Рамка дефекта на фото в долях от размера кадра: [x, y, ширина, высота], каждое 0..1",
     )
     status: DefectStatus = DefectStatus.pending
+    options: list[RepairOption] = Field(default_factory=list)
+    chosen: int | None = None  # индекс выбранного варианта в options
     id: str = Field(default_factory=lambda: uuid4().hex[:8])
+
+
+    @property
+    def repair_option(self) -> RepairOption | None:
+        if self.chosen is None or not 0 <= self.chosen < len(self.options):
+            return None
+        return self.options[self.chosen]
 
 
 class FoundDefect(BaseModel):
@@ -96,6 +125,22 @@ class ZoneInspection(BaseModel):
         default_factory=list,
         description="Что нельзя оценить по этим фото и нужно проверить вручную",
     )
+
+
+class ScoutOffer(BaseModel):
+    """Предложение, найденное в интернете (ответ разборщика результатов поиска)."""
+
+    defect_id: str
+    kind: Literal["repair", "oem", "analog", "used"]
+    supplier: str = Field(description="Магазин или мастерская")
+    url: str = Field(description="Страница, где найдена цена")
+    parts_kzt: int = Field(0, description="Цена детали, ₸; 0 если это только работа")
+    labor_kzt: int = Field(0, description="Цена работы, ₸; 0 если не найдена")
+    note: str = Field("", description="Что именно: 'фонарь б/у, левый, Алматы'")
+
+
+class ScoutResult(BaseModel):
+    offers: list[ScoutOffer] = Field(default_factory=list)
 
 
 class ReviewFinding(BaseModel):

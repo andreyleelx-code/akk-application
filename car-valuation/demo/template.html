@@ -34,7 +34,7 @@ h3{font-size:18px;font-weight:600}
 p{margin:0;max-width:68ch}
 a{color:var(--accent)}
 .num,td.n,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
-.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:40px;max-width:1320px;margin:0 auto;
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:clamp(24px,3vw,48px);width:100%;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 80px}
 nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;display:flex;flex-direction:column;gap:2px;font-size:14px}
 nav.toc .brand{font-family:var(--display);font-weight:700;font-size:16px;margin-bottom:12px;line-height:1.25}
@@ -135,6 +135,25 @@ button{font:inherit;cursor:pointer}
 .side-notes ul{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:6px}
 .sev{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+
+/* Ремонт и запчасти */
+.parts-sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.pdef{display:flex;flex-direction:column;gap:10px}
+.pdef .hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pdef .hd .no{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font:700 12px var(--body)}
+.pdef.off{opacity:.5}
+.opt-tbl td{vertical-align:middle}
+.opt-tbl tr.sel td{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.opt-tbl tr{cursor:pointer}
+.opt-tbl input{accent-color:var(--accent);width:16px;height:16px}
+.src{display:inline-block;font:600 11px var(--body);padding:2px 8px;border-radius:99px;white-space:nowrap}
+.src.own{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.src.contractor{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent)}
+.src.web{background:color-mix(in srgb,var(--minor) 20%,transparent);color:var(--minor)}
+.how-web{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.how-web div{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.how-web b{color:var(--ink);font-size:14px}
+@media (max-width:860px){.parts-sum,.how-web{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* Telegram */
 .phones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
@@ -290,15 +309,16 @@ pre code{background:none;padding:0}
   <a href="#top"><span>01</span>Суть</a>
   <a href="#how"><span>02</span>Как работает</a>
   <a href="#demo"><span>03</span>Демо: оценка</a>
-  <a href="#telegram"><span>04</span>Бот в Telegram</a>
-  <a href="#act"><span>05</span>Акт оценки</a>
-  <a href="#summary"><span>06</span>Панель руководства</a>
-  <a href="#cost"><span>07</span>Стоимость</a>
-  <a href="#plan"><span>08</span>План и сроки</a>
-  <a href="#setup"><span>09</span>Инструкция</a>
-  <a href="#limits"><span>10</span>Границы и риски</a>
-  <a href="#questions"><span>11</span>Вопросы к встрече</a>
-  <a href="#tech"><span>12</span>Техническая часть</a>
+  <a href="#parts"><span>04</span>Ремонт и запчасти</a>
+  <a href="#telegram"><span>05</span>Бот в Telegram</a>
+  <a href="#act"><span>06</span>Акт оценки</a>
+  <a href="#summary"><span>07</span>Панель руководства</a>
+  <a href="#cost"><span>08</span>Стоимость</a>
+  <a href="#plan"><span>09</span>План и сроки</a>
+  <a href="#setup"><span>10</span>Инструкция</a>
+  <a href="#limits"><span>11</span>Границы и риски</a>
+  <a href="#questions"><span>12</span>Вопросы к встрече</a>
+  <a href="#tech"><span>13</span>Техническая часть</a>
 </nav>
 
 <main>
@@ -333,7 +353,7 @@ pre code{background:none;padding:0}
   <div class="flow">
     <div class="step"><span class="k">Шаг 1</span><b>Контроль съёмки</b><p>27 ракурсов по чек-листу. Размытое или тёмное фото бот просит переснять.</p><span class="who tag">Код + Claude Haiku</span></div>
     <div class="step"><span class="k">Шаг 2</span><b>Дефектоскопы</b><p>Пять зон параллельно: кузов, стёкла и оптика, колёса, салон, подкапотное.</p><span class="who tag">Claude Opus</span></div>
-    <div class="step"><span class="k">Шаг 3</span><b>Расчёт цены</b><p>Медиана аналогов минус ремонт по прайсу компании.</p><span class="who tag">Формула</span></div>
+    <div class="step"><span class="k">Шаг 3</span><b>Ремонт и цена</b><p>Варианты ремонта из базы поставщиков или из интернета. Цена = рынок минус ремонт.</p><span class="who tag">База + поиск + формула</span></div>
     <div class="step"><span class="k">Шаг 4</span><b>Ревьюер</b><p>Ищет противоречия и признаки ДТП, помечает неуверенные находки.</p><span class="who tag">Claude Opus</span></div>
     <div class="step human"><span class="k">Шаг 5</span><b>Человек</b><p>Оценщик подтверждает дефекты и вносит замеры. Старший утверждает цену.</p><span class="who">Оценщик и старший</span></div>
   </div>
@@ -361,6 +381,31 @@ pre code{background:none;padding:0}
     <div class="card verdict" id="verdict"></div>
   </div>
   <div class="side-notes" id="sideNotes"></div>
+</section>
+
+<!-- 04 parts -->
+<section id="parts">
+  <div class="eyebrow">Ремонт и запчасти</div>
+  <h2>Во что обойдётся ремонт и у кого заказать</h2>
+  <p class="lead">По каждому дефекту ИИ собирает варианты: ремонт, замена оригиналом, аналогом или б/у. Сначала смотрит базу компании (свой цех и подрядчики). Если там пусто, ищет цены на открытых сайтах. Выберите другой вариант, и вычет на ремонт и цена выкупа пересчитаются.</p>
+  <span class="tag demo">Поставщики и цены примерные · сайты настоящие</span>
+  <div class="parts-sum" id="partsSum"></div>
+  <div id="partsList" style="display:flex;flex-direction:column;gap:14px"></div>
+  <div class="card" style="display:flex;flex-direction:column;gap:12px">
+    <h3>Как ИИ ищет, если подрядчика нет</h3>
+    <div class="how-web">
+      <div><b>1. Смотрит базу</b>Свой цех и подрядчики из таблицы поставщиков. Нашёл — берёт их цену.</div>
+      <div><b>2. Ищет в интернете</b>Claude с веб-поиском ищет деталь под марку, модель и год в Казахстане.</div>
+      <div><b>3. Раскладывает в таблицу</b>Цена детали, работы, ссылка на страницу. Без ссылки предложение не берётся.</div>
+      <div><b>4. Отдаёт человеку</b>Цены из интернета помечены жёлтым: их проверяют звонком перед сделкой.</div>
+    </div>
+    <p class="note">Где ищет: <a href="https://kolesa.kz/zapchasti/" target="_blank" rel="noopener">kolesa.kz → Запчасти</a> (новые и б/у, авторазборы), <a href="https://www.olx.kz/zapchasti/" target="_blank" rel="noopener">OLX.kz</a> (запчасти и услуги СТО), <a href="https://ezyparts.kz" target="_blank" rel="noopener">Ezy Parts</a> (оригиналы и аналоги, подбор по VIN), <a href="https://2gis.kz/almaty" target="_blank" rel="noopener">2GIS</a> (шинные центры, автостекло, мастерские). Список сайтов настраивается.</p>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>Как выбирается вариант по умолчанию</th><th>Почему</th></tr></thead><tbody>
+    <tr><td>Самый дешёвый из своей базы и подрядчиков, при равной цене — быстрее</td><td>Цены и сроки там проверены, с этими людьми уже работают</td></tr>
+    <tr><td>Цены из интернета берутся, только если в базе ничего нет</td><td>Их ещё нужно подтвердить: наличие, совместимость, реальная цена</td></tr>
+    <tr><td>Оценщик или старший может выбрать любой другой вариант</td><td>Например, б/у деталь дешевле, но клиенту важен оригинал</td></tr>
+  </tbody></table></div>
 </section>
 
 <!-- 04 -->
@@ -518,6 +563,7 @@ pre code{background:none;padding:0}
       <div class="field"><label for="inPhotos">Фото на машину</label><input id="inPhotos" type="number" min="10" value="50"></div>
       <div class="field"><label for="inModel">Модель для дефектов</label>
         <select id="inModel"><option value="opus">Claude Opus 5.5 (рекомендуем)</option><option value="fable">Claude Fable 5.1 (максимум)</option></select></div>
+      <div class="field"><label for="inWeb">Машин, где нужен поиск запчастей в интернете, %</label><input id="inWeb" type="number" min="0" max="100" value="30"></div>
       <div class="field"><label for="inRate">Курс, ₸ за $1</label><input id="inRate" type="number" min="1" value="500"></div>
       <div class="field"><label for="inFee">Абонентская плата заказчика, ₸/мес</label><input id="inFee" type="number" min="0" step="10000" value="200000"></div>
     </div>
@@ -529,7 +575,7 @@ pre code{background:none;padding:0}
       </div>
       <div class="tbl-wrap"><table id="tMonth"></table></div>
       <div class="tbl-wrap"><table id="tCar"></table></div>
-      <p class="note">Как считали: одно фото из Telegram (1280×960) ≈ 1 600 токенов. Контроль съёмки идёт на дешёвой модели Haiku. Дефектоскопы по 5 зонам и ревьюер идут на выбранной модели, с запасом на «размышления» модели. Точную цифру покажет прогон на 10 реальных машинах.</p>
+      <p class="note">Как считали: поиск в интернете — $10 за 1 000 запросов, около 4 запросов на машину плюс чтение найденных страниц. Одно фото из Telegram (1280×960) ≈ 1 600 токенов. Контроль съёмки идёт на дешёвой модели Haiku. Дефектоскопы по 5 зонам и ревьюер идут на выбранной модели, с запасом на «размышления» модели. Точную цифру покажет прогон на 10 реальных машинах.</p>
     </div>
   </div>
 
@@ -676,6 +722,7 @@ pytest                  # проверка: всё зелёное</code></pre></
     <tr><td>Анализ фото</td><td>Claude Opus 5.5 (vision), структурированный ответ</td><td>Сильная модель, ответ сразу проверяется по схеме</td></tr>
     <tr><td>Контроль съёмки</td><td>Claude Haiku 5.5</td><td>Дешёвая быстрая проверка размытости и бликов</td></tr>
     <tr><td>Расчёт цены</td><td>Python-формула по аналогам и прайсу</td><td>Деньги считает прозрачная формула, а не ИИ</td></tr>
+    <tr><td>Запчасти и подрядчики</td><td>Таблица поставщиков + веб-поиск Claude</td><td>Сначала своя база, в интернете только то, чего нет</td></tr>
     <tr><td>База и фото</td><td>Supabase: Postgres + закрытое хранилище</td><td>Готовая база с бэкапами и правами доступа</td></tr>
     <tr><td>Панель руководства</td><td>Appsmith или ToolJet поверх Supabase</td><td>Собирается без программирования за 1–2 дня</td></tr>
     <tr><td>Интеграции</td><td>n8n (после пилота)</td><td>CRM, уведомления, обновление аналогов</td></tr>
@@ -721,13 +768,15 @@ const tenge = n => fmt(n) + "\u00a0₸";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const $ = id => document.getElementById(id);
 
-const state = {car:0, view:null, hl:null, status: DATA.map(c => c.defects.map(d => d.status))};
+const state = {car:0, view:null, hl:null, status: DATA.map(c => c.defects.map(d => d.status)), chosen: DATA.map(c => c.defects.map(d => d.chosen))};
+const KIND = {repair:"ремонт", oem:"оригинал", analog:"аналог", used:"б/у"};
+function costOf(ci, di){ const d = DATA[ci].defects[di], k = state.chosen[ci][di]; return (d.options.length && k !== null && k !== undefined) ? d.options[k].total : d.cost; }
+function optOf(ci, di){ const d = DATA[ci].defects[di], k = state.chosen[ci][di]; return (d.options.length && k !== null && k !== undefined) ? d.options[k] : null; }
 
 /* ---------- расчёт: та же формула, что в pricing.py ---------- */
 function calc(ci){
   const c = DATA[ci], st = state.status[ci];
-  const active = c.defects.filter((d,i) => st[i] !== "rejected");
-  const repair = active.reduce((s,d) => s + d.cost, 0);
+  const repair = c.defects.reduce((s,d,i) => s + (st[i] !== "rejected" ? costOf(ci, i) : 0), 0);
   const e = c.estimate;
   return {repair, low: Math.max(e.market_low - repair, 0), high: Math.max(e.market_median - repair, 0),
           manual: manualRule(ci)};
@@ -800,7 +849,7 @@ function renderVerdict(){
         <div style="min-width:0"><div class="t">${esc(d.name)}</div>
           <div class="s">${esc(d.location)} · ${SEV_RU[d.severity]}</div>
           <span class="conf" title="Уверенность ИИ"><i><b style="width:${d.confidence*100}%"></b></i>${Math.round(d.confidence*100)}%</span></div>
-        <div class="acts"><span class="cost">${d.cost?"− "+fmt(d.cost):"инфо"}</span>
+        <div class="acts"><span class="cost">${costOf(state.car,i)?"− "+fmt(costOf(state.car,i)):"инфо"}</span>
           <button type="button" class="y ${s==="confirmed"?"on":""}" data-i="${i}" data-s="confirmed" aria-label="Подтвердить">✓</button>
           <button type="button" class="n ${s==="rejected"?"on":""}" data-i="${i}" data-s="rejected" aria-label="Отклонить">✕</button></div></div>`;
     }).join("")}</div>`;
@@ -811,7 +860,7 @@ function renderVerdict(){
     ev.stopPropagation();
     const i = +b.dataset.i, arr = state.status[state.car];
     arr[i] = arr[i] === b.dataset.s ? "pending" : b.dataset.s;
-    renderVerdict(); renderStage(); renderChats(); renderSheet();
+    renderVerdict(); renderStage(); renderChats(); renderSheet(); renderParts();
   });
 }
 function renderSideNotes(){
@@ -896,9 +945,9 @@ function renderSheet(){
     <div><h3 style="margin-bottom:8px">Фото с отмеченными дефектами</h3>
       <div class="strip">${marked.map(([a,src]) => `<figure><img src="${src}" alt=""><figcaption>${esc(titles[a]||a)}</figcaption></figure>`).join("")}</div></div>
     <div><h3 style="margin-bottom:8px">Дефекты</h3><div class="tbl-wrap"><table>
-      <thead><tr><th>№</th><th>Дефект</th><th>Где</th><th>Степень</th><th class="n">ИИ</th><th>Решение</th><th class="n">Ремонт, ₸</th></tr></thead><tbody>
-      ${c.defects.map((d,i) => `<tr${st[i]==="rejected"?' style="color:var(--muted);text-decoration:line-through"':""}><td>${i+1}</td><td>${esc(d.name)}</td><td>${esc(d.location)}</td><td><i class="sev" style="background:${SEV[d.severity]}"></i>${SEV_RU[d.severity]}</td><td class="n">${Math.round(d.confidence*100)}%</td><td>${{pending:"ждёт",confirmed:"подтверждён",rejected:"отклонён"}[st[i]]}</td><td class="n">${st[i]==="rejected"?"—":fmt(d.cost)}</td></tr>`).join("")}
-      <tr class="total"><td colspan="6">Итого вычет на ремонт</td><td class="n">${fmt(r.repair)}</td></tr></tbody></table></div></div>
+      <thead><tr><th>№</th><th>Дефект</th><th>Где</th><th>Степень</th><th class="n">ИИ</th><th>Решение</th><th>Вариант ремонта</th><th class="n">Ремонт, ₸</th></tr></thead><tbody>
+      ${c.defects.map((d,i) => `<tr${st[i]==="rejected"?' style="color:var(--muted);text-decoration:line-through"':""}><td>${i+1}</td><td>${esc(d.name)}</td><td>${esc(d.location)}</td><td><i class="sev" style="background:${SEV[d.severity]}"></i>${SEV_RU[d.severity]}</td><td class="n">${Math.round(d.confidence*100)}%</td><td>${{pending:"ждёт",confirmed:"подтверждён",rejected:"отклонён"}[st[i]]}</td><td>${(() => { const o = optOf(ci,i); return o ? `${KIND[o.kind]} · ${esc(o.supplier)}${o.source==="web"?" (интернет)":""}` : (d.cost ? "по прайсу" : "—"); })()}</td><td class="n">${st[i]==="rejected"?"—":fmt(costOf(ci,i))}</td></tr>`).join("")}
+      <tr class="total"><td colspan="7">Итого вычет на ремонт</td><td class="n">${fmt(r.repair)}</td></tr></tbody></table></div></div>
     <div><h3 style="margin-bottom:8px">Расчёт цены</h3>
       <div class="tbl-wrap" style="margin-bottom:10px"><table><thead><tr><th>Аналог</th><th class="n">Год</th><th class="n">Пробег, км</th><th class="n">Цена, ₸</th></tr></thead><tbody>
         ${c.comparables.map(x => `<tr><td>${esc(x.make)} ${esc(x.model)}</td><td class="n">${x.year}</td><td class="n">${fmt(x.mileage_km)}</td><td class="n">${fmt(x.price)}</td></tr>`).join("")}</tbody></table></div>
@@ -949,20 +998,22 @@ const MODELS = {
   fable: {name:"Claude Fable 5.1", in:10, out:50},
   haiku: {name:"Claude Haiku 5.5", in:0.10, out:0.50},
 };
-function perCar(photos, modelKey){
+function perCar(photos, modelKey, webShare = 0.3){
   const img = photos * 1600, m = MODELS[modelKey], h = MODELS.haiku;
   const rows = [
-    ["Контроль съёмки", h.name, img + 1000, 1500, h],
-    ["Дефектоскопы, 5 зон", m.name, img + 5000, 20000, m],
-    ["Ревьюер", m.name, 4000, 4000, m],
-  ].map(([step, name, tin, tout, p]) => ({step, name, tin, tout, usd: tin/1e6*p.in + tout/1e6*p.out}));
+    ["Контроль съёмки", h.name, img + 1000, 1500, h, 1, 0],
+    ["Дефектоскопы, 5 зон", m.name, img + 5000, 20000, m, 1, 0],
+    ["Ревьюер", m.name, 4000, 4000, m, 1, 0],
+    [`Поиск запчастей в интернете (${Math.round(webShare*100)}% машин)`, m.name + " + поиск", 30000, 3000, m, webShare, 4],
+  ].map(([step, name, tin, tout, p, share, searches]) => ({step, name, tin, tout,
+      usd: share * (tin/1e6*p.in + tout/1e6*p.out + searches * 0.01)}));
   return {rows, usd: rows.reduce((s,r) => s + r.usd, 0)};
 }
 function renderCost(){
   const v = id => Math.max(0, +$(id).value || 0);
   const cars = v("inCars"), days = v("inDays"), photos = v("inPhotos"), rate = v("inRate"), fee = v("inFee");
   const model = $("inModel").value;
-  const pc = perCar(photos, model), monthCars = cars * days;
+  const pc = perCar(photos, model, v("inWeb")/100), monthCars = cars * days;
   const api = pc.usd * monthCars;
   const storageGb = monthCars * photos * 0.25 / 1024 * 6; // фото храним 6 месяцев
   const supa = storageGb > 1 ? 25 : 0, vps = 8;
@@ -986,7 +1037,7 @@ function renderCost(){
   $("rSpend").textContent = tenge(spend);
   $("rRoi").textContent = spend ? (save/spend).toFixed(1).replace(".",",") + " ₸" : "—";
 }
-["inCars","inDays","inPhotos","inModel","inRate","inFee","inMiss","inLoss","inCatch"].forEach(id => $(id).addEventListener("input", renderCost));
+["inCars","inDays","inPhotos","inModel","inWeb","inRate","inFee","inMiss","inLoss","inCatch"].forEach(id => $(id).addEventListener("input", renderCost));
 
 /* ---------- Вопросы ---------- */
 const QUESTIONS = ["Сколько машин оценивают в день и в пиковый день?","Кто утверждает цену, есть ли старший оценщик?","Есть ли письменный чек-лист осмотра?",
@@ -1076,7 +1127,49 @@ $("pFilter").querySelectorAll("button").forEach(b => b.onclick = () => {
 });
 $("pSearch").addEventListener("input", e => { panel.q = e.target.value; renderPanelList(); });
 
-function renderAll(){ renderTabs(); renderStage(); renderVerdict(); renderSideNotes(); renderChats(); renderSheet(); }
+function renderParts(){
+  const ci = state.car, c = DATA[ci], st = state.status[ci];
+  let parts = 0, labor = 0, days = 0, web = 0, base = 0;
+  c.defects.forEach((d,i) => {
+    if (st[i] === "rejected") return;
+    const o = optOf(ci,i);
+    if (o){ parts += o.parts_cost; labor += o.labor_cost; days = Math.max(days, o.days || 0); o.source === "web" ? web++ : base++; }
+    else if (d.cost){ labor += d.cost; }
+  });
+  const r = calc(ci);
+  $("partsSum").innerHTML = `
+    <div class="kpi"><b>${tenge(r.repair)}</b><span>вычет на ремонт</span></div>
+    <div class="kpi"><b>${tenge(parts)}</b><span>из них детали, работа ${tenge(labor)}</span></div>
+    <div class="kpi"><b>${days ? days + " дн." : "—"}</b><span>срок самого долгого ремонта</span></div>
+    <div class="kpi"><b>${base} / ${web}</b><span>вариантов из базы / из интернета</span></div>`;
+  $("partsList").innerHTML = c.defects.map((d,i) => {
+    const off = st[i] === "rejected", col = off ? "var(--rej)" : SEV[d.severity];
+    let body;
+    if (!d.options.length){
+      body = `<p class="note">${d.cost ? "Вариантов нет ни в базе, ни в интернете — расчёт по прайсу: " + tenge(d.cost) : "Информационный дефект: ремонт не считается, нужна проверка инструментом или осмотр."}</p>`;
+    } else {
+      const k = state.chosen[ci][i];
+      const onlyWeb = d.options.every(o => o.source === "web");
+      body = (onlyWeb ? `<p class="note" style="color:var(--minor)">В базе компании вариантов нет — ИИ нашёл предложения в интернете. Цены нужно подтвердить звонком.</p>` : "") +
+      `<div class="tbl-wrap"><table class="opt-tbl"><thead><tr><th></th><th>Вариант</th><th>Поставщик</th><th>Источник</th><th class="n">Деталь</th><th class="n">Работа</th><th class="n">Итого</th><th class="n">Срок</th><th>Комментарий</th></tr></thead><tbody>
+      ${d.options.map((o,j) => `<tr class="${j===k?"sel":""}" data-d="${i}" data-o="${j}">
+        <td><input type="radio" name="opt-${ci}-${i}" id="opt-${ci}-${i}-${j}" ${j===k?"checked":""} aria-label="Выбрать вариант"></td>
+        <td><b>${esc(o.kind_ru)}</b></td><td>${esc(o.supplier)}</td>
+        <td>${o.url ? `<a class="src ${o.source}" href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.source_ru)} ↗</a>` : `<span class="src ${o.source}">${esc(o.source_ru)}</span>`}</td>
+        <td class="n">${o.parts_cost ? fmt(o.parts_cost) : "—"}</td><td class="n">${o.labor_cost ? fmt(o.labor_cost) : "—"}</td>
+        <td class="n"><b>${fmt(o.total)}</b></td><td class="n">${o.days ? o.days + " дн." : "?"}</td><td class="note">${esc(o.note)}</td></tr>`).join("")}
+      </tbody></table></div>`;
+    }
+    return `<div class="card pdef ${off?"off":""}"><div class="hd"><span class="no" style="background:${col}">${i+1}</span><h3>${esc(d.name)}</h3><span class="note">${esc(d.location)} · ${SEV_RU[d.severity]}${off?" · отклонён, не считается":""}</span></div>${body}</div>`;
+  }).join("");
+  $("partsList").querySelectorAll(".opt-tbl tr[data-o]").forEach(tr => tr.onclick = ev => {
+    if (ev.target.closest("a")) return;
+    state.chosen[ci][+tr.dataset.d] = +tr.dataset.o;
+    renderParts(); renderVerdict(); renderChats(); renderSheet();
+  });
+}
+
+function renderAll(){ renderTabs(); renderStage(); renderVerdict(); renderSideNotes(); renderChats(); renderSheet(); renderParts(); }
 renderAll(); renderCharts(); renderCost(); renderPanel();
 if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
 </script>

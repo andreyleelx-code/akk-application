@@ -46,7 +46,10 @@ async def test_analyze_end_to_end(settings, catalog, camry):
     assert "rear_left" in report.missing_angles
     assert [i.angle_id for i in report.photo_issues] == ["rear"]
     assert len(report.defects) == 1 and report.defects[0].zone == "body"
-    assert report.estimate.repair_cost == catalog.repair_prices[("dent", Severity.moderate)]
+    # вмятина есть в своей базе — расчёт по выбранному варианту, а не по прайсу
+    dent = report.defects[0]
+    assert dent.repair_option.source == "own"
+    assert report.estimate.repair_cost == dent.repair_option.total
     assert report.review.overall_confidence == 0.7
 
     # дешёвая модель только для контроля съёмки
