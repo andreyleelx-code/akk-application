@@ -1,0 +1,14 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+
+# Данные заказчика: фото, сделки, цены — конфиденциально, в git не кладём
+data/local/
+data/cases/*
+!data/cases/.gitkeep
+!data/cases/README.md
+config/repair_prices.csv
+config/comparables.csv

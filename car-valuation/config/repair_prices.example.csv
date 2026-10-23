@@ -1,0 +1,76 @@
+defect_code,severity,cost_kzt,comment
+dent,minor,25000,PDR без покраски
+dent,moderate,60000,рихтовка + покраска элемента
+dent,severe,150000,замена/серьёзная рихтовка
+scratch,minor,10000,полировка
+scratch,moderate,45000,локальная покраска
+scratch,severe,70000,покраска элемента
+chip,minor,5000,подкраска
+chip,moderate,20000,
+chip,severe,45000,
+paint_mismatch,minor,0,информационно
+paint_mismatch,moderate,0,информационно: проверить толщиномером
+paint_mismatch,severe,0,информационно: проверить толщиномером
+panel_gap,minor,0,информационно
+panel_gap,moderate,30000,регулировка
+panel_gap,severe,0,подозрение на ДТП: ручная проверка
+rust,minor,20000,
+rust,moderate,70000,
+rust,severe,180000,
+crack_bumper,minor,25000,пайка
+crack_bumper,moderate,60000,пайка + покраска
+crack_bumper,severe,120000,замена бампера
+glass_chip,minor,8000,ремонт скола
+glass_chip,moderate,15000,
+glass_chip,severe,90000,замена лобового
+glass_crack,minor,90000,замена лобового
+glass_crack,moderate,90000,
+glass_crack,severe,120000,
+headlight_haze,minor,10000,полировка
+headlight_haze,moderate,20000,
+headlight_haze,severe,80000,замена фары
+light_crack,minor,40000,
+light_crack,moderate,80000,
+light_crack,severe,120000,
+light_moisture,minor,15000,
+light_moisture,moderate,30000,
+light_moisture,severe,80000,
+tire_wear,minor,0,
+tire_wear,moderate,60000,пара шин
+tire_wear,severe,120000,комплект шин
+tire_uneven_wear,minor,10000,развал-схождение
+tire_uneven_wear,moderate,40000,
+tire_uneven_wear,severe,70000,
+rim_damage,minor,10000,
+rim_damage,moderate,30000,
+rim_damage,severe,70000,замена диска
+tire_mismatch,minor,0,
+tire_mismatch,moderate,30000,
+tire_mismatch,severe,60000,
+seat_wear,minor,10000,
+seat_wear,moderate,35000,перетяжка
+seat_wear,severe,80000,
+wheel_wear,minor,0,информационно
+wheel_wear,moderate,0,информационно: сверить с пробегом
+wheel_wear,severe,25000,
+dash_warning,minor,0,информационно: проверить OBD
+dash_warning,moderate,0,информационно: проверить OBD
+dash_warning,severe,0,информационно: проверить OBD
+stain,minor,5000,химчистка
+stain,moderate,15000,
+stain,severe,40000,
+trim_damage,minor,5000,
+trim_damage,moderate,20000,
+trim_damage,severe,50000,
+oil_leak,minor,15000,
+oil_leak,moderate,50000,
+oil_leak,severe,150000,
+non_factory_weld,minor,0,ручная проверка
+non_factory_weld,moderate,0,ручная проверка
+non_factory_weld,severe,0,ручная проверка
+missing_parts,minor,10000,
+missing_parts,moderate,40000,
+missing_parts,severe,100000,
+coolant_leak,minor,10000,
+coolant_leak,moderate,40000,
+coolant_leak,severe,120000,

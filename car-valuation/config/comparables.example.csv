@@ -1,0 +1,9 @@
+make,model,year,mileage_km,price_kzt,source,date
+Toyota,Camry,2018,120000,11800000,manual,2026-10-01
+Toyota,Camry,2018,95000,12500000,manual,2026-10-03
+Toyota,Camry,2019,80000,13400000,manual,2026-10-05
+Toyota,Camry,2017,150000,10900000,manual,2026-10-02
+Toyota,Camry,2018,140000,11300000,manual,2026-10-07
+Hyundai,Tucson,2020,60000,12900000,manual,2026-10-04
+Hyundai,Tucson,2020,85000,12300000,manual,2026-10-06
+Hyundai,Tucson,2019,110000,11200000,manual,2026-10-08

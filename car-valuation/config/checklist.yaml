@@ -1,0 +1,54 @@
+# Чек-лист съёмки. Бот ведёт оценщика по этому списку сверху вниз.
+# Правьте под регламент заказчика: порядок, формулировки, обязательность.
+#
+# id        — постоянный ключ ракурса (не меняйте после запуска: на него ссылаются отчёты)
+# zone      — к какой зоне относится фото (см. zones ниже)
+# title     — что попросит бот
+# required  — без этого фото отчёт не строится
+
+zones:
+  body: Кузов
+  glass_lights: Стёкла и оптика
+  wheels: Колёса и шины
+  interior: Салон
+  engine_bay: Подкапотное пространство
+
+angles:
+  # --- Общий вид: 8 ракурсов по кругу ---
+  - {id: front, zone: body, required: true, title: "Спереди, прямо, вся машина в кадре"}
+  - {id: front_left, zone: body, required: true, title: "Спереди-слева под 45°"}
+  - {id: left, zone: body, required: true, title: "Левый бок целиком"}
+  - {id: rear_left, zone: body, required: true, title: "Сзади-слева под 45°"}
+  - {id: rear, zone: body, required: true, title: "Сзади, прямо"}
+  - {id: rear_right, zone: body, required: true, title: "Сзади-справа под 45°"}
+  - {id: right, zone: body, required: true, title: "Правый бок целиком"}
+  - {id: front_right, zone: body, required: true, title: "Спереди-справа под 45°"}
+
+  # --- Кузов крупно ---
+  - {id: roof, zone: body, required: false, title: "Крыша (сверху, если есть возможность)"}
+  - {id: hood_close, zone: body, required: true, title: "Капот крупно, под углом к свету"}
+  - {id: gaps_front, zone: body, required: true, title: "Зазоры капот–крылья–фары крупно"}
+  - {id: gaps_doors, zone: body, required: true, title: "Зазоры дверей с левой стороны крупно"}
+  - {id: sills, zone: body, required: true, title: "Пороги снизу, обе стороны"}
+
+  # --- Стёкла и оптика ---
+  - {id: windshield, zone: glass_lights, required: true, title: "Лобовое стекло (сколы, трещины)"}
+  - {id: headlights, zone: glass_lights, required: true, title: "Передние фары крупно"}
+  - {id: taillights, zone: glass_lights, required: true, title: "Задние фонари крупно"}
+
+  # --- Колёса ---
+  - {id: wheel_fl, zone: wheels, required: true, title: "Переднее левое колесо (диск и протектор)"}
+  - {id: wheel_fr, zone: wheels, required: true, title: "Переднее правое колесо"}
+  - {id: wheel_rl, zone: wheels, required: true, title: "Заднее левое колесо"}
+  - {id: wheel_rr, zone: wheels, required: true, title: "Заднее правое колесо"}
+
+  # --- Салон ---
+  - {id: dashboard, zone: interior, required: true, title: "Приборная панель при включённом зажигании (пробег, ошибки)"}
+  - {id: driver_seat, zone: interior, required: true, title: "Водительское сиденье (износ боковины)"}
+  - {id: steering_wheel, zone: interior, required: true, title: "Руль и рычаг КПП крупно"}
+  - {id: rear_seats, zone: interior, required: true, title: "Задний ряд"}
+  - {id: trunk, zone: interior, required: true, title: "Багажник открытый, с поднятым полом"}
+
+  # --- Под капотом ---
+  - {id: engine, zone: engine_bay, required: true, title: "Моторный отсек целиком"}
+  - {id: vin_plate, zone: engine_bay, required: false, title: "Табличка VIN / номер кузова"}
