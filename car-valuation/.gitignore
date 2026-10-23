@@ -16,3 +16,7 @@ config/suppliers.csv
 
 # Служебная копия страницы для публикации ссылкой
 demo/.artifact.html
+
+# Фирменные версии под конкретных заказчиков — не публикуем
+demo/brand-*.json
+demo/presentation-*.html

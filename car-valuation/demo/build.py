@@ -271,9 +271,12 @@ def logo_svg(initials: str, accent: str, ink: str, size: int = 34) -> str:
             f'font-size="{15 if len(initials) <= 2 else 12}" font-weight="800" fill="{ink}">{escape(initials)}</text></svg>')
 
 
+BRAND_FILE = DEMO / "brand.json"
+
+
 def apply_brand(html: str) -> str:
     from html import escape
-    b = json.loads((DEMO / "brand.json").read_text("utf-8"))
+    b = json.loads(BRAND_FILE.read_text("utf-8"))
     tag = (f"Демо для {b['company']} · цифры и фото условные" if b.get("for_client")
            else "Демо на примерах · цифры и фото условные")
     values = {
@@ -366,13 +369,22 @@ def build() -> None:
 
     template = apply_brand((DEMO / "template.html").read_text("utf-8"))
     html = template.replace("/*__DEMO_DATA__*/null", json.dumps(payload, ensure_ascii=False))
-    # Для публикации ссылкой — фрагмент (обёртку добавляет сервис)
-    (DEMO / ".artifact.html").write_text(html, "utf-8")
-    # Для ноутбука на встрече — полный документ, работает без интернета
-    out = DEMO / "presentation.html"
+    slug = json.loads(BRAND_FILE.read_text("utf-8")).get("slug")
+    if slug:
+        # Фирменная версия для конкретного заказчика: только файл, без публикации
+        out = DEMO / f"presentation-{slug}.html"
+    else:
+        # Для публикации ссылкой — фрагмент (обёртку добавляет сервис)
+        (DEMO / ".artifact.html").write_text(html, "utf-8")
+        out = DEMO / "presentation.html"
+    # Полный документ для ноутбука: работает без интернета
     out.write_text('<!doctype html>\n<html lang="ru">\n' + html + "\n</html>\n", "utf-8")
     print(f"Готово: {out} ({out.stat().st_size // 1024} КБ)")
 
 
 if __name__ == "__main__":
+    # python demo/build.py                         — нейтральная версия
+    # python demo/build.py demo/brand-silkway.json — фирменная версия заказчика
+    if len(sys.argv) > 1:
+        BRAND_FILE = Path(sys.argv[1]).resolve()
     build()
