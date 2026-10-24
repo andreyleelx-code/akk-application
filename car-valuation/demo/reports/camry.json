@@ -11,7 +11,7 @@
   "rental": null,
   "settlement": null,
   "location": null,
-  "created_at": "2026-10-23T23:05:20.117160Z",
+  "created_at": "2026-10-24T06:19:56.795441Z",
   "photos": [
     {
       "angle_id": "front",
@@ -71,7 +71,7 @@
         }
       ],
       "chosen": 0,
-      "id": "ffb7695e"
+      "id": "004c9da1"
     },
     {
       "zone": "body",
@@ -90,7 +90,7 @@
       "status": "confirmed",
       "options": [],
       "chosen": null,
-      "id": "b0fb2a90"
+      "id": "d1d82ec4"
     },
     {
       "zone": "body",
@@ -121,7 +121,7 @@
         }
       ],
       "chosen": 0,
-      "id": "e959d529"
+      "id": "f9b243fd"
     },
     {
       "zone": "glass_lights",
@@ -152,7 +152,7 @@
         }
       ],
       "chosen": 0,
-      "id": "bf81dcab"
+      "id": "2435bac3"
     },
     {
       "zone": "wheels",
@@ -194,7 +194,7 @@
         }
       ],
       "chosen": 0,
-      "id": "67345847"
+      "id": "532d8ab7"
     },
     {
       "zone": "body",
@@ -225,7 +225,7 @@
         }
       ],
       "chosen": 0,
-      "id": "98f7bc14"
+      "id": "26dc1ecb"
     }
   ],
   "not_assessable": [
