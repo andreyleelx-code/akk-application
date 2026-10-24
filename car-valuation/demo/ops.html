@@ -85,6 +85,49 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .note{color:var(--muted);font-size:12.5px;line-height:1.6}
 code{font-family:var(--mono);font-size:12px;background:var(--panel2);padding:1px 5px;border-radius:4px}
 .empty{color:var(--muted);font-size:13px;padding:10px 2px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px}
+.tabs button{background:transparent;border:1px solid transparent;border-radius:99px;padding:7px 14px}
+.tabs button[aria-selected="true"]{background:var(--panel);border-color:var(--line);color:var(--ink)}
+.tabs button:not([aria-selected="true"]){color:var(--muted)}
+.tabpanel[hidden]{display:none}
+.tabpanel{display:flex;flex-direction:column;gap:16px}
+/* лиды */
+.leads{display:flex;flex-direction:column;gap:7px}
+.lead{display:grid;grid-template-columns:28px minmax(0,1fr) 120px 150px;gap:10px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px}
+.lead .ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:14px;background:var(--panel)}
+.lead .ic.whatsapp{color:#6fdc8c} .lead .ic.telegram{color:#7db8e8}
+.lead .txt b{display:block;font-size:13px}
+.lead .txt span{color:var(--muted);font-size:12px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who-pill{font:600 11.5px var(--body);padding:3px 9px;border-radius:99px;background:var(--panel);border:1px solid var(--line);white-space:nowrap;text-align:center}
+.who-pill.agent{background:var(--good-soft);color:var(--accent);border-color:transparent}
+/* парк */
+.cal-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table.cal{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100%}
+.cal th,.cal td{border-bottom:1px solid var(--line);padding:0;height:32px;text-align:center}
+.cal thead th{position:sticky;top:0;background:var(--panel2);font-weight:500;color:var(--muted);height:38px;min-width:34px;z-index:1}
+.cal thead th b{display:block;color:var(--ink);font:600 12px var(--mono)}
+.cal thead th.today{box-shadow:inset 0 -2px 0 var(--accent)}
+.cal .car{position:sticky;left:0;z-index:2;background:var(--panel2);text-align:left;padding:0 10px;min-width:150px;border-right:1px solid var(--line)}
+.cal thead .car{z-index:3}
+.cal .car b{display:block;font-size:12.5px;font-weight:600}
+.cal td{min-width:34px;position:relative}
+.cal td .bar{position:absolute;inset:5px 2px;border-radius:5px;display:flex;align-items:center;padding-left:5px;font-size:10.5px;font-weight:600;overflow:hidden;white-space:nowrap}
+.bar.draft{background:#56636b55;color:#d6dadd}
+.bar.confirmed{background:var(--confirmed);color:#dbe8f6}
+.bar.issued{background:var(--issued);color:#eafbe0}
+.bar.returned{background:repeating-linear-gradient(135deg,var(--returned) 0 5px,#8a6421 5px 10px);color:#1f1400}
+.bar.repair{background:var(--bad);color:#fff}
+.bar.prep{background:#3a444b;color:#cfd7db}
+/* фото до/после */
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.photos{grid-template-columns:1fr}}
+.pframe{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.pframe img{display:block;width:100%;height:auto}
+.pframe .lbl{position:absolute;top:8px;left:8px;background:#000a;padding:3px 9px;border-radius:99px;font-size:11.5px}
+.pframe .box{position:absolute;border:2px solid var(--bad);border-radius:4px;box-shadow:0 0 0 2px #0008}
+.pframe .box span{position:absolute;top:-20px;left:-2px;background:var(--bad);color:#fff;font:700 10px var(--mono);padding:1px 5px;border-radius:4px}
+.difflist{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.difflist div{display:flex;justify-content:space-between;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -97,21 +140,70 @@ code{font-family:var(--mono);font-size:12px;background:var(--panel2);padding:1px
 
   <div class="stripe" id="kpis"></div>
 
-  <div class="grid">
+  <nav class="tabs" id="tabs" aria-label="Разделы">
+    <button type="button" data-tab="deals" aria-selected="true">Сделки</button>
+    <button type="button" data-tab="leads" aria-selected="false">Лиды</button>
+    <button type="button" data-tab="photos" aria-selected="false">Фотоконтроль</button>
+    <button type="button" data-tab="fleet" aria-selected="false">Парк</button>
+  </nav>
+
+  <div class="tabpanel" id="tab-deals">
+    <div class="grid">
+      <section class="panel">
+        <div class="cols-head"><span>Сделка</span><span>Клиент · машина</span><span>Статус</span><span>Риски</span><span style="text-align:right">Сумма</span></div>
+        <div class="board" id="board"></div>
+      </section>
+
+      <section class="panel" id="detailPanel"></section>
+    </div>
+
     <section class="panel">
-      <div class="cols-head"><span>Сделка</span><span>Клиент · машина</span><span>Статус</span><span>Риски</span><span style="text-align:right">Сумма</span></div>
-      <div class="board" id="board"></div>
+      <div class="cols-head" style="grid-template-columns:1fr"><span>Напоминания руководителю</span></div>
+      <div class="reminders" id="reminders"></div>
     </section>
 
-    <section class="panel" id="detailPanel"></section>
+    <p class="note">Это прототип логики, которую мы закладываем в код (<code>src/carval/deals.py</code>, 9 тестов). В рабочей версии источник «машина свободна» и оплаты — не вручную, а из RentProg и чата-кассы.</p>
   </div>
 
-  <section class="panel">
-    <div class="cols-head" style="grid-template-columns:1fr"><span>Напоминания руководителю</span></div>
-    <div class="reminders" id="reminders"></div>
-  </section>
+  <div class="tabpanel" id="tab-leads" hidden>
+    <section class="panel">
+      <div class="panel-h" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <h2>Лента лидов из WhatsApp и Telegram</h2>
+        <button type="button" class="primary" id="btnNewLead">Новый лид (демо)</button>
+      </div>
+      <p class="note" style="margin-top:-4px">Правило: если клиент уже переписывался с менеджером — лид падает на него же. Новый клиент — по кругу, менеджерам поровну. В нерабочее время (сейчас это 09:00–21:00) отвечает агент, человек проверяет утром.</p>
+      <div class="leads" id="leads"></div>
+    </section>
+    <p class="note">Логика распределения — <code>src/carval/leads.py</code>, 6 тестов: круговая очередь, «тот же клиент — тот же менеджер», разбор рабочего времени.</p>
+  </div>
 
-  <p class="note">Это прототип логики, которую мы закладываем в код (<code>src/carval/deals.py</code>, 9 тестов). В рабочей версии источник «машина свободна» и оплаты — не вручную, а из RentProg и чата-кассы.</p>
+  <div class="tabpanel" id="tab-photos" hidden>
+    <section class="panel">
+      <h2>Состояние машины: до и после</h2>
+      <p class="note" style="margin-top:-4px">Тот же принцип, что в основном осмотре: ИИ сравнивает фото при выдаче и при возврате, отмечает новые места и передаёт решение человеку. Пример ниже — машина из сделки <b id="pfDeal"></b>.</p>
+      <div class="photos">
+        <div class="pframe"><span class="lbl">При выдаче</span><img src="ops-before.jpg" alt="Машина при выдаче, повреждений нет" id="pfBefore"></div>
+        <div class="pframe"><span class="lbl">При возврате</span><img src="ops-after.jpg" alt="Машина при возврате" id="pfAfter">
+          <div class="box" id="boxScratch" style="left:35%;top:60%;width:17%;height:9%;display:none"><span>царапина</span></div>
+          <div class="box" id="boxDent" style="left:54%;top:58%;width:9%;height:11%;display:none"><span>вмятина</span></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="primary" id="btnDiff">Сравнить с выдачей</button>
+        <button type="button" id="btnReset">Сбросить</button>
+      </div>
+      <div class="difflist" id="diffList"></div>
+    </section>
+    <p class="note">Коробки и суммы здесь расставлены вручную для показа идеи. В рабочей версии это делает тот же конвейер, что уже проверен на реальных фото (<code>src/carval/pipeline/</code>, 51 тест).</p>
+  </div>
+
+  <div class="tabpanel" id="tab-fleet" hidden>
+    <section class="panel">
+      <h2>Календарь парка</h2>
+      <p class="note" style="margin-top:-4px">То же, что видит агент проката, когда проверяет наличие — один календарь, а не два. Полосы — те же сделки со вкладки «Сделки», плюс пример ремонта и мойки.</p>
+      <div class="cal-scroll"><table class="cal" id="cal"></table></div>
+    </section>
+  </div>
 </div>
 
 <script>
@@ -349,5 +441,98 @@ function renderReminders(){
 
 $("board").addEventListener("click", e => { const row = e.target.closest(".row"); if (!row) return; selId = row.dataset.id; renderBoard(); renderDetail(); });
 
-kpis(); renderBoard(); renderDetail(); renderReminders();
+/* ---------- Вкладки ---------- */
+$("tabs").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tab]"); if (!b) return;
+  $("tabs").querySelectorAll("button").forEach(x => x.setAttribute("aria-selected", x === b));
+  ["deals","leads","photos","fleet"].forEach(t => $("tab-"+t).hidden = t !== b.dataset.tab);
+});
+
+/* ---------- Лиды: та же логика, что в src/carval/leads.py ---------- */
+const MANAGERS = ["Ерлан", "Дана", "Арман"];
+const WORK_FROM = 9, WORK_TO = 21;
+let leadNextIdx = 0;
+const leadHistory = {};  // телефон -> менеджер
+function isWorkHour(h){ return h >= WORK_FROM && h < WORK_TO; }
+function assignLead(lead){
+  const known = leadHistory[lead.phone];
+  if (known) lead.to = known;
+  else { lead.to = MANAGERS[leadNextIdx % MANAGERS.length]; leadNextIdx++; leadHistory[lead.phone] = lead.to; }
+  lead.byAgent = !isWorkHour(lead.hour);
+  return lead;
+}
+let LEADS = [
+  {phone:"+77011112233", channel:"whatsapp", text:"Добрый день! Нужен внедорожник на выходные, сколько будет стоить?", hour:11, name:"новый клиент"},
+  {phone:"+77022223344", channel:"telegram", text:"Здравствуйте, это снова я, нужна машина ещё на 3 дня", hour:14, name:"уже писал Дане ранее"},
+  {phone:"+77033334455", channel:"whatsapp", text:"Сәлеметсіз бе! Ертеңге арзан көлік керек", hour:23, name:"новый клиент, ночь"},
+  {phone:"+77044445566", channel:"whatsapp", text:"Подскажите цену на Zeekr X на неделю", hour:10, name:"новый клиент"},
+  {phone:"+77055556677", channel:"telegram", text:"Можно забронировать Land Cruiser на корпоратив, 5 дней?", hour:16, name:"новый клиент"},
+].map(assignLead);
+// второе сообщение от уже знакомого клиента — чтобы показать «тот же менеджер»
+leadHistory["+77022223344"] = "Дана";
+LEADS[1] = assignLead(LEADS[1]);
+
+function renderLeads(){
+  $("leads").innerHTML = LEADS.map(l => `<div class="lead">
+      <span class="ic ${l.channel}">${l.channel === "whatsapp" ? "W" : "T"}</span>
+      <span class="txt"><b>${esc(l.phone)} <span style="color:var(--muted);font-weight:400">· ${esc(l.name)}</span></b><span>${esc(l.text)}</span></span>
+      <span class="who-pill">${l.byAgent ? "ночь · агент ответит" : "рабочее время"}</span>
+      <span class="who-pill ${l.byAgent ? 'agent' : ''}">${l.byAgent ? "агент → утром " + esc(l.to) : esc(l.to)}</span>
+    </div>`).join("");
+}
+$("btnNewLead").onclick = () => {
+  const names = ["Б. Садыкова","Н. Жумабек","О. Петров","Г. Ахметова","Т. Исаев"];
+  const texts = ["Есть что-то на этих выходных подешевле?","Нужна машина с доставкой в аэропорт","Сколько стоит депозит и можно ли без него?","Хочу забронировать на следующую неделю"];
+  const phone = "+7700" + Math.floor(1000000 + Math.random()*8999999);
+  const hour = Math.floor(Math.random()*24);
+  const l = assignLead({phone, channel: Math.random()>0.5?"whatsapp":"telegram",
+    text: texts[Math.floor(Math.random()*texts.length)], hour, name: names[Math.floor(Math.random()*names.length)] + ", новый клиент"});
+  LEADS.unshift(l);
+  renderLeads();
+};
+
+/* ---------- Фотоконтроль: до/после ---------- */
+$("pfDeal").textContent = "D-083 · Д. Сериков · Zeekr X";
+$("btnDiff").onclick = () => {
+  $("boxScratch").style.display = "block";
+  $("boxDent").style.display = "block";
+  $("diffList").innerHTML = `
+    <div><span>Царапина, бампер слева — нет на фото при выдаче</span><b>новое</b></div>
+    <div><span>Вмятина, переднее крыло слева — нет на фото при выдаче</span><b>новое</b></div>
+    <div><span>Остальной кузов — совпадает с выдачей</span><b>без изменений</b></div>`;
+};
+$("btnReset").onclick = () => {
+  $("boxScratch").style.display = "none"; $("boxDent").style.display = "none"; $("diffList").innerHTML = "";
+};
+
+/* ---------- Парк: календарь из тех же сделок + пара служебных записей ---------- */
+const FLEET_CARS = ["Lixiang L9", "Zeekr X", "Chery Tiggo 7 Pro", "Toyota Land Cruiser 200"];
+const SERVICE = [
+  {car:"Zeekr X", from:"2026-10-19", to:"2026-10-20", type:"prep", label:"мойка, подготовка"},
+  {car:"Chery Tiggo 7 Pro", from:"2026-10-24", to:"2026-10-25", type:"repair", label:"ремонт: скол стекла"},
+];
+function renderFleet(){
+  const start = parseISO(TODAY);
+  const n = 14;
+  const days = [...Array(n)].map((_,i) => addDays(TODAY, i));
+  const wdShort = iso => ["вс","пн","вт","ср","чт","пт","сб"][new Date(parseISO(iso)).getDay()];
+  let h = `<thead><tr><th class="car">Машина</th>${days.map((s,i) => `<th class="${i===0?'today':''}">${wdShort(s)}<b>${s.slice(8,10)}</b></th>`).join("")}</tr></thead><tbody>`;
+  for (const car of FLEET_CARS){
+    h += `<tr><th class="car" scope="row"><b>${esc(car)}</b></th>`;
+    const bars = [
+      ...DEALS.filter(d => d.car === car).map(d => ({from:d.from, to:d.to, type:d.status, label:d.client})),
+      ...SERVICE.filter(s => s.car === car).map(s => ({from:s.from, to:s.to, type:s.type, label:s.label})),
+    ];
+    days.forEach((s,i) => {
+      const b = bars.find(x => x.from <= s && x.to >= s);
+      const label = b && (b.from === s || i===0) ? b.label : "";
+      h += `<td>${b ? `<span class="bar ${b.type}">${esc(label)}</span>` : ""}</td>`;
+    });
+    h += `</tr>`;
+  }
+  $("cal").innerHTML = h + "</tbody>";
+}
+function parseISO(s){ const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
+
+kpis(); renderBoard(); renderDetail(); renderReminders(); renderLeads(); renderFleet();
 </script>
