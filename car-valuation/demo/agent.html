@@ -1,0 +1,558 @@
+<title>Агент проката</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Слева календарь парка (что видит менеджер), справа переписка клиента с агентом. Одна тёмная тема, как в презентации. */
+:root{
+  --bg:#0d1012; --panel:#151a1d; --panel2:#1b2125; --line:#273136; --ink:#e7edef; --muted:#8b9aa1;
+  --accent:#5cc8b5; --accent-ink:#06211c;
+  --rent:#2f5f93; --rent-ink:#dbe8f6; --hold:#e0a43a; --repair:#c9574a; --prep:#56636b;
+  --me:#1d4a41; --them:#1c2226; --wknd:#12171a;
+  --display:"Unbounded","Onest",system-ui,sans-serif; --body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font:15px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px 40px;display:flex;flex-direction:column;gap:18px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font:800 clamp(22px,3vw,30px)/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 em{font-style:normal;color:var(--accent)}
+h2{font:600 16px var(--display);margin:0;letter-spacing:.01em}
+.sub{color:var(--muted);max-width:70ch;margin:6px 0 0}
+.tag{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:99px;padding:4px 11px;font-size:12px;color:var(--muted)}
+.tag b{color:var(--ink);font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--muted)}
+.dot.on{background:var(--accent);box-shadow:0 0 0 3px #5cc8b533}
+.dot.off{background:var(--hold)}
+.grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(340px,1fr);gap:18px;align-items:start}
+@media (max-width:1000px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.sw-rent{background:var(--rent)} .sw-hold{background:repeating-linear-gradient(135deg,var(--hold) 0 4px,#8a6421 4px 8px)}
+.sw-repair{background:var(--repair)} .sw-prep{background:var(--prep)} .sw-free{background:transparent;border:1px solid var(--line)}
+/* календарь */
+.cal-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table.cal{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100%}
+.cal th,.cal td{border-bottom:1px solid var(--line);padding:0;height:34px;text-align:center;white-space:nowrap}
+.cal thead th{position:sticky;top:0;background:var(--panel2);font-weight:500;color:var(--muted);height:42px;min-width:38px;line-height:1.15;z-index:1}
+.cal thead th b{display:block;color:var(--ink);font:600 13px var(--mono)}
+.cal thead th.today b{color:var(--accent)}
+.cal thead th.today{box-shadow:inset 0 -2px 0 var(--accent)}
+.cal .car{position:sticky;left:0;z-index:2;background:var(--panel2);text-align:left;padding:0 10px;min-width:150px;border-right:1px solid var(--line)}
+.cal thead .car{z-index:3}
+.cal .car b{display:block;font-size:13px;color:var(--ink);font-weight:600}
+.cal .car span{color:var(--muted);font:11px var(--mono)}
+.cal td{min-width:38px;position:relative;cursor:pointer}
+.cal td.wk{background:var(--wknd)}
+.cal td .bar{position:absolute;inset:6px 0;display:flex;align-items:center;padding-left:6px;font-size:11px;font-weight:600}
+.cal td .bar .lbl{position:relative;z-index:2;white-space:nowrap;pointer-events:none}
+.cal td .bar.s{margin-left:3px;border-top-left-radius:6px;border-bottom-left-radius:6px}
+.cal td .bar.e{margin-right:3px;border-top-right-radius:6px;border-bottom-right-radius:6px}
+.bar.rent{background:var(--rent);color:var(--rent-ink)}
+.bar.hold{background:repeating-linear-gradient(135deg,var(--hold) 0 5px,#8a6421 5px 10px);color:#1f1400}
+.bar.repair{background:var(--repair);color:#fff}
+.bar.prep{background:var(--prep);color:#e9eef0}
+.cal td:hover{outline:1px solid var(--accent);outline-offset:-1px}
+.cal td.flash .bar{animation:flash 1.6s ease-out 1}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--hold)}100%{box-shadow:0 0 0 0 transparent}}
+.detail{font-size:13px;color:var(--muted);min-height:20px}
+.detail b{color:var(--ink)}
+/* заявки и уведомления */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:700px){.two{grid-template-columns:minmax(0,1fr)}}
+.box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.box h3{margin:0;font:600 13px var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.req{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:8px;font-size:13px}
+.req:first-of-type{border-top:0;padding-top:0}
+.req .meta{color:var(--muted);font-size:12px}
+.req .acts{display:flex;gap:6px;flex-wrap:wrap}
+.pill{display:inline-block;font:600 11px var(--body);padding:2px 8px;border-radius:99px;background:#e0a43a26;color:var(--hold)}
+.pill.ok{background:#5cc8b526;color:var(--accent)} .pill.no{background:#c9574a26;color:#f0a197} .pill.call{background:#2f5f9340;color:#a9c6ea}
+.empty{color:var(--muted);font-size:13px}
+.note-log{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.note-log div{display:flex;gap:8px}
+.note-log time{font:11px var(--mono);color:var(--muted);padding-top:2px;flex:none}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 11px;font-size:13px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+select{font:inherit;font-size:13px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+/* чат */
+.phone{background:#0b0e10;border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;height:min(720px,calc(100vh - 80px));min-height:520px}
+.ph-top{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel2);border-bottom:1px solid var(--line)}
+.ava{width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font:800 13px var(--display);flex:none}
+.ph-top b{display:block;font-size:14px}
+.ph-top small{color:var(--muted);font-size:12px}
+.ph-top .sp{flex:1}
+.chat{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:
+  radial-gradient(circle at 20% 10%,#5cc8b50d,transparent 40%),#0b0e10}
+.msg{max-width:84%;padding:8px 11px 6px;border-radius:12px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45}
+.msg.me{align-self:flex-end;background:var(--me);border-bottom-right-radius:4px}
+.msg.them{align-self:flex-start;background:var(--them);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg time{display:block;text-align:right;font:10px var(--mono);color:var(--muted);margin-top:3px}
+.msg.mgr{border-color:#2f5f93}
+.msg .who{display:block;font-size:11px;color:var(--accent);font-weight:600;margin-bottom:2px}
+.msg.mgr .who{color:#a9c6ea}
+.sys{align-self:center;font-size:12px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:3px 11px;text-align:center;max-width:94%}
+.sys.tool{color:#b9d9d2;border-color:#25433d}
+.typing{align-self:flex-start;color:var(--muted);font-size:13px;padding:4px 2px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 10px 0;scrollbar-width:none}
+.chips button{white-space:nowrap;border-radius:99px;font-size:12.5px;padding:5px 11px;background:var(--panel2)}
+form.send{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:var(--panel2);margin:0}
+form.send input{flex:1;min-width:0;background:#0b0e10;border:1px solid var(--line);border-radius:99px;color:var(--ink);font:inherit;padding:9px 14px}
+form.send button{border-radius:99px;padding:0 16px}
+.hint{font-size:12px;color:var(--muted)}
+.terms{font-size:12px;color:var(--muted);line-height:1.6}
+.terms b{color:var(--ink);font-weight:600}
+code{font-family:var(--mono);font-size:12px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Агент проката в <em>WhatsApp</em></h1>
+      <p class="sub">Вы пишете как клиент. Агент отвечает по правилам компании и каждый раз сверяется с календарём парка. Бронь он не подтверждает сам: создаёт заявку, её подтверждает менеджер.</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span class="tag"><span class="dot" id="aiDot"></span><span id="aiState">Подключаю ИИ…</span></span>
+      <span class="tag">Демо · машины и тарифы условные</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-label="Календарь парка">
+      <div class="panel-h">
+        <h2>Календарь парка</h2>
+        <div class="legend">
+          <span><i class="sw-rent"></i>аренда</span><span><i class="sw-hold"></i>заявка агента</span>
+          <span><i class="sw-repair"></i>ремонт</span><span><i class="sw-prep"></i>мойка, подготовка</span><span><i class="sw-free"></i>свободна</span>
+        </div>
+      </div>
+      <div class="cal-scroll"><table class="cal" id="cal"></table></div>
+      <div class="detail" id="detail">Нажмите на день, чтобы увидеть, кто и до какого числа арендует машину.</div>
+
+      <div class="two">
+        <div class="box">
+          <h3>Заявки от агента</h3>
+          <div id="reqs"><p class="empty">Пока нет. Попросите в чате забронировать машину.</p></div>
+        </div>
+        <div class="box">
+          <h3>Уведомления клиентам</h3>
+          <div class="note-log" id="notes"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button type="button" id="btnDamage">Пример: машина вернулась с повреждением</button>
+          </div>
+        </div>
+      </div>
+      <div class="terms" id="terms"></div>
+    </section>
+
+    <section class="panel" aria-label="Переписка с клиентом" style="padding:12px">
+      <div class="phone">
+        <div class="ph-top">
+          <div class="ava">ПА</div>
+          <div><b>Прокат авто · Алматы</b><small id="phStatus">агент на связи · отвечает за минуту</small></div>
+          <div class="sp"></div>
+          <select id="tier" aria-label="Скорость агента">
+            <option value="quick">Быстрый</option>
+            <option value="default">Вдумчивый</option>
+          </select>
+          <button type="button" id="btnReset" title="Начать переписку заново">Заново</button>
+        </div>
+        <div class="chat" id="chat" aria-live="polite"></div>
+        <div class="chips" id="chips"></div>
+        <form class="send" id="send">
+          <input id="box" autocomplete="off" placeholder="Напишите как клиент…" aria-label="Сообщение">
+          <button class="primary" id="btnSend">Отправить</button>
+        </form>
+      </div>
+      <p class="hint" id="hint">Первое сообщение попросит разрешить странице обращаться к Claude: ответы идут с вашего аккаунта.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+/* ---------- Данные парка (условные) ---------- */
+const TODAY = new Date(2026, 9, 24);           // суббота, 24 октября 2026
+const DAYS = 21;
+const FLEET = [
+  {id:"L9-1",  name:"Lixiang L9",            plate:"702 SWR 02", cls:"Премиум SUV, 6 мест, гибрид", price:65000, deposit:100000},
+  {id:"L9-2",  name:"Lixiang L9",            plate:"715 SWR 02", cls:"Премиум SUV, 6 мест, гибрид", price:65000, deposit:100000},
+  {id:"Z001",  name:"Zeekr 001",             plate:"118 SWR 02", cls:"Бизнес, электро",            price:55000, deposit:80000},
+  {id:"ZX-1",  name:"Zeekr X",               plate:"204 SWR 02", cls:"Кроссовер, электро",         price:40000, deposit:50000},
+  {id:"ZX-2",  name:"Zeekr X",               plate:"209 SWR 02", cls:"Кроссовер, электро",         price:40000, deposit:50000},
+  {id:"LC200", name:"Toyota Land Cruiser 200", plate:"300 SWR 02", cls:"Внедорожник, 7 мест",       price:60000, deposit:100000},
+  {id:"T7-1",  name:"Chery Tiggo 7 Pro",     plate:"411 SWR 02", cls:"Кроссовер",                  price:22000, deposit:30000},
+  {id:"T7-2",  name:"Chery Tiggo 7 Pro",     plate:"412 SWR 02", cls:"Кроссовер",                  price:22000, deposit:30000},
+  {id:"EL",    name:"Hyundai Elantra",       plate:"520 SWR 02", cls:"Седан комфорт",              price:18000, deposit:30000},
+  {id:"CB-1",  name:"Chevrolet Cobalt",      plate:"601 SWR 02", cls:"Эконом седан",               price:12000, deposit:30000},
+  {id:"CB-2",  name:"Chevrolet Cobalt",      plate:"602 SWR 02", cls:"Эконом седан",               price:12000, deposit:30000},
+  {id:"CB-3",  name:"Chevrolet Cobalt",      plate:"603 SWR 02", cls:"Эконом седан",               price:12000, deposit:30000},
+];
+const TERMS = {
+  km_per_day: 200, extra_km: 50, delivery: {none:0, city:5000, airport:7000},
+  discounts: [[7,0.20],[3,0.10]], age: 21, experience: 2,
+  docs: "удостоверение личности и водительские права",
+  hours: "выдача и возврат с 9:00 до 21:00, позже — по договорённости",
+  address: "офис на Сейфуллина, выдача также в аэропорту",
+};
+// брони: даты включительно
+let BOOKINGS = [
+  {car:"L9-1",  from:"2026-10-22", to:"2026-10-26", type:"rent",   client:"А. Ахметов"},
+  {car:"L9-1",  from:"2026-10-30", to:"2026-11-02", type:"rent",   client:"Д. Касымова"},
+  {car:"L9-2",  from:"2026-10-28", to:"2026-11-03", type:"rent",   client:"Р. Омаров"},
+  {car:"Z001",  from:"2026-10-24", to:"2026-10-27", type:"repair", client:"ремонт: вмятина после аренды"},
+  {car:"ZX-1",  from:"2026-10-21", to:"2026-10-25", type:"rent",   client:"Д. Сериков"},
+  {car:"ZX-1",  from:"2026-10-31", to:"2026-11-04", type:"rent",   client:"М. Ли"},
+  {car:"ZX-2",  from:"2026-10-24", to:"2026-10-24", type:"prep",   client:"мойка, химчистка"},
+  {car:"LC200", from:"2026-10-20", to:"2026-10-30", type:"rent",   client:"ТОО «Алтын Тау»"},
+  {car:"T7-1",  from:"2026-10-24", to:"2026-10-26", type:"rent",   client:"Е. Бекова"},
+  {car:"T7-2",  from:"2026-10-27", to:"2026-10-29", type:"rent",   client:"С. Ким"},
+  {car:"EL",    from:"2026-10-26", to:"2026-11-01", type:"rent",   client:"А. Нурланов"},
+  {car:"CB-1",  from:"2026-10-18", to:"2026-11-07", type:"rent",   client:"доставка, на месяц"},
+  {car:"CB-2",  from:"2026-10-25", to:"2026-10-26", type:"rent",   client:"Б. Сапаров"},
+];
+let REQUESTS = [];
+let NOTES = [];
+
+/* ---------- Даты ---------- */
+const pad = n => String(n).padStart(2,"0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseIso = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||"").trim()); return m ? new Date(+m[1], +m[2]-1, +m[3]) : null; };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const WD = ["вс","пн","вт","ср","чт","пт","сб"];
+const WD_FULL = ["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
+const MON = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+const human = s => { const d = parseIso(s); return d ? `${d.getDate()} ${MON[d.getMonth()]}` : s; };
+const span = (a,b) => a === b ? human(a) : `${human(a)} – ${human(b)}`;
+const fmt = n => Math.round(n).toLocaleString("ru-RU").replace(/,/g," ");
+const tenge = n => fmt(n) + " ₸";
+const daysBetween = (a,b) => Math.round((parseIso(b) - parseIso(a)) / 864e5) + 1;
+const nowTime = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+
+/* ---------- Логика проката (её же вызывает агент) ---------- */
+const carById = id => FLEET.find(c => c.id.toLowerCase() === String(id||"").trim().toLowerCase());
+function busyOn(carId, from, to){
+  return BOOKINGS.filter(b => b.car === carId && b.type !== "cancelled" && !(b.to < from || b.from > to));
+}
+function checkDates(from, to){
+  const a = parseIso(from), b = parseIso(to);
+  if (!a || !b) throw new Error("Даты нужны в формате ГГГГ-ММ-ДД");
+  if (b < a) throw new Error("Дата возврата раньше даты выдачи");
+  if (a < TODAY) throw new Error("Дата выдачи уже прошла. Сегодня " + iso(TODAY));
+  if (daysBetween(from,to) > 60) throw new Error("Больше 60 суток — это долгосрочная аренда, позовите менеджера");
+}
+function quote(car, from, to, delivery="none"){
+  const days = daysBetween(from, to);
+  const base = car.price * days;
+  const d = TERMS.discounts.find(([min]) => days >= min);
+  const discount = d ? Math.round(base * d[1]) : 0;
+  const del = TERMS.delivery[delivery] ?? 0;
+  return {car_id:car.id, car:car.name, days, price_per_day:car.price, base, discount_percent: d ? d[1]*100 : 0, discount,
+          delivery, delivery_cost:del, total: base - discount + del, deposit: car.deposit,
+          km_included: TERMS.km_per_day * days, extra_km_price: TERMS.extra_km};
+}
+function findAvailable(from, to, query){
+  checkDates(from, to);
+  const q = String(query||"").toLowerCase().trim();
+  const match = c => !q || (c.name + " " + c.cls).toLowerCase().includes(q) ||
+    (q.includes("эконом") && c.price <= 15000) || (q.includes("электр") && /электро/.test(c.cls)) ||
+    ((q.includes("внедорож") || q.includes("джип")) && /SUV|Внедорожник/.test(c.cls)) || (q.includes("премиум") && c.price >= 55000);
+  const pool = FLEET.filter(match);
+  const free = pool.filter(c => busyOn(c.id, from, to).length === 0);
+  const seen = new Set();
+  const list = free.filter(c => { const k = c.name; if (seen.has(k)) return false; seen.add(k); return true; })
+    .map(c => ({car_id:c.id, car:c.name, class:c.cls, price_per_day:c.price, total:quote(c,from,to).total, free_units: free.filter(x => x.name === c.name).length}));
+  const busyModels = [...new Set(pool.filter(c => !free.includes(c)).map(c => c.name))].filter(n => !list.some(l => l.car === n));
+  const nextFree = busyModels.map(n => {
+    for (let i = 0; i < DAYS + 14; i++){
+      const s = iso(addDays(parseIso(from), i)), e = iso(addDays(parseIso(to), i));
+      const c = FLEET.find(x => x.name === n && busyOn(x.id, s, e).length === 0);
+      if (c) return {car:n, free_from:s, free_to:e};
+    }
+    return {car:n, free_from:null};
+  }).sort((x,y) => String(x.free_from||"9").localeCompare(String(y.free_from||"9")));
+  return {date_from:from, date_to:to, days:daysBetween(from,to), available:list, busy_models_next_free:nextFree};
+}
+function createRequest({car_id, date_from, date_to, client_name, phone, delivery}){
+  const car = carById(car_id);
+  if (!car) throw new Error("Нет машины с id " + car_id + ". Возьмите car_id из find_available_cars");
+  checkDates(date_from, date_to);
+  if (busyOn(car.id, date_from, date_to).length) {
+    const alt = FLEET.find(c => c.name === car.name && busyOn(c.id, date_from, date_to).length === 0);
+    if (!alt) throw new Error(`${car.name} (${car.id}) занята в эти даты. Предложите другие даты или машину`);
+    return createRequest({car_id:alt.id, date_from, date_to, client_name, phone, delivery});
+  }
+  if (!String(client_name||"").trim()) throw new Error("Нужно имя клиента");
+  const q = quote(car, date_from, date_to, delivery || "none");
+  const id = "Z-" + (101 + REQUESTS.length);
+  const b = {car:car.id, from:date_from, to:date_to, type:"hold", client:String(client_name).trim(), req:id};
+  BOOKINGS.push(b);
+  REQUESTS.unshift({id, car, from:date_from, to:date_to, client:b.client, phone:String(phone||"").trim(), delivery:q.delivery, total:q.total, deposit:q.deposit, status:"wait", booking:b});
+  renderCal(car.id, date_from); renderReqs();
+  return {request_id:id, status:"ждёт подтверждения менеджера (обычно до 15 минут)", ...q};
+}
+function callManager(reason){
+  const id = "M-" + (201 + REQUESTS.length);
+  REQUESTS.unshift({id, kind:"call", reason:String(reason||"клиент просит менеджера"), status:"call"});
+  renderReqs();
+  return {ok:true, message:"Менеджер получил уведомление и подключится к переписке"};
+}
+
+/* ---------- Календарь ---------- */
+const SHORT = (s, len) => { const max = Math.max(4, len * 6); return s.length > max ? s.slice(0, max - 1).replace(/[\s,:]+$/,"") + "…" : s; };
+function renderCal(flashCar, flashFrom){
+  const days = [...Array(DAYS)].map((_,i) => addDays(TODAY, i));
+  let h = `<thead><tr><th class="car">Машина</th>${days.map((d,i) =>
+    `<th class="${i===0?"today":""}">${WD[d.getDay()]}<b>${d.getDate()}</b></th>`).join("")}</tr></thead><tbody>`;
+  for (const c of FLEET){
+    h += `<tr><th class="car" scope="row"><b>${c.name}</b><span>${c.plate} · ${fmt(c.price)} ₸</span></th>`;
+    days.forEach((d,i) => {
+      const s = iso(d), wk = d.getDay()===0 || d.getDay()===6;
+      const b = BOOKINGS.find(x => x.car === c.id && x.type !== "cancelled" && x.from <= s && x.to >= s);
+      let bar = "";
+      if (b){
+        const start = b.from === s, end = b.to === s, label = (start || i===0) ? SHORT(b.type==="hold" ? "заявка: " + b.client : b.client, daysBetween(s, b.to < iso(days[DAYS-1]) ? b.to : iso(days[DAYS-1]))) : "";
+        bar = `<span class="bar ${b.type}${start?" s":""}${end?" e":""}">${label ? `<span class="lbl">${esc(label)}</span>` : ""}</span>`;
+      }
+      const fl = flashCar === c.id && b && b.from === flashFrom && b.from <= s ? " flash" : "";
+      h += `<td class="${wk?"wk":""}${fl}" data-car="${c.id}" data-day="${s}">${bar}</td>`;
+    });
+    h += `</tr>`;
+  }
+  $("cal").innerHTML = h + "</tbody>";
+}
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+$("cal").addEventListener("click", e => {
+  const td = e.target.closest("td[data-car]"); if (!td) return;
+  const c = carById(td.dataset.car), s = td.dataset.day;
+  const b = BOOKINGS.find(x => x.car === c.id && x.type !== "cancelled" && x.from <= s && x.to >= s);
+  const what = {rent:"в аренде", hold:"заявка агента, ждёт менеджера", repair:"в ремонте", prep:"на подготовке"};
+  $("detail").innerHTML = b
+    ? `<b>${esc(c.name)}</b> ${c.plate} · ${what[b.type]}: ${esc(b.client)}, ${span(b.from, b.to)}`
+    : `<b>${esc(c.name)}</b> ${c.plate} · свободна ${human(s)}`;
+});
+
+function renderReqs(){
+  if (!REQUESTS.length){ $("reqs").innerHTML = `<p class="empty">Пока нет. Попросите в чате забронировать машину.</p>`; return; }
+  $("reqs").innerHTML = REQUESTS.map(r => r.kind === "call"
+    ? `<div class="req"><div><span class="pill call">позвать менеджера</span> ${esc(r.id)}</div><div class="meta">${esc(r.reason)}</div></div>`
+    : `<div class="req"><div><span class="pill ${r.status==="ok"?"ok":r.status==="no"?"no":""}">${{wait:"ждёт",ok:"подтверждена",no:"отклонена"}[r.status]}</span> <b>${esc(r.id)}</b> · ${esc(r.car.name)} ${r.car.plate}</div>
+        <div class="meta">${esc(r.client)}${r.phone?", "+esc(r.phone):""} · ${span(r.from, r.to)} · ${tenge(r.total)}${r.delivery!=="none"?", доставка":""} · депозит ${tenge(r.deposit)}</div>
+        ${r.status==="wait" ? `<div class="acts"><button type="button" class="primary" data-ok="${r.id}">Подтвердить</button><button type="button" data-no="${r.id}">Отклонить</button></div>` : ""}</div>`).join("");
+}
+$("reqs").addEventListener("click", e => {
+  const ok = e.target.dataset.ok, no = e.target.dataset.no; if (!ok && !no) return;
+  const r = REQUESTS.find(x => x.id === (ok || no)); if (!r) return;
+  r.status = ok ? "ok" : "no";
+  r.booking.type = ok ? "rent" : "cancelled";
+  renderReqs(); renderCal();
+  addMsg(ok
+    ? `Бронь ${r.id} подтверждена ✅\n${r.car.name}, ${span(r.from, r.to)}.\nК оплате ${tenge(r.total)}, депозит ${tenge(r.deposit)} (вернём после возврата машины).\nВозьмите с собой ${TERMS.docs}. Накануне пришлём напоминание.`
+    : `К сожалению, ${r.car.name} на эти даты подтвердить не можем: машина нужна на техобслуживание. Подберу вам другой вариант — напишите, пожалуйста, удобные даты или класс машины.`,
+    "them mgr", "Менеджер");
+  addNote(ok ? `${r.client}: подтверждение брони ${r.id} и памятка по документам` : `${r.client}: отказ по заявке ${r.id}, агент предложит замену`);
+});
+
+function addNote(text){ NOTES.unshift({t:nowTime(), text}); renderNotes(); }
+function renderNotes(){
+  $("notes").innerHTML = NOTES.slice(0,6).map(n => `<div><time>${n.t}</time><span>${esc(n.text)}</span></div>`).join("");
+}
+function seedNotes(){
+  const tomorrow = iso(addDays(TODAY,1));
+  BOOKINGS.filter(b => b.type === "rent" && b.to === iso(TODAY)).forEach(b => NOTES.push({t:"09:00", text:`${b.client}: напоминание — возврат ${carById(b.car).name} сегодня до 21:00`}));
+  BOOKINGS.filter(b => b.type === "rent" && b.to === tomorrow).forEach(b => NOTES.push({t:"10:00", text:`${b.client}: напоминание — возврат ${carById(b.car).name} завтра`}));
+  BOOKINGS.filter(b => b.type === "rent" && b.from === tomorrow).forEach(b => NOTES.push({t:"10:05", text:`${b.client}: завтра выдача ${carById(b.car).name}, адрес и документы`}));
+  renderNotes();
+}
+$("btnDamage").onclick = () => {
+  const b = BOOKINGS.find(x => x.car === "T7-1" && x.type === "rent");
+  if (!b || b.damaged) return;
+  b.damaged = true; b.to = iso(TODAY);
+  BOOKINGS.push({car:"T7-1", from:iso(addDays(TODAY,1)), to:iso(addDays(TODAY,3)), type:"repair", client:"ремонт: царапина на бампере"});
+  renderCal("T7-1", iso(addDays(TODAY,1)));
+  addNote(`Е. Бекова: акт возврата с фото, удержание из депозита 18 000 ₸`);
+  addNote(`Chery Tiggo 7 Pro 411: в ремонте до ${human(iso(addDays(TODAY,3)))} — агент не предлагает её клиентам`);
+  $("btnDamage").disabled = true;
+  $("detail").innerHTML = `<b>Chery Tiggo 7 Pro</b> 411 SWR 02 · после осмотра ИИ нашёл новую царапину. Машина автоматически ушла в ремонт, агент её больше не предлагает.`;
+};
+
+$("terms").innerHTML = `<b>Условия, по которым отвечает агент:</b> лимит ${TERMS.km_per_day} км/сутки, сверх — ${TERMS.extra_km} ₸/км · скидка от 3 суток 10%, от 7 суток 20% · доставка по городу ${tenge(TERMS.delivery.city)}, в аэропорт ${tenge(TERMS.delivery.airport)} · возраст от ${TERMS.age} лет, стаж от ${TERMS.experience} лет · ${TERMS.hours}. Тарифы и правила условные: на пилоте подставим действующие.`;
+
+/* ---------- Чат ---------- */
+const turns = [];        // история для Claude
+let busy = false, ctl = null, sample = null, aiMode = "wait";
+function addMsg(text, cls, who){
+  const el = document.createElement("div");
+  el.className = "msg " + cls;
+  if (who){ const w = document.createElement("span"); w.className = "who"; w.textContent = who; el.append(w); }
+  const body = document.createElement("span"); body.textContent = text; el.append(body);
+  const t = document.createElement("time"); t.textContent = nowTime(); el.append(t);
+  $("chat").append(el); $("chat").scrollTop = $("chat").scrollHeight;
+  return body;
+}
+function addSys(text, tool){
+  const el = document.createElement("div"); el.className = "sys" + (tool ? " tool" : ""); el.textContent = text;
+  $("chat").append(el); $("chat").scrollTop = $("chat").scrollHeight;
+}
+function greet(){
+  $("chat").innerHTML = "";
+  addSys(`сегодня, ${TODAY.getDate()} ${MON[TODAY.getMonth()]}`);
+  addMsg("Здравствуйте! Я помощник проката. Подскажу свободные машины на ваши даты, посчитаю стоимость и оформлю заявку. Какие даты и какая машина вас интересует?", "them", "Агент");
+}
+const CHIPS = ["Есть свободный Zeekr на эти выходные?","Сколько стоит L9 на 3 дня с доставкой в аэропорт?",
+  "Нужна недорогая машина с 28 по 30 октября","Можно без депозита?","Сәлеметсіз бе! Ертеңге көлік керек","Хочу Land Cruiser на завтра"];
+$("chips").innerHTML = CHIPS.map(c => `<button type="button">${esc(c)}</button>`).join("");
+$("chips").addEventListener("click", e => { if (e.target.tagName === "BUTTON" && !busy){ $("box").value = e.target.textContent; $("send").requestSubmit(); } });
+
+function rules(){
+  const fleet = [...new Map(FLEET.map(c => [c.name, c])).values()]
+    .map(c => `- ${c.name}: ${c.cls}, ${fmt(c.price)} ₸/сутки, депозит ${fmt(c.deposit)} ₸, машин: ${FLEET.filter(x => x.name === c.name).length}`).join("\n");
+  const week = [...Array(10)].map((_,i) => { const d = addDays(TODAY,i); return `${iso(d)} — ${WD_FULL[d.getDay()]}`; }).join("; ");
+  return `Ты — агент проката автомобилей в Алматы. Отвечаешь клиентам в WhatsApp от имени компании.
+Сегодня ${iso(TODAY)}, ${WD_FULL[TODAY.getDay()]}. Ближайшие дни: ${week}.
+
+Как отвечать:
+- Пиши как живой менеджер в WhatsApp: коротко, 1–4 предложения, вежливо, без канцелярита и без markdown (никаких звёздочек и решёток). Цены пиши с пробелами между тысячами и знаком ₸.
+- Отвечай на языке клиента: по-русски или по-казахски.
+- Наличие машин НИКОГДА не придумывай: всегда вызывай find_available_cars с датами. Если даты неясны — уточни их одним вопросом. «Выходные» — ближайшие суббота и воскресенье; «на N дней с завтра» — считай от завтрашнего дня; аренда считается посуточно, обе даты включительно.
+- Стоимость считай только через get_quote. Называй итог, депозит и лимит пробега.
+- Если нужной машины нет на эти даты — скажи, когда она освободится (busy_models_next_free), и предложи похожую свободную.
+- Чтобы забронировать, нужны машина, даты и имя клиента (телефон — по желанию, WhatsApp-номер у нас уже есть). Тогда вызови create_booking_request. Говори, что это заявка, и менеджер подтвердит её в течение 15 минут. Не пиши, что бронь уже подтверждена.
+- Скидки сверх правил, аренда без депозита, споры о повреждениях и штрафах, жалобы, аренда больше 30 дней, вопросы, на которые нет ответа в правилах — вызови call_manager и скажи клиенту, что подключится менеджер. Ничего не обещай сам.
+- Не проси фото документов в чате. Документы показывают при выдаче.
+
+Парк:
+${fleet}
+
+Условия: лимит ${TERMS.km_per_day} км в сутки, сверх лимита ${TERMS.extra_km} ₸/км. Скидка от 3 суток 10%, от 7 суток 20%. Доставка по городу ${fmt(TERMS.delivery.city)} ₸, в аэропорт ${fmt(TERMS.delivery.airport)} ₸, самовывоз бесплатно (${TERMS.address}). Возраст от ${TERMS.age} лет, стаж от ${TERMS.experience} лет. Документы: ${TERMS.docs}. ${TERMS.hours}. Депозит возвращаем после осмотра машины при возврате, обычно в тот же день. Топливо/заряд: вернуть с тем же уровнем, что при выдаче.`;
+}
+const TOOLS = [
+  {name:"find_available_cars", description:"Проверяет календарь парка: какие машины свободны на все дни с date_from по date_to включительно. Возвращает свободные модели с ценой и итогом без доставки, и для занятых моделей — ближайшие свободные даты той же длины.",
+   inputSchema:{type:"object", properties:{date_from:{type:"string", description:"ГГГГ-ММ-ДД, день выдачи"}, date_to:{type:"string", description:"ГГГГ-ММ-ДД, день возврата"}, query:{type:"string", description:"Необязательно: модель или класс (Zeekr, L9, эконом, внедорожник, электро, премиум)"}}, required:["date_from","date_to"]},
+   execute: (i) => { addSys(`Агент проверяет календарь: ${span(String(i.date_from), String(i.date_to))}${i.query ? ", " + i.query : ""}`, true); return findAvailable(String(i.date_from), String(i.date_to), i.query); }},
+  {name:"get_quote", description:"Считает стоимость аренды конкретной машины: сутки, скидка, доставка, итог, депозит, включённый пробег.",
+   inputSchema:{type:"object", properties:{car_id:{type:"string"}, date_from:{type:"string"}, date_to:{type:"string"}, delivery:{type:"string", enum:["none","city","airport"]}}, required:["car_id","date_from","date_to"]},
+   execute: (i) => { const c = carById(i.car_id) || FLEET.find(x => x.name.toLowerCase().includes(String(i.car_id).toLowerCase()));
+     if (!c) throw new Error("Неизвестный car_id"); checkDates(String(i.date_from), String(i.date_to));
+     addSys(`Агент считает стоимость: ${c.name}`, true); return quote(c, String(i.date_from), String(i.date_to), ["city","airport"].includes(i.delivery) ? i.delivery : "none"); }},
+  {name:"create_booking_request", description:"Создаёт заявку на бронь в календаре (статус: ждёт подтверждения менеджера). Если выбранный экземпляр занят, сам берёт свободный той же модели. Возвращает номер заявки и итог.",
+   inputSchema:{type:"object", properties:{car_id:{type:"string"}, date_from:{type:"string"}, date_to:{type:"string"}, client_name:{type:"string"}, phone:{type:"string"}, delivery:{type:"string", enum:["none","city","airport"]}}, required:["car_id","date_from","date_to","client_name"]},
+   execute: (i) => { addSys("Агент создаёт заявку в календаре", true); const r = createRequest({...i, delivery: ["city","airport"].includes(i.delivery) ? i.delivery : "none"});
+     addNote(`Менеджеру: новая заявка ${r.request_id} от ${String(i.client_name)}`); return r; }},
+  {name:"call_manager", description:"Зовёт живого менеджера в переписку: скидки сверх правил, без депозита, споры, жалобы, нестандартные вопросы.",
+   inputSchema:{type:"object", properties:{reason:{type:"string", description:"Коротко: что нужно клиенту"}}, required:["reason"]},
+   execute: (i) => { addSys("Агент позвал менеджера", true); return callManager(i.reason); }},
+];
+
+function setAi(mode){
+  aiMode = mode;
+  const map = {ai:["on","ИИ подключён: отвечает Claude"], local:["off","ИИ недоступен в этом окне: ответы по заготовкам"], wait:["","Подключаю ИИ…"]};
+  $("aiDot").className = "dot " + map[mode][0]; $("aiState").textContent = map[mode][1];
+  if (mode === "local") $("hint").textContent = "Чтобы отвечал настоящий ИИ, откройте опубликованную страницу в Claude и разрешите ей обращаться к Claude.";
+  $("tier").hidden = mode !== "ai";
+}
+
+async function ask(text){
+  busy = true; $("btnSend").disabled = true;
+  addMsg(text, "me");
+  turns.push({role:"user", content:text});
+  const typing = document.createElement("div"); typing.className = "typing"; typing.textContent = "Агент печатает…";
+  $("chat").append(typing); $("chat").scrollTop = $("chat").scrollHeight;
+  let reply = "";
+  try {
+    if (aiMode === "ai"){
+      ctl = new AbortController();
+      let bubble = null;
+      const r = await sample([{role:"user", content:rules()}, ...turns.slice(-16)], {
+        tools: TOOLS, modelTier: $("tier").value, signal: ctl.signal,
+        onText: ({text}) => { typing.remove(); if (!bubble) bubble = addMsg("", "them", "Агент"); bubble.textContent = text.trim(); $("chat").scrollTop = $("chat").scrollHeight; },
+      });
+      reply = r.text.trim();
+      if (!bubble) addMsg(reply, "them", "Агент"); else bubble.textContent = reply;
+    } else {
+      await new Promise(r => setTimeout(r, 600));
+      typing.remove();
+      reply = localReply(text);
+      addMsg(reply, "them", "Агент");
+    }
+    turns.push({role:"assistant", content:reply});
+  } catch (e){
+    typing.remove();
+    const code = e && e.code;
+    if (["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed","tools_unavailable"].includes(code)){
+      setAi("local"); reply = localReply(text); addMsg(reply, "them", "Агент"); turns.push({role:"assistant", content:reply});
+    } else if (code === "cancelled"){ addSys("Ответ остановлен"); turns.pop(); }
+    else if (code === "rate_limited"){ addSys("Слишком много запросов подряд. Подождите минуту и отправьте снова."); turns.pop(); }
+    else { if (e && e.text) addMsg(e.text, "them", "Агент"); addSys("Связь прервалась. Отправьте сообщение ещё раз."); turns.pop(); }
+  } finally { busy = false; $("btnSend").disabled = false; $("box").focus(); }
+}
+$("send").addEventListener("submit", e => { e.preventDefault(); const t = $("box").value.trim(); if (!t || busy) return; $("box").value = ""; ask(t); });
+$("btnReset").onclick = () => { ctl?.abort(); turns.length = 0; greet(); };
+
+/* ---------- Ответы по заготовкам, если ИИ недоступен ---------- */
+const MODEL_KEYS = [["l9","Lixiang L9"],["лисян","Lixiang L9"],["lixiang","Lixiang L9"],["001","Zeekr 001"],["zeekr x","Zeekr X"],["зикр","Zeekr"],["zeekr","Zeekr"],
+  ["крузак","Toyota Land Cruiser 200"],["cruiser","Toyota Land Cruiser 200"],["круйзер","Toyota Land Cruiser 200"],["land","Toyota Land Cruiser 200"],["tiggo","Chery Tiggo 7 Pro"],["тигго","Chery Tiggo 7 Pro"],
+  ["elantra","Hyundai Elantra"],["элантр","Hyundai Elantra"],["cobalt","Chevrolet Cobalt"],["кобальт","Chevrolet Cobalt"],["эконом","эконом"],["недорог","эконом"],["дешев","эконом"],["внедорож","внедорожник"],["электр","электро"]];
+const LS = {model:null, from:null, to:null, car:null};
+function localDates(t){
+  const s = t.toLowerCase();
+  const m = /(\d{1,2})\s*(?:[.\-–]|по|до)\s*(\d{1,2})(?:\s*(октябр|ноябр))?/.exec(s);
+  if (m){ let mon = /ноябр/.test(s) && !/октябр/.test(s) ? 10 : 9; let a = new Date(2026, mon, +m[1]); if (a < TODAY) a = new Date(2026, mon+1, +m[1]);
+    let b = new Date(a.getFullYear(), a.getMonth(), +m[2]); if (b < a) b = new Date(a.getFullYear(), a.getMonth()+1, +m[2]); return [iso(a), iso(b)]; }
+  if (/выходн|демалыс/.test(s)){ let d = new Date(TODAY); while (d.getDay() !== 6 && d.getDay() !== 0) d = addDays(d,1); const e = d.getDay()===6 ? addDays(d,1) : d; return [iso(d), iso(e)]; }
+  const n = /(\d+)\s*(?:дн|сут|күн)/.exec(s);
+  const start = /сегодня|бүгін/.test(s) ? TODAY : addDays(TODAY,1);
+  if (n) return [iso(start), iso(addDays(start, +n[1]-1))];
+  if (/завтра|ертең/.test(s)) return [iso(start), iso(start)];
+  if (/сегодня|бүгін/.test(s)) return [iso(TODAY), iso(TODAY)];
+  return null;
+}
+function localReply(t){
+  const s = t.toLowerCase(), kk = /[әғқңөұүһі]|сәлем|рахмет|керек/.test(s);
+  if (/депозит|залог/.test(s) && /без/.test(s)){ callManager("клиент просит аренду без депозита"); return kk ? "Депозитсіз жалға беру туралы менеджер шешеді. Қазір менеджерді қосамын." : "Без депозита решает менеджер — сейчас подключу его к переписке."; }
+  if (/скидк|дешевле можно|торг/.test(s)){ callManager("клиент просит скидку"); return "Скидка от 3 суток — 10%, от 7 суток — 20%. Если нужна другая цена, подключу менеджера — он уже получил ваш вопрос."; }
+  const km = MODEL_KEYS.find(([k]) => s.includes(k)); if (km) LS.model = km[1];
+  const dd = localDates(t); if (dd){ LS.from = dd[0]; LS.to = dd[1]; }
+  const name = /(?:[Мм]еня зовут|(?:^|[.!,]\s*)[Яя]\s+—?\s*|[Мм]енің атым)\s*([А-ЯЁӘҒҚҢӨҰҮҺІ][а-яёәғқңөұүһі]+)/.exec(t);
+  if (/бронир|оформ|беру|возьму|заброн|алам/.test(s) || name){
+    if (!LS.car || !LS.from){ return "С радостью оформлю. Подскажите, пожалуйста, машину и даты."; }
+    if (!name) return "Отлично! Как вас зовут? Оформлю заявку на ваше имя.";
+    try { const r = createRequest({car_id:LS.car, date_from:LS.from, date_to:LS.to, client_name:name[1], delivery: /аэропорт/.test(s) ? "airport" : "none"});
+      addNote(`Менеджеру: новая заявка ${r.request_id} от ${name[1]}`);
+      return `Заявка ${r.request_id} создана: ${r.car}, ${span(LS.from, LS.to)}, ${tenge(r.total)}, депозит ${tenge(r.deposit)}. Менеджер подтвердит её в течение 15 минут.`;
+    } catch (e){ return e.message; }
+  }
+  if (/документ|права|возраст|стаж|құжат/.test(s)) return `Нужны ${TERMS.docs}. Возраст от ${TERMS.age} лет, стаж от ${TERMS.experience} лет. Документы показываете при выдаче.`;
+  if (/доставк|аэропорт|привез/.test(s) && !LS.from) return `Доставка по городу ${tenge(TERMS.delivery.city)}, в аэропорт ${tenge(TERMS.delivery.airport)}. На какие даты нужна машина?`;
+  if (!LS.from) return kk ? "Сәлеметсіз бе! Қай күндерге көлік керек? Бос көліктерді тексеріп, бағасын айтамын." : "Подскажите, пожалуйста, даты: с какого по какое число нужна машина? Проверю наличие и посчитаю стоимость.";
+  let r; try { r = findAvailable(LS.from, LS.to, LS.model && LS.model !== "Zeekr" ? LS.model : (LS.model === "Zeekr" ? "zeekr" : "")); } catch (e){ return e.message; }
+  const del = /аэропорт/.test(s) ? "airport" : /доставк|привез/.test(s) ? "city" : "none";
+  if (r.available.length){
+    const top = r.available.slice(0,3).map(a => { const q = quote(carById(a.car_id), LS.from, LS.to, del); return `${a.car} — ${tenge(q.total)} за ${q.days} сут., депозит ${tenge(q.deposit)}`; }).join("\n");
+    LS.car = r.available[0].car_id;
+    return `На ${span(LS.from, LS.to)} свободны:\n${top}${del!=="none"?"\nЦена с доставкой.":""}\nЛимит ${TERMS.km_per_day} км в сутки. Оформить заявку? Напишите, как вас зовут.`;
+  }
+  const nf = r.busy_models_next_free.find(x => x.free_from);
+  const alt = findAvailable(LS.from, LS.to, "").available.slice(0,2).map(a => `${a.car} — ${fmt(a.price_per_day)} ₸/сутки`).join(", ");
+  return `${LS.model || "Эта машина"} на ${span(LS.from, LS.to)} занята.${nf ? ` Ближайшие свободные даты такой же длины: ${span(nf.free_from, nf.free_to)}.` : ""}${alt ? ` На ваши даты свободны: ${alt}.` : ""}`;
+}
+
+/* ---------- Запуск ---------- */
+renderCal(); renderReqs(); seedNotes(); greet(); setAi("wait");
+(async () => {
+  try {
+    sample = window.claude ? await window.claude.use("sample") : null;
+    if (sample){ const lim = await sample.limits().catch(() => null); setAi(lim && lim.tools ? "ai" : "local"); }
+    else setAi("local");
+  } catch { setAi("local"); }
+})();
+</script>
