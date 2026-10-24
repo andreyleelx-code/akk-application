@@ -136,14 +136,30 @@ table.cal{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100
 .chips button{border-radius:99px;font-size:12px;padding:5px 11px}
 .voice-ok{color:var(--accent);margin:0;font-size:13px}
 .voice-bad{color:#f0a197;margin:0;font-size:13px}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar input[type=search]{flex:1;min-width:180px;font:inherit;font-size:13px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.chips button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.avatar{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font:700 9.5px var(--body);color:#fff;margin-right:6px;flex:none;vertical-align:-5px}
+.timeline{display:flex;flex-direction:column;gap:6px;font-size:12.5px;border-top:1px solid var(--line);padding-top:10px;max-height:180px;overflow-y:auto}
+.timeline div{display:flex;gap:8px}
+.timeline time{font:11px var(--mono);flex:none;color:var(--muted);padding-top:1px}
+@keyframes rowflash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+.row.flash{animation:rowflash 1.2s ease-out 1}
+.legend-row{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted)}
+.legend-row i{display:inline-block;width:13px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.tabs button .n{color:var(--muted);font-size:11px;margin-left:2px}
+.lead .ic svg{width:15px;height:15px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 <div class="wrap">
-  <header>
-    <h1>Единая <em>сделка</em> вместо пяти чатов</h1>
-    <p class="sub">Прокат, выкуп, оплаты, депозит и осмотр — одна карточка. Программа не даёт выдать машину без полной оплаты и закрыть сделку без решения по депозиту: это не галочка «проверено», а статус, который физически нельзя перескочить.</p>
-    <p class="tag" style="margin-top:8px">Демо · данные и суммы условные · первая очередь плана</p>
+  <header style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+    <div>
+      <h1>Единая <em>сделка</em> вместо пяти чатов</h1>
+      <p class="sub">Прокат, выкуп, оплаты, депозит и осмотр — одна карточка. Программа не даёт выдать машину без полной оплаты и закрыть сделку без решения по депозиту: это не галочка «проверено», а статус, который физически нельзя перескочить.</p>
+      <p class="tag" style="margin-top:8px">Демо · данные и суммы условные · первая очередь плана</p>
+    </div>
+    <button type="button" id="btnResetDemo" title="Вернуть все сделки, лиды и фото к примеру">↺ Сбросить демо</button>
   </header>
 
   <div class="stripe" id="kpis"></div>
@@ -164,15 +180,26 @@ table.cal{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100
   </section>
 
   <nav class="tabs" id="tabs" aria-label="Разделы">
-    <button type="button" data-tab="deals" aria-selected="true">Сделки</button>
-    <button type="button" data-tab="leads" aria-selected="false">Лиды</button>
+    <button type="button" data-tab="deals" aria-selected="true">Сделки <span class="n" id="cntDeals"></span></button>
+    <button type="button" data-tab="leads" aria-selected="false">Лиды <span class="n" id="cntLeads"></span></button>
     <button type="button" data-tab="photos" aria-selected="false">Фотоконтроль</button>
-    <button type="button" data-tab="fleet" aria-selected="false">Парк</button>
+    <button type="button" data-tab="fleet" aria-selected="false">Парк <span class="n" id="cntFleet"></span></button>
   </nav>
 
   <div class="tabpanel" id="tab-deals">
     <div class="grid">
       <section class="panel">
+        <div class="toolbar">
+          <input type="search" id="dealSearch" placeholder="Поиск: клиент, машина, номер сделки…" aria-label="Поиск по сделкам">
+        </div>
+        <div class="chips" id="statusFilter" role="group" aria-label="Фильтр по статусу">
+          <button type="button" data-f="all" aria-pressed="true">Все</button>
+          <button type="button" data-f="draft" aria-pressed="false">Заявка</button>
+          <button type="button" data-f="confirmed" aria-pressed="false">Подтверждена</button>
+          <button type="button" data-f="issued" aria-pressed="false">Выдана</button>
+          <button type="button" data-f="returned" aria-pressed="false">Возврат принят</button>
+          <button type="button" data-f="closed" aria-pressed="false">Закрыта</button>
+        </div>
         <div class="cols-head"><span>Сделка</span><span>Клиент · машина</span><span>Статус</span><span>Риски</span><span style="text-align:right">Сумма</span></div>
         <div class="board" id="board"></div>
       </section>
@@ -195,6 +222,15 @@ table.cal{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100
         <button type="button" class="primary" id="btnNewLead">Новый лид (демо)</button>
       </div>
       <p class="note" style="margin-top:-4px">Правило: если клиент уже переписывался с менеджером — лид падает на него же. Новый клиент — по кругу, менеджерам поровну. В нерабочее время (сейчас это 09:00–21:00) отвечает агент, человек проверяет утром.</p>
+      <div class="toolbar">
+        <input type="search" id="leadSearch" placeholder="Поиск: телефон, текст…" aria-label="Поиск по лидам">
+      </div>
+      <div class="chips" id="leadFilter" role="group" aria-label="Фильтр лидов">
+        <button type="button" data-f="all" aria-pressed="true">Все</button>
+        <button type="button" data-f="whatsapp" aria-pressed="false">WhatsApp</button>
+        <button type="button" data-f="telegram" aria-pressed="false">Telegram</button>
+        <button type="button" data-f="agent" aria-pressed="false">Отвечал агент</button>
+      </div>
       <div class="leads" id="leads"></div>
     </section>
     <p class="note">Логика распределения — <code>src/carval/leads.py</code>, 6 тестов: круговая очередь, «тот же клиент — тот же менеджер», разбор рабочего времени.</p>
@@ -227,6 +263,14 @@ table.cal{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100
     <section class="panel">
       <h2>Календарь парка</h2>
       <p class="note" style="margin-top:-4px">То же, что видит агент проката, когда проверяет наличие — один календарь, а не два. Полосы — те же сделки со вкладки «Сделки», плюс пример ремонта и мойки.</p>
+      <div class="legend-row">
+        <span><i style="background:var(--draft)"></i>заявка</span>
+        <span><i style="background:var(--confirmed)"></i>подтверждена</span>
+        <span><i style="background:var(--issued)"></i>выдана</span>
+        <span><i style="background:repeating-linear-gradient(135deg,var(--returned) 0 4px,#8a6421 4px 8px)"></i>возврат принят</span>
+        <span><i style="background:var(--bad)"></i>ремонт</span>
+        <span><i style="background:#3a444b"></i>мойка, подготовка</span>
+      </div>
       <div class="cal-scroll"><table class="cal" id="cal"></table></div>
     </section>
   </div>
@@ -240,11 +284,15 @@ const tenge = n => fmt(n) + " ₸";
 const pad = n => String(n).padStart(2,"0");
 const human = iso => { const [y,m,d] = iso.split("-").map(Number); return `${d} ${["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"][m-1]}`; };
 const addDays = (iso, n) => { const [y,m,d] = iso.split("-").map(Number); const dt = new Date(y, m-1, d+n); return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`; };
+const nowTime = () => { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 const TODAY = "2026-10-24";
 const DEPOSIT_DAYS = 7;
 
 /* ---------- Та же state-machine, что в src/carval/deals.py, для живого демо в браузере ---------- */
 const STATUS_RU = {draft:"заявка", confirmed:"подтверждена", issued:"выдана", returned:"возврат принят", closed:"закрыта"};
+const KIND_RU = {prepayment:"предоплата", rest:"остаток аренды", deposit:"депозит", extra:"доплата"};
+const KIND_RU_ACC = {prepayment:"предоплату", rest:"остаток аренды", deposit:"депозит", extra:"доплату"};
+const METHOD_RU = {cash:"нал", kaspi:"Kaspi", transfer:"перевод", card:"карта"};
 function paid(d, kinds){ return d.payments.filter(p => kinds.includes(p.kind)).reduce((s,p)=>s+p.amount,0); }
 function rentalShortfall(d){ return Math.max(0, d.price - paid(d, ["prepayment","rest"])); }
 function depositShortfall(d){ return Math.max(0, d.deposit - paid(d, ["deposit"])); }
@@ -280,40 +328,47 @@ function gate(d, to){
 }
 
 /* ---------- Примерные сделки ---------- */
-let DEALS = [
-  {id:"D-104", kind:"rental", client:"Д. Касымова", car:"Lixiang L9", carAvailable:true, status:"draft",
+const MANAGER_COLORS = {"Ерлан":"#2f5f93", "Дана":"#5c8a3f", "Арман":"#9c5a2a"};
+function initials(name){ return (name||"").trim().slice(0,2).toUpperCase() || "—"; }
+
+function makeDeals(){ return [
+  {id:"D-104", kind:"rental", client:"Д. Касымова", car:"Lixiang L9", carAvailable:true, status:"draft", manager:"Ерлан",
    from:"2026-10-30", to:"2026-11-02", price:195000, deposit:100000, contractSigned:false, handoverReport:null, returnReport:null,
-   depositDecision:"pending", payments:[]},
-  {id:"D-109", kind:"rental", client:"С. Ким", car:"Chery Tiggo 7 Pro", carAvailable:false, status:"draft",
+   depositDecision:"pending", payments:[], history:[]},
+  {id:"D-109", kind:"rental", client:"С. Ким", car:"Chery Tiggo 7 Pro", carAvailable:false, status:"draft", manager:"Дана",
    from:"2026-10-27", to:"2026-10-29", price:44000, deposit:30000, contractSigned:false, handoverReport:null, returnReport:null,
-   depositDecision:"pending", payments:[]},
-  {id:"D-096", kind:"rental", client:"М. Ли", car:"Zeekr X", carAvailable:true, status:"confirmed",
+   depositDecision:"pending", payments:[], history:[]},
+  {id:"D-096", kind:"rental", client:"М. Ли", car:"Zeekr X", carAvailable:true, status:"confirmed", manager:"Арман",
    from:"2026-10-31", to:"2026-11-04", price:160000, deposit:50000, contractSigned:true, handoverReport:null, returnReport:null,
-   depositDecision:"pending", payments:[{kind:"prepayment", method:"kaspi", amount:100000, source:"чат-касса"}]},
-  {id:"D-091", kind:"rental", client:"Р. Омаров", car:"Lixiang L9", carAvailable:true, status:"issued",
+   depositDecision:"pending", payments:[{kind:"prepayment", method:"kaspi", amount:100000, source:"чат-касса"}], history:[]},
+  {id:"D-091", kind:"rental", client:"Р. Омаров", car:"Lixiang L9", carAvailable:true, status:"issued", manager:"Ерлан",
    from:"2026-10-28", to:"2026-11-03", price:390000, deposit:100000, contractSigned:true, handoverReport:"h-091", returnReport:null,
    depositDecision:"pending", payments:[
      {kind:"prepayment", method:"transfer", amount:200000, source:"чат-касса"},
      {kind:"rest", method:"cash", amount:190000, source:"чат-касса"},
-     {kind:"deposit", method:"cash", amount:100000, source:"чат-касса"}]},
-  {id:"D-083", kind:"rental", client:"Д. Сериков", car:"Zeekr X", carAvailable:true, status:"returned",
+     {kind:"deposit", method:"cash", amount:100000, source:"чат-касса"}], history:[]},
+  {id:"D-083", kind:"rental", client:"Д. Сериков", car:"Zeekr X", carAvailable:true, status:"returned", manager:"Дана",
    from:"2026-10-15", to:"2026-10-18", price:120000, deposit:50000, contractSigned:true, handoverReport:"h-083", returnReport:"r-083",
    depositDecision:"pending", payments:[
      {kind:"prepayment", method:"kaspi", amount:120000, source:"чат-касса"},
      {kind:"deposit", method:"cash", amount:50000, source:"чат-касса"},
-     {kind:"extra", method:"cash", amount:57000, source:"осмотр: новые повреждения"}]},
-  {id:"D-071", kind:"rental", client:"Е. Бекова", car:"Chery Tiggo 7 Pro", carAvailable:true, status:"returned",
+     {kind:"extra", method:"cash", amount:57000, source:"осмотр: новые повреждения"}], history:[]},
+  {id:"D-071", kind:"rental", client:"Е. Бекова", car:"Chery Tiggo 7 Pro", carAvailable:true, status:"returned", manager:"Арман",
    from:"2026-09-30", to:"2026-10-03", price:66000, deposit:30000, contractSigned:true, handoverReport:"h-071", returnReport:"r-071",
    depositDecision:"pending", payments:[
      {kind:"prepayment", method:"cash", amount:66000, source:"чат-касса"},
-     {kind:"deposit", method:"cash", amount:30000, source:"чат-касса"}]},
-  {id:"D-064", kind:"rental", client:"ТОО «Алтын Тау»", car:"Toyota Land Cruiser 200", carAvailable:true, status:"closed",
+     {kind:"deposit", method:"cash", amount:30000, source:"чат-касса"}], history:[]},
+  {id:"D-064", kind:"rental", client:"ТОО «Алтын Тау»", car:"Toyota Land Cruiser 200", carAvailable:true, status:"closed", manager:"Ерлан",
    from:"2026-10-02", to:"2026-10-09", price:420000, deposit:100000, contractSigned:true, handoverReport:"h-064", returnReport:"r-064",
    depositDecision:"returned", payments:[
      {kind:"prepayment", method:"transfer", amount:420000, source:"чат-касса"},
-     {kind:"deposit", method:"transfer", amount:100000, source:"чат-касса"}]},
-];
+     {kind:"deposit", method:"transfer", amount:100000, source:"чат-касса"}], history:[{t:"09:40", text:"Сделка закрыта, депозит возвращён"}]},
+]; }
+let DEALS = makeDeals();
 let selId = DEALS[0].id;
+let lastChangedId = null;
+let dealFilter = "all", dealQuery = "";
+function pushHistory(d, text){ (d.history || (d.history = [])).push({t: nowTime(), text}); }
 
 function kpis(){
   const overdue = DEALS.filter(depositOverdue).length;
@@ -325,19 +380,32 @@ function kpis(){
     <div class="kpi ${blocked?'alert':''}"><b>${blocked}</b><span>подтверждены, но нельзя выдать — не хватает денег или документов</span></div>
     <div class="kpi ${overdue?'alert':''}"><b>${overdue}</b><span>просрочен возврат депозита (&gt;7 дней)</span></div>
     <div class="kpi"><b>${soon}</b><span>депозит нужно вернуть в ближайшие 2 дня</span></div>`;
+  $("cntDeals").textContent = `(${DEALS.length})`;
+  $("cntLeads").textContent = `(${LEADS.length})`;
+  $("cntFleet").textContent = `(${FLEET_UNITS.length})`;
+}
+
+function matchesDealFilter(d){
+  if (dealFilter !== "all" && d.status !== dealFilter) return false;
+  if (!dealQuery) return true;
+  const q = dealQuery.toLowerCase();
+  return d.id.toLowerCase().includes(q) || d.client.toLowerCase().includes(q) || d.car.toLowerCase().includes(q);
 }
 
 function renderBoard(){
-  $("board").innerHTML = DEALS.map(d => {
+  const flashId = lastChangedId; lastChangedId = null;
+  const shown = DEALS.filter(matchesDealFilter);
+  if (!shown.length){ $("board").innerHTML = `<p class="empty">Ничего не найдено по этому фильтру или запросу.</p>`; return; }
+  $("board").innerHTML = shown.map(d => {
     const flags = [];
     if (d.status === "draft" && !d.carAvailable) flags.push("машина занята");
     if (d.status === "confirmed" && !gate(d,"issued").ok) flags.push("нельзя выдать");
     if (depositOverdue(d)) flags.push("депозит просрочен");
     const money = d.status === "closed" ? "закрыто" : rentalShortfall(d)+depositShortfall(d) > 0
       ? `<small>не хватает</small>${tenge(rentalShortfall(d)+depositShortfall(d))}` : `<small>оплачено</small>${tenge(d.price+d.deposit)}`;
-    return `<div class="row ${d.id===selId?'sel':''}" data-id="${d.id}">
+    return `<div class="row ${d.id===selId?'sel':''}${d.id===flashId?' flash':''}" data-id="${d.id}">
       <span class="id">${d.id}</span>
-      <span class="who"><b>${esc(d.client)}</b><span>${esc(d.car)} · ${human(d.from)}–${human(d.to)}</span></span>
+      <span class="who"><b><span class="avatar" style="background:${MANAGER_COLORS[d.manager]||'#55606a'}" title="Менеджер: ${esc(d.manager)}">${initials(d.manager)}</span>${esc(d.client)}</b><span>${esc(d.car)} · ${human(d.from)}–${human(d.to)}</span></span>
       <span class="pill ${d.status}"><i></i>${STATUS_RU[d.status]}</span>
       <span>${flags.map(f=>`<span class="flag">${esc(f)}</span>`).join(" ")}</span>
       <span class="money">${money}</span>
@@ -360,6 +428,7 @@ function renderDetail(){
       </div>
 
       <dl class="kv">
+        <dt>Менеджер</dt><dd><span class="avatar" style="background:${MANAGER_COLORS[d.manager]||'#55606a'}">${initials(d.manager)}</span>${esc(d.manager)}</dd>
         <dt>Аренда</dt><dd>${tenge(d.price)}</dd>
         <dt>Депозит</dt><dd>${tenge(d.deposit)}</dd>
         <dt>Договор</dt><dd>${d.contractSigned ? "оформлен" : "не оформлен"}</dd>
@@ -375,7 +444,7 @@ function renderDetail(){
 
       <div>
         <div class="meta" style="margin-bottom:5px">Платежи (${d.payments.length})</div>
-        <div class="paylist">${d.payments.length ? d.payments.map(p => `<div><span>${{prepayment:"предоплата",rest:"остаток",deposit:"депозит",extra:"доплата"}[p.kind]} · ${{cash:"нал",kaspi:"Kaspi",transfer:"перевод",card:"карта"}[p.method]}<span class="src">источник: ${esc(p.source)}</span></span><b>${tenge(p.amount)}</b></div>`).join("") : '<p class="empty">Пока нет</p>'}</div>
+        <div class="paylist">${d.payments.length ? d.payments.map(p => `<div><span>${KIND_RU[p.kind]} · ${METHOD_RU[p.method]}<span class="src">источник: ${esc(p.source)}</span></span><b>${tenge(p.amount)}</b></div>`).join("") : '<p class="empty">Пока нет</p>'}</div>
       </div>
 
       ${d.status === "returned" ? `
@@ -394,6 +463,11 @@ function renderDetail(){
       </div>
 
       ${d.status === "draft" || d.status === "confirmed" ? paymentForm(d) : ""}
+
+      <div class="timeline">
+        <div class="meta" style="margin-bottom:2px">История сделки</div>
+        ${(d.history && d.history.length) ? d.history.slice().reverse().map(h => `<div><time>${h.t}</time><span>${esc(h.text)}</span></div>`).join("") : '<p class="empty">Пока нет действий</p>'}
+      </div>
     </div>`;
   wireDetailEvents(d);
 }
@@ -423,33 +497,43 @@ function paymentForm(d){
   </form>`;
 }
 
-function flashGate(r){
+function showGateMsg(r){
   const el = $("gateMsg");
   if (!el) return;
-  el.innerHTML = `<div class="gate-msg ${r.ok?'ok':''}">${r.ok ? "Переход выполнен" : "Нельзя: " + esc(r.reason)}</div>`;
+  el.innerHTML = `<div class="gate-msg ${r.ok?'ok':''}">${r.ok ? "✓ " + esc(r.msg) : "✗ " + esc(r.msg)}</div>`;
 }
 
 function wireDetailEvents(d){
   $("detailPanel").querySelectorAll("[data-try]").forEach(b => b.onclick = () => {
-    const r = gate(d, b.dataset.try);
-    if (r.ok){ d.status = b.dataset.try; renderBoard(); kpis(); renderReminders(); renderDetail(); }
-    else flashGate(r);
+    const r = applyGateTransition(d, b.dataset.try);
+    if (!r.ok) showGateMsg(r);
   });
   $("detailPanel").querySelectorAll("[data-sim]").forEach(b => b.onclick = () => {
     const k = b.dataset.sim;
-    if (k === "handoverReport") d.handoverReport = "h-" + d.id;
-    if (k === "returnReport") d.returnReport = "r-" + d.id;
-    if (k === "contractSigned") d.contractSigned = true;
+    if (k === "handoverReport"){ d.handoverReport = "h-" + d.id; pushHistory(d, "Прикреплён отчёт осмотра при выдаче"); }
+    if (k === "returnReport"){ d.returnReport = "r-" + d.id; pushHistory(d, "Прикреплён отчёт осмотра при возврате"); }
+    if (k === "contractSigned"){ d.contractSigned = true; pushHistory(d, "Договор отмечен как оформленный"); }
     renderDetail();
   });
-  $("detailPanel").querySelectorAll("[data-dep-return]").forEach(b => b.onclick = () => { d.depositDecision = "returned"; renderBoard(); kpis(); renderReminders(); renderDetail(); });
-  $("detailPanel").querySelectorAll("[data-dep-hold]").forEach(b => b.onclick = () => { const v = +prompt("Сколько удержать, ₸?", "15000") || 0; d.depositDecision = "withheld"; d.depositWithheld = v; renderBoard(); kpis(); renderReminders(); renderDetail(); });
+  $("detailPanel").querySelectorAll("[data-dep-return]").forEach(b => b.onclick = () => {
+    d.depositDecision = "returned"; lastChangedId = d.id; pushHistory(d, "Депозит возвращён");
+    renderBoard(); kpis(); renderReminders(); renderDetail();
+  });
+  $("detailPanel").querySelectorAll("[data-dep-hold]").forEach(b => b.onclick = () => {
+    const v = +prompt("Сколько удержать, ₸?", "15000") || 0;
+    d.depositDecision = "withheld"; d.depositWithheld = v; lastChangedId = d.id;
+    pushHistory(d, `Из депозита удержано ${tenge(v)}`);
+    renderBoard(); kpis(); renderReminders(); renderDetail();
+  });
   const form = $("payForm");
   if (form) form.addEventListener("submit", e => {
     e.preventDefault();
     const fd = new FormData(form);
     const amount = +fd.get("amount"); if (!amount) return;
-    d.payments.push({kind: fd.get("kind"), method: fd.get("method"), amount, source:"чат-касса"});
+    const kind = fd.get("kind"), method = fd.get("method");
+    d.payments.push({kind, method, amount, source:"чат-касса"});
+    lastChangedId = d.id;
+    pushHistory(d, `+ ${KIND_RU_ACC[kind]} ${tenge(amount)} (${METHOD_RU[method]})`);
     renderBoard(); kpis(); renderDetail();
   });
 }
@@ -466,6 +550,25 @@ function renderReminders(){
 }
 
 $("board").addEventListener("click", e => { const row = e.target.closest(".row"); if (!row) return; selId = row.dataset.id; renderBoard(); renderDetail(); });
+$("dealSearch").addEventListener("input", e => { dealQuery = e.target.value; renderBoard(); });
+$("statusFilter").addEventListener("click", e => {
+  const b = e.target.closest("[data-f]"); if (!b) return;
+  dealFilter = b.dataset.f;
+  $("statusFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderBoard();
+});
+
+/* ---------- Сброс демо: вернуть всё к примеру, не перезагружая страницу ---------- */
+$("btnResetDemo").onclick = () => {
+  DEALS = makeDeals(); selId = DEALS[0].id; dealFilter = "all"; dealQuery = "";
+  $("dealSearch").value = ""; $("statusFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === "all"));
+  LEADS = makeLeads(); leadFilter = "all"; leadQuery = "";
+  $("leadSearch").value = ""; $("leadFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.f === "all"));
+  $("pfBefore").src = "ops-before.jpg"; $("pfAfter").src = "ops-after.jpg";
+  $("boxScratch").style.display = "none"; $("boxDent").style.display = "none"; $("diffList").innerHTML = ""; $("uploadNote").textContent = "";
+  kpis(); renderBoard(); renderDetail(); renderReminders(); renderLeads(); renderFleet();
+  $("voiceResult").innerHTML = `<p class="voice-ok">✓ Демо сброшено к примеру.</p>`;
+};
 
 /* ---------- Вкладки ---------- */
 $("tabs").addEventListener("click", e => {
@@ -478,7 +581,7 @@ $("tabs").addEventListener("click", e => {
 const MANAGERS = ["Ерлан", "Дана", "Арман"];
 const WORK_FROM = 9, WORK_TO = 21;
 let leadNextIdx = 0;
-const leadHistory = {};  // телефон -> менеджер
+let leadHistory = {};  // телефон -> менеджер
 function isWorkHour(h){ return h >= WORK_FROM && h < WORK_TO; }
 function assignLead(lead){
   const known = leadHistory[lead.phone];
@@ -487,25 +590,52 @@ function assignLead(lead){
   lead.byAgent = !isWorkHour(lead.hour);
   return lead;
 }
-let LEADS = [
-  {phone:"+77011112233", channel:"whatsapp", text:"Добрый день! Нужен внедорожник на выходные, сколько будет стоить?", hour:11, name:"новый клиент"},
-  {phone:"+77022223344", channel:"telegram", text:"Здравствуйте, это снова я, нужна машина ещё на 3 дня", hour:14, name:"уже писал Дане ранее"},
-  {phone:"+77033334455", channel:"whatsapp", text:"Сәлеметсіз бе! Ертеңге арзан көлік керек", hour:23, name:"новый клиент, ночь"},
-  {phone:"+77044445566", channel:"whatsapp", text:"Подскажите цену на Zeekr X на неделю", hour:10, name:"новый клиент"},
-  {phone:"+77055556677", channel:"telegram", text:"Можно забронировать Land Cruiser на корпоратив, 5 дней?", hour:16, name:"новый клиент"},
-].map(assignLead);
-// второе сообщение от уже знакомого клиента — чтобы показать «тот же менеджер»
-leadHistory["+77022223344"] = "Дана";
-LEADS[1] = assignLead(LEADS[1]);
+const ICON_WHATSAPP = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15L2 22l5.2-1.4A10 10 0 1012 2zm5.8 14.3c-.3.8-1.6 1.5-2.3 1.6-.6.1-1.3.2-4.2-.9-3.6-1.4-5.9-5-6.1-5.3-.2-.3-1.4-1.9-1.4-3.6 0-1.7.9-2.5 1.2-2.9.3-.3.7-.4 1-.4h.7c.2 0 .5 0 .8.6.3.7 1 2.3 1.1 2.5.1.2.2.4.1.6-.1.2-.2.4-.4.6-.2.2-.4.5-.6.6-.2.2-.4.4-.2.8.2.4 1 1.6 2.1 2.6 1.4 1.3 2.6 1.7 3 1.9.4.2.6.1.8-.1.2-.3.9-1 1.1-1.4.2-.3.5-.3.8-.2.3.1 2 1 2.3 1.1.3.2.5.2.6.4.1.2.1.9-.2 1.7z"/></svg>`;
+const ICON_TELEGRAM = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 3.5L2.7 11c-.9.4-.9 1 0 1.3l4.9 1.5 1.9 5.8c.2.6.5.7.9.4l2.7-2.1 4.8 3.5c.6.4 1 .2 1.2-.5l3.5-15.6c.2-.9-.3-1.3-1-.8zM8.5 13.8l9.4-6.6c.3-.2.6-.1.3.1l-7.6 7.2-.3 3.1z"/></svg>`;
+
+function makeLeads(){
+  leadNextIdx = 0; leadHistory = {};
+  const leads = [
+    {phone:"+77011112233", channel:"whatsapp", text:"Добрый день! Нужен внедорожник на выходные, сколько будет стоить?", hour:11, name:"новый клиент"},
+    {phone:"+77022223344", channel:"telegram", text:"Здравствуйте, это снова я, нужна машина ещё на 3 дня", hour:14, name:"уже писал Дане ранее"},
+    {phone:"+77033334455", channel:"whatsapp", text:"Сәлеметсіз бе! Ертеңге арзан көлік керек", hour:23, name:"новый клиент, ночь"},
+    {phone:"+77044445566", channel:"whatsapp", text:"Подскажите цену на Zeekr X на неделю", hour:10, name:"новый клиент"},
+    {phone:"+77055556677", channel:"telegram", text:"Можно забронировать Land Cruiser на корпоратив, 5 дней?", hour:16, name:"новый клиент"},
+  ].map(assignLead);
+  // второе сообщение от уже знакомого клиента — чтобы показать «тот же менеджер»
+  leadHistory["+77022223344"] = "Дана";
+  leads[1] = assignLead(leads[1]);
+  return leads;
+}
+let LEADS = makeLeads();
+let leadFilter = "all", leadQuery = "";
+
+function matchesLeadFilter(l){
+  if (leadFilter === "whatsapp" && l.channel !== "whatsapp") return false;
+  if (leadFilter === "telegram" && l.channel !== "telegram") return false;
+  if (leadFilter === "agent" && !l.byAgent) return false;
+  if (!leadQuery) return true;
+  const q = leadQuery.toLowerCase();
+  return l.phone.toLowerCase().includes(q) || l.text.toLowerCase().includes(q) || l.name.toLowerCase().includes(q);
+}
 
 function renderLeads(){
-  $("leads").innerHTML = LEADS.map(l => `<div class="lead">
-      <span class="ic ${l.channel}">${l.channel === "whatsapp" ? "W" : "T"}</span>
+  const shown = LEADS.filter(matchesLeadFilter);
+  if (!shown.length){ $("leads").innerHTML = `<p class="empty">Ничего не найдено по этому фильтру или запросу.</p>`; return; }
+  $("leads").innerHTML = shown.map(l => `<div class="lead">
+      <span class="ic ${l.channel}">${l.channel === "whatsapp" ? ICON_WHATSAPP : ICON_TELEGRAM}</span>
       <span class="txt"><b>${esc(l.phone)} <span style="color:var(--muted);font-weight:400">· ${esc(l.name)}</span></b><span>${esc(l.text)}</span></span>
       <span class="who-pill">${l.byAgent ? "ночь · агент ответит" : "рабочее время"}</span>
       <span class="who-pill ${l.byAgent ? 'agent' : ''}">${l.byAgent ? "агент → утром " + esc(l.to) : esc(l.to)}</span>
     </div>`).join("");
 }
+$("leadSearch").addEventListener("input", e => { leadQuery = e.target.value; renderLeads(); });
+$("leadFilter").addEventListener("click", e => {
+  const b = e.target.closest("[data-f]"); if (!b) return;
+  leadFilter = b.dataset.f;
+  $("leadFilter").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderLeads();
+});
 $("btnNewLead").onclick = () => {
   const names = ["Б. Садыкова","Н. Жумабек","О. Петров","Г. Ахметова","Т. Исаев"];
   const texts = ["Есть что-то на этих выходных подешевле?","Нужна машина с доставкой в аэропорт","Сколько стоит депозит и можно ли без него?","Хочу забронировать на следующую неделю"];
@@ -514,7 +644,7 @@ $("btnNewLead").onclick = () => {
   const l = assignLead({phone, channel: Math.random()>0.5?"whatsapp":"telegram",
     text: texts[Math.floor(Math.random()*texts.length)], hour, name: names[Math.floor(Math.random()*names.length)] + ", новый клиент"});
   LEADS.unshift(l);
-  renderLeads();
+  kpis(); renderLeads();
 };
 
 /* ---------- Фотоконтроль: до/после ---------- */
@@ -609,11 +739,15 @@ $("btnResetPhotos").onclick = () => {
 
 /* ---------- Голосовые команды ---------- */
 function findDeal(id){ return DEALS.find(x => x.id.toLowerCase() === id.toLowerCase()); }
-const KIND_RU = {prepayment:"предоплату", rest:"остаток аренды", deposit:"депозит", extra:"доплату"};
 
-function applyVoiceGate(d, to){
+function applyGateTransition(d, to){
   const r = gate(d, to);
-  if (r.ok){ d.status = to; selId = d.id; renderBoard(); kpis(); renderReminders(); renderDetail(); return {ok:true, msg:`${d.id}: ${STATUS_RU[to]}.`}; }
+  if (r.ok){
+    d.status = to; selId = d.id; lastChangedId = d.id;
+    pushHistory(d, `Статус: ${STATUS_RU[to]}`);
+    renderBoard(); kpis(); renderReminders(); renderDetail();
+    return {ok:true, msg:`${d.id}: ${STATUS_RU[to]}.`};
+  }
   return {ok:false, msg:`Нельзя: ${r.reason}`};
 }
 
@@ -634,19 +768,23 @@ function voiceExec(text){
 
   if (/депозит/i.test(t) && /верн/i.test(t)){
     if (d.status !== "returned") return {ok:false, msg:`Нельзя: сделка ${id} ещё не в статусе «возврат принят».`};
-    d.depositDecision = "returned"; selId = d.id; renderBoard(); kpis(); renderReminders(); renderDetail();
+    d.depositDecision = "returned"; selId = d.id; lastChangedId = d.id;
+    pushHistory(d, "Депозит возвращён (голосом)");
+    renderBoard(); kpis(); renderReminders(); renderDetail();
     return {ok:true, msg:`${id}: депозит отмечен как возвращённый.`};
   }
   if (/депозит/i.test(t) && /удерж/i.test(t)){
     if (d.status !== "returned") return {ok:false, msg:`Нельзя: сделка ${id} ещё не в статусе «возврат принят».`};
     const amtm = /(\d[\d\s]{2,})/.exec(t); const amount = amtm ? +amtm[1].replace(/\s/g,"") : 0;
-    d.depositDecision = "withheld"; d.depositWithheld = amount; selId = d.id; renderBoard(); kpis(); renderReminders(); renderDetail();
+    d.depositDecision = "withheld"; d.depositWithheld = amount; selId = d.id; lastChangedId = d.id;
+    pushHistory(d, `Из депозита удержано ${tenge(amount)} (голосом)`);
+    renderBoard(); kpis(); renderReminders(); renderDetail();
     return {ok:true, msg:`${id}: из депозита удержано ${tenge(amount)}.`};
   }
-  if (/подтверд/i.test(t)) return applyVoiceGate(d, "confirmed");
-  if (/выда/i.test(t)) return applyVoiceGate(d, "issued");
-  if (/закро/i.test(t)) return applyVoiceGate(d, "closed");
-  if (/возврат|верн\w* машин/i.test(t)) return applyVoiceGate(d, "returned");
+  if (/подтверд/i.test(t)) return applyGateTransition(d, "confirmed");
+  if (/выда/i.test(t)) return applyGateTransition(d, "issued");
+  if (/закро/i.test(t)) return applyGateTransition(d, "closed");
+  if (/возврат|верн\w* машин/i.test(t)) return applyGateTransition(d, "returned");
 
   const paym = /(предоплат\w*|остаток\w*|депозит\w*|доплат\w*)[^\d]{0,12}(\d[\d\s]{2,})/i.exec(t);
   if (paym){
@@ -656,8 +794,10 @@ function voiceExec(text){
     const amount = +paym[2].replace(/\s/g,"");
     const method = /kaspi|каспи/i.test(t) ? "kaspi" : /перевод/i.test(t) ? "transfer" : /карт/i.test(t) ? "card" : "cash";
     d.payments.push({kind, method, amount, source:"голосовая команда"});
-    selId = d.id; renderBoard(); kpis(); renderDetail();
-    return {ok:true, msg:`${id}: добавил ${KIND_RU[kind]} ${tenge(amount)} (${method}).`};
+    selId = d.id; lastChangedId = d.id;
+    pushHistory(d, `+ ${KIND_RU_ACC[kind]} ${tenge(amount)} (${METHOD_RU[method]}, голосом)`);
+    renderBoard(); kpis(); renderDetail();
+    return {ok:true, msg:`${id}: добавил ${KIND_RU_ACC[kind]} ${tenge(amount)} (${method}).`};
   }
   return {ok:false, msg:"Не распознал действие. Примеры — в кнопках ниже."};
 }
