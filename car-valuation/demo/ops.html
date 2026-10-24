@@ -49,7 +49,7 @@ h2{font:600 15px var(--display);margin:0}
 .pill.issued{background:#5c8a3f40;color:#b9dc9e}
 .pill.returned{background:var(--warn-soft);color:var(--returned)}
 .pill.closed{background:var(--good-soft);color:var(--accent)}
-.flag{font:600 11px var(--body);padding:2px 7px;border-radius:6px;background:var(--bad-soft);color:#f0a197;white-space:nowrap}
+.flag{font:600 11px var(--body);padding:2px 7px;border-radius:6px;background:var(--bad-soft);color:#f0a197;white-space:normal;display:inline-block}
 .cols-head{display:grid;grid-template-columns:90px minmax(0,1.3fr) 108px minmax(0,1fr) 92px;gap:10px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0 12px}
 .detail{display:flex;flex-direction:column;gap:12px;font-size:13.5px}
 .detail h3{margin:0;font:700 17px var(--display)}
@@ -128,6 +128,14 @@ table.cal{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100
 .pframe .box span{position:absolute;top:-20px;left:-2px;background:var(--bad);color:#fff;font:700 10px var(--mono);padding:1px 5px;border-radius:4px}
 .difflist{display:flex;flex-direction:column;gap:6px;font-size:13px}
 .difflist div{display:flex;justify-content:space-between;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.upl{position:absolute;right:8px;bottom:8px;background:#000a;color:#fff;font-size:11.5px;padding:5px 10px;border-radius:8px;cursor:pointer;border:1px solid #ffffff33}
+.upl:hover{border-color:var(--accent)}
+.voice-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.voice-row input[type=text]{flex:1;min-width:220px;font:inherit;font-size:13px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{border-radius:99px;font-size:12px;padding:5px 11px}
+.voice-ok{color:var(--accent);margin:0;font-size:13px}
+.voice-bad{color:#f0a197;margin:0;font-size:13px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -139,6 +147,21 @@ table.cal{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100
   </header>
 
   <div class="stripe" id="kpis"></div>
+
+  <section class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <h2>Голосовые команды</h2>
+      <span class="tag" id="voiceStatus">Проверяю микрофон…</span>
+    </div>
+    <p class="note" style="margin-top:4px">Работает в любой вкладке. В рабочей версии голос записывается в Telegram/WhatsApp и распознаётся тем же способом (Yandex SpeechKit) — здесь тот же принцип прямо в браузере: запись → текст → действие.</p>
+    <div class="voice-row">
+      <button type="button" id="btnMic">🎙️ Сказать</button>
+      <input type="text" id="voiceInput" placeholder="Например: подтверди D-104">
+      <button type="button" class="primary" id="btnVoiceRun">Выполнить</button>
+    </div>
+    <div class="chips" id="voiceChips"></div>
+    <div id="voiceResult"></div>
+  </section>
 
   <nav class="tabs" id="tabs" aria-label="Разделы">
     <button type="button" data-tab="deals" aria-selected="true">Сделки</button>
@@ -182,16 +205,19 @@ table.cal{border-collapse:separate;border-spacing:0;font-size:12px;min-width:100
       <h2>Состояние машины: до и после</h2>
       <p class="note" style="margin-top:-4px">Тот же принцип, что в основном осмотре: ИИ сравнивает фото при выдаче и при возврате, отмечает новые места и передаёт решение человеку. Пример ниже — машина из сделки <b id="pfDeal"></b>.</p>
       <div class="photos">
-        <div class="pframe"><span class="lbl">При выдаче</span><img src="ops-before.jpg" alt="Машина при выдаче, повреждений нет" id="pfBefore"></div>
+        <div class="pframe"><span class="lbl">При выдаче</span><img src="ops-before.jpg" alt="Машина при выдаче, повреждений нет" id="pfBefore">
+          <label class="upl" for="upBefore">Загрузить своё фото</label><input type="file" id="upBefore" accept="image/*" hidden></div>
         <div class="pframe"><span class="lbl">При возврате</span><img src="ops-after.jpg" alt="Машина при возврате" id="pfAfter">
           <div class="box" id="boxScratch" style="left:35%;top:60%;width:17%;height:9%;display:none"><span>царапина</span></div>
           <div class="box" id="boxDent" style="left:54%;top:58%;width:9%;height:11%;display:none"><span>вмятина</span></div>
-        </div>
+          <label class="upl" for="upAfter">Загрузить своё фото</label><input type="file" id="upAfter" accept="image/*" hidden></div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button type="button" class="primary" id="btnDiff">Сравнить с выдачей</button>
-        <button type="button" id="btnReset">Сбросить</button>
+        <button type="button" id="btnReset">Сбросить рамки</button>
+        <button type="button" id="btnResetPhotos">Вернуть фото-пример</button>
       </div>
+      <p class="note" id="uploadNote" style="margin-top:-6px"></p>
       <div class="difflist" id="diffList"></div>
     </section>
     <p class="note">Коробки и суммы здесь расставлены вручную для показа идеи. В рабочей версии это делает тот же конвейер, что уже проверен на реальных фото (<code>src/carval/pipeline/</code>, 51 тест).</p>
@@ -505,34 +531,165 @@ $("btnReset").onclick = () => {
   $("boxScratch").style.display = "none"; $("boxDent").style.display = "none"; $("diffList").innerHTML = "";
 };
 
-/* ---------- Парк: календарь из тех же сделок + пара служебных записей ---------- */
-const FLEET_CARS = ["Lixiang L9", "Zeekr X", "Chery Tiggo 7 Pro", "Toyota Land Cruiser 200"];
-const SERVICE = [
-  {car:"Zeekr X", from:"2026-10-19", to:"2026-10-20", type:"prep", label:"мойка, подготовка"},
-  {car:"Chery Tiggo 7 Pro", from:"2026-10-24", to:"2026-10-25", type:"repair", label:"ремонт: скол стекла"},
+/* ---------- Парк: весь список машин компании, календарь из тех же сделок + служебные записи ---------- */
+const FLEET_UNITS = [
+  {model:"Lixiang L9", plate:"702 SWR 02"},
+  {model:"Lixiang L9", plate:"715 SWR 02"},
+  {model:"Zeekr 001", plate:"118 SWR 02"},
+  {model:"Zeekr X", plate:"204 SWR 02"},
+  {model:"Zeekr X", plate:"209 SWR 02"},
+  {model:"Toyota Land Cruiser 200", plate:"300 SWR 02"},
+  {model:"Chery Tiggo 7 Pro", plate:"411 SWR 02"},
+  {model:"Chery Tiggo 7 Pro", plate:"412 SWR 02"},
+  {model:"Hyundai Elantra", plate:"520 SWR 02"},
+  {model:"Chevrolet Cobalt", plate:"601 SWR 02"},
+  {model:"Chevrolet Cobalt", plate:"602 SWR 02"},
+  {model:"Chevrolet Cobalt", plate:"603 SWR 02"},
 ];
+const SERVICE = [
+  {model:"Zeekr X", from:"2026-10-19", to:"2026-10-20", type:"prep", label:"мойка, подготовка"},
+  {model:"Chery Tiggo 7 Pro", from:"2026-10-24", to:"2026-10-25", type:"repair", label:"ремонт: скол стекла"},
+];
+function parseISO(s){ const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
+
+// несколько машин одной модели — события модели раскладываем по свободным
+// экземплярам жадно, чтобы пересекающиеся по датам брони не легли в одну строку
+function packUnits(events, count){
+  const slots = Array.from({length: Math.max(count, 1)}, () => []);
+  for (const ev of events.slice().sort((a,b) => a.from.localeCompare(b.from))){
+    let slot = slots.find(s => !s.length || s[s.length - 1].to < ev.from);
+    if (!slot) slot = slots[slots.length - 1];  // перебор экземпляров модели — демо-данные, в жизни такого не допустит gate
+    slot.push(ev);
+  }
+  return slots;
+}
+
 function renderFleet(){
-  const start = parseISO(TODAY);
   const n = 14;
   const days = [...Array(n)].map((_,i) => addDays(TODAY, i));
-  const wdShort = iso => ["вс","пн","вт","ср","чт","пт","сб"][new Date(parseISO(iso)).getDay()];
+  const wdShort = iso => ["вс","пн","вт","ср","чт","пт","сб"][parseISO(iso).getDay()];
   let h = `<thead><tr><th class="car">Машина</th>${days.map((s,i) => `<th class="${i===0?'today':''}">${wdShort(s)}<b>${s.slice(8,10)}</b></th>`).join("")}</tr></thead><tbody>`;
-  for (const car of FLEET_CARS){
-    h += `<tr><th class="car" scope="row"><b>${esc(car)}</b></th>`;
-    const bars = [
-      ...DEALS.filter(d => d.car === car).map(d => ({from:d.from, to:d.to, type:d.status, label:d.client})),
-      ...SERVICE.filter(s => s.car === car).map(s => ({from:s.from, to:s.to, type:s.type, label:s.label})),
+
+  const models = [...new Set(FLEET_UNITS.map(u => u.model))];
+  for (const model of models){
+    const units = FLEET_UNITS.filter(u => u.model === model);
+    const events = [
+      ...DEALS.filter(d => d.car === model).map(d => ({from:d.from, to:d.to, type:d.status, label:d.client})),
+      ...SERVICE.filter(s => s.model === model).map(s => ({from:s.from, to:s.to, type:s.type, label:s.label})),
     ];
-    days.forEach((s,i) => {
-      const b = bars.find(x => x.from <= s && x.to >= s);
-      const label = b && (b.from === s || i===0) ? b.label : "";
-      h += `<td>${b ? `<span class="bar ${b.type}">${esc(label)}</span>` : ""}</td>`;
+    const slots = packUnits(events, units.length);
+    units.forEach((unit, i) => {
+      h += `<tr><th class="car" scope="row"><b>${esc(unit.model)}</b><span>${esc(unit.plate)}</span></th>`;
+      days.forEach((s,di) => {
+        const b = (slots[i] || []).find(x => x.from <= s && x.to >= s);
+        const label = b && (b.from === s || di===0) ? b.label : "";
+        h += `<td>${b ? `<span class="bar ${b.type}">${esc(label)}</span>` : ""}</td>`;
+      });
+      h += `</tr>`;
     });
-    h += `</tr>`;
   }
   $("cal").innerHTML = h + "</tbody>";
 }
-function parseISO(s){ const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
+
+/* ---------- Загрузка своих фото во вкладке «Фотоконтроль» ---------- */
+function wireUpload(inputId, imgId){
+  $(inputId).addEventListener("change", e => {
+    const f = e.target.files[0]; if (!f) return;
+    $(imgId).src = URL.createObjectURL(f);
+    $("boxScratch").style.display = "none"; $("boxDent").style.display = "none"; $("diffList").innerHTML = "";
+    $("uploadNote").textContent = "Загружено своё фото. Рамки повреждений для него программа не считала — координаты в этом демо прописаны вручную под картинку-пример. На реальных фото их размечает конвейер осмотра (src/carval/pipeline/).";
+  });
+}
+wireUpload("upBefore", "pfBefore");
+wireUpload("upAfter", "pfAfter");
+$("btnResetPhotos").onclick = () => {
+  $("pfBefore").src = "ops-before.jpg"; $("pfAfter").src = "ops-after.jpg";
+  $("boxScratch").style.display = "none"; $("boxDent").style.display = "none"; $("diffList").innerHTML = ""; $("uploadNote").textContent = "";
+};
+
+/* ---------- Голосовые команды ---------- */
+function findDeal(id){ return DEALS.find(x => x.id.toLowerCase() === id.toLowerCase()); }
+const KIND_RU = {prepayment:"предоплату", rest:"остаток аренды", deposit:"депозит", extra:"доплату"};
+
+function applyVoiceGate(d, to){
+  const r = gate(d, to);
+  if (r.ok){ d.status = to; selId = d.id; renderBoard(); kpis(); renderReminders(); renderDetail(); return {ok:true, msg:`${d.id}: ${STATUS_RU[to]}.`}; }
+  return {ok:false, msg:`Нельзя: ${r.reason}`};
+}
+
+function voiceExec(text){
+  const t = text.trim();
+  const tabm = /открой\s+(сделки|лиды|фото\w*|парк)/i.exec(t);
+  if (tabm){
+    const map = [["сделки","deals"],["лиды","leads"],["фото","photos"],["парк","fleet"]];
+    const found = map.find(([k]) => tabm[1].toLowerCase().startsWith(k));
+    if (found){ document.querySelector(`#tabs [data-tab="${found[1]}"]`).click(); return {ok:true, msg:`Открыл вкладку «${tabm[1]}».`}; }
+  }
+
+  const idm = /D[\s-]?(\d{2,4})/i.exec(t);
+  const id = idm ? "D-" + idm[1] : null;
+  if (!id) return {ok:false, msg:"Не понял, какая сделка — назовите номер, например D-096."};
+  const d = findDeal(id);
+  if (!d) return {ok:false, msg:`Не нашёл сделку ${id}.`};
+
+  if (/депозит/i.test(t) && /верн/i.test(t)){
+    if (d.status !== "returned") return {ok:false, msg:`Нельзя: сделка ${id} ещё не в статусе «возврат принят».`};
+    d.depositDecision = "returned"; selId = d.id; renderBoard(); kpis(); renderReminders(); renderDetail();
+    return {ok:true, msg:`${id}: депозит отмечен как возвращённый.`};
+  }
+  if (/депозит/i.test(t) && /удерж/i.test(t)){
+    if (d.status !== "returned") return {ok:false, msg:`Нельзя: сделка ${id} ещё не в статусе «возврат принят».`};
+    const amtm = /(\d[\d\s]{2,})/.exec(t); const amount = amtm ? +amtm[1].replace(/\s/g,"") : 0;
+    d.depositDecision = "withheld"; d.depositWithheld = amount; selId = d.id; renderBoard(); kpis(); renderReminders(); renderDetail();
+    return {ok:true, msg:`${id}: из депозита удержано ${tenge(amount)}.`};
+  }
+  if (/подтверд/i.test(t)) return applyVoiceGate(d, "confirmed");
+  if (/выда/i.test(t)) return applyVoiceGate(d, "issued");
+  if (/закро/i.test(t)) return applyVoiceGate(d, "closed");
+  if (/возврат|верн\w* машин/i.test(t)) return applyVoiceGate(d, "returned");
+
+  const paym = /(предоплат\w*|остаток\w*|депозит\w*|доплат\w*)[^\d]{0,12}(\d[\d\s]{2,})/i.exec(t);
+  if (paym){
+    const kindMap = {"предоплат":"prepayment", "остаток":"rest", "депозит":"deposit", "доплат":"extra"};
+    const kindKey = Object.keys(kindMap).find(k => paym[1].toLowerCase().startsWith(k));
+    const kind = kindMap[kindKey] || "prepayment";
+    const amount = +paym[2].replace(/\s/g,"");
+    const method = /kaspi|каспи/i.test(t) ? "kaspi" : /перевод/i.test(t) ? "transfer" : /карт/i.test(t) ? "card" : "cash";
+    d.payments.push({kind, method, amount, source:"голосовая команда"});
+    selId = d.id; renderBoard(); kpis(); renderDetail();
+    return {ok:true, msg:`${id}: добавил ${KIND_RU[kind]} ${tenge(amount)} (${method}).`};
+  }
+  return {ok:false, msg:"Не распознал действие. Примеры — в кнопках ниже."};
+}
+
+function runVoice(){
+  const t = $("voiceInput").value.trim(); if (!t) return;
+  const r = voiceExec(t);
+  $("voiceResult").innerHTML = `<p class="${r.ok?'voice-ok':'voice-bad'}">${r.ok?"✓ ":"✗ "}${esc(r.msg)}</p>`;
+}
+$("btnVoiceRun").onclick = runVoice;
+$("voiceInput").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); runVoice(); } });
+const VOICE_EXAMPLES = ["подтверди D-104", "выдай D-096", "оплата депозит 50000 kaspi D-096", "возврат D-091", "верни депозит по D-083", "удержи депозит 15000 по D-071", "открой парк"];
+$("voiceChips").innerHTML = VOICE_EXAMPLES.map(t => `<button type="button" data-ex="${esc(t)}">${esc(t)}</button>`).join("");
+$("voiceChips").addEventListener("click", e => { const b = e.target.closest("[data-ex]"); if (!b) return; $("voiceInput").value = b.dataset.ex; runVoice(); });
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recognizing = false;
+if (SR){
+  rec = new SR(); rec.lang = "ru-RU"; rec.interimResults = false; rec.maxAlternatives = 1;
+  rec.onresult = e => { $("voiceInput").value = e.results[0][0].transcript; runVoice(); };
+  rec.onerror = e => { $("voiceStatus").textContent = "Микрофон недоступен в этом окне — наберите текстом"; recognizing = false; $("btnMic").textContent = "🎙️ Сказать"; };
+  rec.onend = () => { recognizing = false; $("btnMic").textContent = "🎙️ Сказать"; };
+  $("voiceStatus").textContent = "Нажмите «Сказать» и разрешите доступ к микрофону";
+} else {
+  $("voiceStatus").textContent = "В этом окне нет распознавания речи — наберите команду текстом";
+}
+$("btnMic").onclick = () => {
+  if (!rec){ $("voiceInput").focus(); return; }
+  if (recognizing){ rec.stop(); return; }
+  try { rec.start(); recognizing = true; $("btnMic").textContent = "● Слушаю…"; }
+  catch(e){ $("voiceStatus").textContent = "Не удалось включить микрофон — наберите текстом"; }
+};
 
 kpis(); renderBoard(); renderDetail(); renderReminders(); renderLeads(); renderFleet();
 </script>
