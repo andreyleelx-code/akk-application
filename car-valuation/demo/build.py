@@ -526,7 +526,8 @@ async def render_jpegs(svgs: dict[Path, str]) -> None:
         browser = await p.chromium.launch(executable_path=str(chrome) if chrome.exists() else None)
         page = await browser.new_page(viewport={"width": 1280, "height": 720})
         for path, svg in svgs.items():
-            big = svg.replace('width="800" height="450"', 'width="1280" height="720"')
+            # только внешний кадр: у фото внутри (<image>) те же размеры, их трогать нельзя
+            big = svg.replace('width="800" height="450"', 'width="1280" height="720"', 1)
             await page.set_content(f"<body style='margin:0'>{big}</body>")
             await page.screenshot(path=str(path), type="jpeg", quality=88, clip={"x": 0, "y": 0, "width": 1280, "height": 720})
         await browser.close()
