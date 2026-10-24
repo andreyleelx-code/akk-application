@@ -1,0 +1,353 @@
+<title>Единая сделка</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@600;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Этап 1 плана: одна карточка сделки вместо пяти разных чатов. Жёсткие
+   статусы вместо регламента на бумаге — показываем это интерактивно. */
+:root{
+  --bg:#0d1012; --panel:#151a1d; --panel2:#1b2125; --line:#273136; --ink:#e7edef; --muted:#8b9aa1;
+  --accent:#5cc8b5; --accent-ink:#06211c;
+  --draft:#56636b; --confirmed:#2f5f93; --issued:#5c8a3f; --returned:#e0a43a; --closed:#5cc8b5;
+  --bad:#c9574a; --bad-soft:#c9574a22; --good-soft:#5cc8b522; --warn-soft:#e0a43a26;
+  --display:"Unbounded","Onest",system-ui,sans-serif; --body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font:15px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px 44px;display:flex;flex-direction:column;gap:18px;max-width:1360px;margin:0 auto}
+h1{font:800 clamp(22px,3vw,30px)/1.15 var(--display);margin:0;letter-spacing:-.01em}
+h1 em{font-style:normal;color:var(--accent)}
+h2{font:600 15px var(--display);margin:0}
+.sub{color:var(--muted);max-width:76ch;margin:6px 0 0}
+.tag{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:99px;padding:4px 11px;font-size:12px;color:var(--muted);white-space:nowrap}
+.stripe{display:flex;gap:10px;flex-wrap:wrap}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;min-width:150px;flex:1}
+.kpi b{display:block;font:700 22px var(--display)}
+.kpi span{color:var(--muted);font-size:12.5px}
+.kpi.alert b{color:var(--bad)}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);gap:16px;align-items:start}
+@media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.board{display:flex;flex-direction:column;gap:7px}
+.row{display:grid;grid-template-columns:90px minmax(0,1.3fr) 108px minmax(0,1fr) 92px;gap:10px;align-items:center;
+  background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;font-size:13px;min-width:0}
+.row:hover{border-color:var(--accent)}
+.row.sel{outline:2px solid var(--accent);outline-offset:-1px}
+.row .id{font:600 12px var(--mono);color:var(--muted)}
+.row .who{min-width:0}
+.row .who b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .who span{color:var(--muted);font-size:12px}
+.row .money{font:600 13px var(--mono);text-align:right;white-space:nowrap}
+.row .money small{display:block;font:11px var(--body);color:var(--muted);font-weight:400}
+.pill{display:inline-flex;align-items:center;gap:5px;font:600 11.5px var(--body);padding:3px 9px;border-radius:99px;white-space:nowrap}
+.pill i{width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.draft{background:#56636b33;color:#b7c0c5}
+.pill.confirmed{background:#2f5f9340;color:#a9c6ea}
+.pill.issued{background:#5c8a3f40;color:#b9dc9e}
+.pill.returned{background:var(--warn-soft);color:var(--returned)}
+.pill.closed{background:var(--good-soft);color:var(--accent)}
+.flag{font:600 11px var(--body);padding:2px 7px;border-radius:6px;background:var(--bad-soft);color:#f0a197;white-space:nowrap}
+.cols-head{display:grid;grid-template-columns:90px minmax(0,1.3fr) 108px minmax(0,1fr) 92px;gap:10px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0 12px}
+.detail{display:flex;flex-direction:column;gap:12px;font-size:13.5px}
+.detail h3{margin:0;font:700 17px var(--display)}
+.detail .meta{color:var(--muted);font-size:12.5px}
+.kv{display:grid;grid-template-columns:auto auto;gap:4px 14px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;text-align:right;font-family:var(--mono)}
+.bar{height:8px;border-radius:99px;background:var(--panel2);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--accent)}
+.bar.bad i{background:var(--bad)}
+.paylist{display:flex;flex-direction:column;gap:6px;font-size:12.5px}
+.paylist div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding-bottom:5px}
+.paylist span.src{color:var(--muted);font-size:11px;display:block}
+.acts{display:flex;flex-direction:column;gap:8px}
+.acts .row2{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:7px 12px;font-size:13px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.danger{border-color:var(--bad)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.gate-msg{border:1px solid var(--bad);background:var(--bad-soft);color:#f3b5ad;border-radius:8px;padding:8px 11px;font-size:13px;display:flex;gap:8px;align-items:flex-start}
+.gate-msg.ok{border-color:var(--accent);background:var(--good-soft);color:#bfe9e0}
+.payform{display:flex;flex-direction:column;gap:7px;border-top:1px solid var(--line);padding-top:10px}
+.payform .r{display:flex;gap:7px;flex-wrap:wrap}
+.payform select,.payform input{font:inherit;font-size:13px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.payform input[type=number]{width:120px}
+.reminders{display:flex;flex-direction:column;gap:7px}
+.reminders .item{display:flex;justify-content:space-between;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:13px}
+.reminders .item.over{border-color:var(--bad)}
+.reminders .item b{display:block;font-size:13px}
+.reminders .item span{color:var(--muted);font-size:11.5px}
+.note{color:var(--muted);font-size:12.5px;line-height:1.6}
+code{font-family:var(--mono);font-size:12px;background:var(--panel2);padding:1px 5px;border-radius:4px}
+.empty{color:var(--muted);font-size:13px;padding:10px 2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Единая <em>сделка</em> вместо пяти чатов</h1>
+    <p class="sub">Прокат, выкуп, оплаты, депозит и осмотр — одна карточка. Программа не даёт выдать машину без полной оплаты и закрыть сделку без решения по депозиту: это не галочка «проверено», а статус, который физически нельзя перескочить.</p>
+    <p class="tag" style="margin-top:8px">Демо · данные и суммы условные · первая очередь плана</p>
+  </header>
+
+  <div class="stripe" id="kpis"></div>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="cols-head"><span>Сделка</span><span>Клиент · машина</span><span>Статус</span><span>Риски</span><span style="text-align:right">Сумма</span></div>
+      <div class="board" id="board"></div>
+    </section>
+
+    <section class="panel" id="detailPanel"></section>
+  </div>
+
+  <section class="panel">
+    <div class="cols-head" style="grid-template-columns:1fr"><span>Напоминания руководителю</span></div>
+    <div class="reminders" id="reminders"></div>
+  </section>
+
+  <p class="note">Это прототип логики, которую мы закладываем в код (<code>src/carval/deals.py</code>, 9 тестов). В рабочей версии источник «машина свободна» и оплаты — не вручную, а из RentProg и чата-кассы.</p>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+const fmt = n => Math.round(n).toLocaleString("ru-RU").replace(/,/g," ");
+const tenge = n => fmt(n) + " ₸";
+const pad = n => String(n).padStart(2,"0");
+const human = iso => { const [y,m,d] = iso.split("-").map(Number); return `${d} ${["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"][m-1]}`; };
+const addDays = (iso, n) => { const [y,m,d] = iso.split("-").map(Number); const dt = new Date(y, m-1, d+n); return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`; };
+const TODAY = "2026-10-24";
+const DEPOSIT_DAYS = 7;
+
+/* ---------- Та же state-machine, что в src/carval/deals.py, для живого демо в браузере ---------- */
+const STATUS_RU = {draft:"заявка", confirmed:"подтверждена", issued:"выдана", returned:"возврат принят", closed:"закрыта"};
+function paid(d, kinds){ return d.payments.filter(p => kinds.includes(p.kind)).reduce((s,p)=>s+p.amount,0); }
+function rentalShortfall(d){ return Math.max(0, d.price - paid(d, ["prepayment","rest"])); }
+function depositShortfall(d){ return Math.max(0, d.deposit - paid(d, ["deposit"])); }
+function depositDueDate(d){ return d.status === "returned" ? addDays(d.to, DEPOSIT_DAYS) : null; }
+function depositOverdue(d){ const due = depositDueDate(d); return !!due && d.depositDecision === "pending" && TODAY > due; }
+function depositDaysLeft(d){ const due = depositDueDate(d); return due ? Math.round((new Date(due) - new Date(TODAY)) / 864e5) : null; }
+
+function gate(d, to){
+  if (to === "confirmed"){
+    if (d.status !== "draft") return {ok:false, reason:`сделка уже в статусе «${STATUS_RU[d.status]}»`};
+    if (!d.carAvailable) return {ok:false, reason:"машина занята на эти даты по календарю — нельзя подтвердить бронь"};
+    return {ok:true};
+  }
+  if (to === "issued"){
+    if (d.status !== "confirmed") return {ok:false, reason:"сначала подтвердите бронь"};
+    if (rentalShortfall(d) > 0) return {ok:false, reason:`не хватает оплаты аренды: ${tenge(rentalShortfall(d))}`};
+    if (depositShortfall(d) > 0) return {ok:false, reason:`не внесён депозит: не хватает ${tenge(depositShortfall(d))}`};
+    if (!d.contractSigned) return {ok:false, reason:"договор не оформлен"};
+    if (!d.handoverReport) return {ok:false, reason:"нет отчёта осмотра при выдаче — снимите машину по чек-листу"};
+    return {ok:true};
+  }
+  if (to === "returned"){
+    if (d.status !== "issued") return {ok:false, reason:"машина ещё не выдана"};
+    if (!d.returnReport) return {ok:false, reason:"нет отчёта осмотра при возврате — сначала снимите машину"};
+    return {ok:true};
+  }
+  if (to === "closed"){
+    if (d.status !== "returned") return {ok:false, reason:"сделка ещё не в статусе «возврат принят»"};
+    if (d.depositDecision === "pending") return {ok:false, reason:"не принято решение по депозиту: вернуть или удержать"};
+    return {ok:true};
+  }
+  return {ok:false, reason:"неизвестный переход"};
+}
+
+/* ---------- Примерные сделки ---------- */
+let DEALS = [
+  {id:"D-104", kind:"rental", client:"Д. Касымова", car:"Lixiang L9", carAvailable:true, status:"draft",
+   from:"2026-10-30", to:"2026-11-02", price:195000, deposit:100000, contractSigned:false, handoverReport:null, returnReport:null,
+   depositDecision:"pending", payments:[]},
+  {id:"D-109", kind:"rental", client:"С. Ким", car:"Chery Tiggo 7 Pro", carAvailable:false, status:"draft",
+   from:"2026-10-27", to:"2026-10-29", price:44000, deposit:30000, contractSigned:false, handoverReport:null, returnReport:null,
+   depositDecision:"pending", payments:[]},
+  {id:"D-096", kind:"rental", client:"М. Ли", car:"Zeekr X", carAvailable:true, status:"confirmed",
+   from:"2026-10-31", to:"2026-11-04", price:160000, deposit:50000, contractSigned:true, handoverReport:null, returnReport:null,
+   depositDecision:"pending", payments:[{kind:"prepayment", method:"kaspi", amount:100000, source:"чат-касса"}]},
+  {id:"D-091", kind:"rental", client:"Р. Омаров", car:"Lixiang L9", carAvailable:true, status:"issued",
+   from:"2026-10-28", to:"2026-11-03", price:390000, deposit:100000, contractSigned:true, handoverReport:"h-091", returnReport:null,
+   depositDecision:"pending", payments:[
+     {kind:"prepayment", method:"transfer", amount:200000, source:"чат-касса"},
+     {kind:"rest", method:"cash", amount:190000, source:"чат-касса"},
+     {kind:"deposit", method:"cash", amount:100000, source:"чат-касса"}]},
+  {id:"D-083", kind:"rental", client:"Д. Сериков", car:"Zeekr X", carAvailable:true, status:"returned",
+   from:"2026-10-15", to:"2026-10-18", price:120000, deposit:50000, contractSigned:true, handoverReport:"h-083", returnReport:"r-083",
+   depositDecision:"pending", payments:[
+     {kind:"prepayment", method:"kaspi", amount:120000, source:"чат-касса"},
+     {kind:"deposit", method:"cash", amount:50000, source:"чат-касса"},
+     {kind:"extra", method:"cash", amount:57000, source:"осмотр: новые повреждения"}]},
+  {id:"D-071", kind:"rental", client:"Е. Бекова", car:"Chery Tiggo 7 Pro", carAvailable:true, status:"returned",
+   from:"2026-09-30", to:"2026-10-03", price:66000, deposit:30000, contractSigned:true, handoverReport:"h-071", returnReport:"r-071",
+   depositDecision:"pending", payments:[
+     {kind:"prepayment", method:"cash", amount:66000, source:"чат-касса"},
+     {kind:"deposit", method:"cash", amount:30000, source:"чат-касса"}]},
+  {id:"D-064", kind:"rental", client:"ТОО «Алтын Тау»", car:"Toyota Land Cruiser 200", carAvailable:true, status:"closed",
+   from:"2026-10-02", to:"2026-10-09", price:420000, deposit:100000, contractSigned:true, handoverReport:"h-064", returnReport:"r-064",
+   depositDecision:"returned", payments:[
+     {kind:"prepayment", method:"transfer", amount:420000, source:"чат-касса"},
+     {kind:"deposit", method:"transfer", amount:100000, source:"чат-касса"}]},
+];
+let selId = DEALS[0].id;
+
+function kpis(){
+  const overdue = DEALS.filter(depositOverdue).length;
+  const soon = DEALS.filter(d => { const l = depositDaysLeft(d); return l !== null && l >= 0 && l <= 2 && d.depositDecision === "pending"; }).length;
+  const blocked = DEALS.filter(d => d.status === "confirmed" && !gate(d,"issued").ok).length;
+  const open = DEALS.filter(d => d.status !== "closed").length;
+  $("kpis").innerHTML = `
+    <div class="kpi"><b>${open}</b><span>сделок в работе</span></div>
+    <div class="kpi ${blocked?'alert':''}"><b>${blocked}</b><span>подтверждены, но нельзя выдать — не хватает денег или документов</span></div>
+    <div class="kpi ${overdue?'alert':''}"><b>${overdue}</b><span>просрочен возврат депозита (&gt;7 дней)</span></div>
+    <div class="kpi"><b>${soon}</b><span>депозит нужно вернуть в ближайшие 2 дня</span></div>`;
+}
+
+function renderBoard(){
+  $("board").innerHTML = DEALS.map(d => {
+    const flags = [];
+    if (d.status === "draft" && !d.carAvailable) flags.push("машина занята");
+    if (d.status === "confirmed" && !gate(d,"issued").ok) flags.push("нельзя выдать");
+    if (depositOverdue(d)) flags.push("депозит просрочен");
+    const money = d.status === "closed" ? "закрыто" : rentalShortfall(d)+depositShortfall(d) > 0
+      ? `<small>не хватает</small>${tenge(rentalShortfall(d)+depositShortfall(d))}` : `<small>оплачено</small>${tenge(d.price+d.deposit)}`;
+    return `<div class="row ${d.id===selId?'sel':''}" data-id="${d.id}">
+      <span class="id">${d.id}</span>
+      <span class="who"><b>${esc(d.client)}</b><span>${esc(d.car)} · ${human(d.from)}–${human(d.to)}</span></span>
+      <span class="pill ${d.status}"><i></i>${STATUS_RU[d.status]}</span>
+      <span>${flags.map(f=>`<span class="flag">${esc(f)}</span>`).join(" ")}</span>
+      <span class="money">${money}</span>
+    </div>`;
+  }).join("");
+}
+
+function renderDetail(){
+  const d = DEALS.find(x => x.id === selId);
+  if (!d){ $("detailPanel").innerHTML = `<p class="empty">Выберите сделку слева</p>`; return; }
+  const rs = rentalShortfall(d), ds = depositShortfall(d);
+  const rentPct = Math.min(100, Math.round(100 * (d.price - rs) / Math.max(1,d.price)));
+  const depPct = Math.min(100, Math.round(100 * (d.deposit - ds) / Math.max(1,d.deposit)));
+  const left = depositDaysLeft(d);
+  $("detailPanel").innerHTML = `
+    <div class="detail">
+      <div>
+        <h3>${esc(d.id)} · ${esc(d.client)}</h3>
+        <div class="meta">${esc(d.car)} · ${human(d.from)} – ${human(d.to)} · <span class="pill ${d.status}"><i></i>${STATUS_RU[d.status]}</span></div>
+      </div>
+
+      <dl class="kv">
+        <dt>Аренда</dt><dd>${tenge(d.price)}</dd>
+        <dt>Депозит</dt><dd>${tenge(d.deposit)}</dd>
+        <dt>Договор</dt><dd>${d.contractSigned ? "оформлен" : "не оформлен"}</dd>
+      </dl>
+      <div>
+        <div class="meta" style="margin-bottom:3px">Оплата аренды: ${rs>0?`не хватает ${tenge(rs)}`:"полностью"}</div>
+        <div class="bar ${rs>0?'bad':''}"><i style="width:${rentPct}%"></i></div>
+      </div>
+      <div>
+        <div class="meta" style="margin-bottom:3px">Депозит: ${ds>0?`не хватает ${tenge(ds)}`:"внесён"}</div>
+        <div class="bar ${ds>0?'bad':''}"><i style="width:${depPct}%"></i></div>
+      </div>
+
+      <div>
+        <div class="meta" style="margin-bottom:5px">Платежи (${d.payments.length})</div>
+        <div class="paylist">${d.payments.length ? d.payments.map(p => `<div><span>${{prepayment:"предоплата",rest:"остаток",deposit:"депозит",extra:"доплата"}[p.kind]} · ${{cash:"нал",kaspi:"Kaspi",transfer:"перевод",card:"карта"}[p.method]}<span class="src">источник: ${esc(p.source)}</span></span><b>${tenge(p.amount)}</b></div>`).join("") : '<p class="empty">Пока нет</p>'}</div>
+      </div>
+
+      ${d.status === "returned" ? `
+        <div>
+          <div class="meta" style="margin-bottom:5px">Депозит ${left!==null && left<0 ? `просрочен на ${-left} дн.` : left!==null ? `вернуть до ${human(depositDueDate(d))} (осталось ${left} дн.)` : ""}</div>
+          ${d.depositDecision === "pending" ? `<div class="acts"><div class="row2">
+              <button type="button" data-dep-return="${d.id}" class="primary">Вернуть депозит</button>
+              <button type="button" data-dep-hold="${d.id}" class="danger">Удержать за повреждение</button>
+            </div></div>` : `<div class="gate-msg ok">Депозит: ${d.depositDecision === "returned" ? "возвращён" : `удержано ${tenge(d.depositWithheld||0)}`}</div>`}
+        </div>` : ""}
+
+      <div class="acts">
+        <div class="meta" style="margin-bottom:2px">Действия</div>
+        ${nextStatusButtons(d)}
+        <div id="gateMsg"></div>
+      </div>
+
+      ${d.status === "draft" || d.status === "confirmed" ? paymentForm(d) : ""}
+    </div>`;
+  wireDetailEvents(d);
+}
+
+function nextStatusButtons(d){
+  const order = ["draft","confirmed","issued","returned","closed"];
+  const i = order.indexOf(d.status);
+  if (i < 0 || i === order.length - 1) return `<p class="meta">Сделка закрыта.</p>`;
+  const to = order[i+1];
+  const label = {confirmed:"Подтвердить бронь", issued:"Выдать машину", returned:"Отметить возврат", closed:"Закрыть сделку"}[to];
+  return `<div class="row2"><button type="button" class="primary" data-try="${to}">${label}</button>
+    ${to==="issued" ? `<button type="button" data-sim="handoverReport">Симулировать отчёт осмотра при выдаче</button>` : ""}
+    ${to==="returned" ? `<button type="button" data-sim="returnReport">Симулировать отчёт осмотра при возврате</button>` : ""}
+    ${to==="issued" && !d.contractSigned ? `<button type="button" data-sim="contractSigned">Отметить договор подписанным</button>` : ""}
+  </div>`;
+}
+
+function paymentForm(d){
+  return `<form class="payform" id="payForm" data-for="${d.id}">
+    <div class="meta">Добавить платёж (как запись из чата-кассы)</div>
+    <div class="r">
+      <select name="kind"><option value="prepayment">предоплата</option><option value="rest">остаток аренды</option><option value="deposit">депозит</option></select>
+      <select name="method"><option value="kaspi">Kaspi</option><option value="cash">наличные</option><option value="transfer">перевод</option><option value="card">карта</option></select>
+      <input name="amount" type="number" min="0" step="1000" placeholder="Сумма, ₸" required>
+      <button class="primary" type="submit">Добавить</button>
+    </div>
+  </form>`;
+}
+
+function flashGate(r){
+  const el = $("gateMsg");
+  if (!el) return;
+  el.innerHTML = `<div class="gate-msg ${r.ok?'ok':''}">${r.ok ? "Переход выполнен" : "Нельзя: " + esc(r.reason)}</div>`;
+}
+
+function wireDetailEvents(d){
+  $("detailPanel").querySelectorAll("[data-try]").forEach(b => b.onclick = () => {
+    const r = gate(d, b.dataset.try);
+    if (r.ok){ d.status = b.dataset.try; renderBoard(); kpis(); renderReminders(); renderDetail(); }
+    else flashGate(r);
+  });
+  $("detailPanel").querySelectorAll("[data-sim]").forEach(b => b.onclick = () => {
+    const k = b.dataset.sim;
+    if (k === "handoverReport") d.handoverReport = "h-" + d.id;
+    if (k === "returnReport") d.returnReport = "r-" + d.id;
+    if (k === "contractSigned") d.contractSigned = true;
+    renderDetail();
+  });
+  $("detailPanel").querySelectorAll("[data-dep-return]").forEach(b => b.onclick = () => { d.depositDecision = "returned"; renderBoard(); kpis(); renderReminders(); renderDetail(); });
+  $("detailPanel").querySelectorAll("[data-dep-hold]").forEach(b => b.onclick = () => { const v = +prompt("Сколько удержать, ₸?", "15000") || 0; d.depositDecision = "withheld"; d.depositWithheld = v; renderBoard(); kpis(); renderReminders(); renderDetail(); });
+  const form = $("payForm");
+  if (form) form.addEventListener("submit", e => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const amount = +fd.get("amount"); if (!amount) return;
+    d.payments.push({kind: fd.get("kind"), method: fd.get("method"), amount, source:"чат-касса"});
+    renderBoard(); kpis(); renderDetail();
+  });
+}
+
+function renderReminders(){
+  const overdue = DEALS.filter(depositOverdue);
+  const soon = DEALS.filter(d => { const l = depositDaysLeft(d); return l !== null && l >= 0 && l <= 2 && d.depositDecision === "pending"; });
+  const items = [...overdue.map(d => ({d, over:true})), ...soon.map(d => ({d, over:false}))];
+  $("reminders").innerHTML = items.length ? items.map(({d,over}) => {
+    const left = depositDaysLeft(d);
+    return `<div class="item ${over?'over':''}"><span><b>${esc(d.id)} · ${esc(d.client)}</b><span>${esc(d.car)} · возврат ${human(d.to)}</span></span>
+      <span>${over ? `<span class="flag">просрочено на ${-left} дн.</span>` : `вернуть до ${human(depositDueDate(d))}`}</span></div>`;
+  }).join("") : `<p class="empty">Просроченных и близких по сроку депозитов нет.</p>`;
+}
+
+$("board").addEventListener("click", e => { const row = e.target.closest(".row"); if (!row) return; selId = row.dataset.id; renderBoard(); renderDetail(); });
+
+kpis(); renderBoard(); renderDetail(); renderReminders();
+</script>
