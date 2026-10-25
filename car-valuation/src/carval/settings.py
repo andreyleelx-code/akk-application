@@ -36,6 +36,16 @@ class Settings(BaseSettings):
     voice_name: str = Field("alena", alias="CARVAL_VOICE_NAME")
     voice_replies: bool = Field(True, alias="CARVAL_VOICE_REPLIES")
 
+    # WhatsApp (Meta Cloud API). Пусто — вебхук работает, но ничего не отправляет.
+    # Получаются в business.facebook.com после регистрации номера — см. docs/09-whatsapp-setup.md
+    whatsapp_access_token: str = Field("", alias="WHATSAPP_ACCESS_TOKEN")
+    whatsapp_phone_number_id: str = Field("", alias="WHATSAPP_PHONE_NUMBER_ID")
+    whatsapp_verify_token: str = Field("", alias="WHATSAPP_VERIFY_TOKEN")  # придумываете сами, вписываете при подписке вебхука
+    whatsapp_app_secret: str = Field("", alias="WHATSAPP_APP_SECRET")  # для проверки подписи входящих запросов
+    whatsapp_work_from: int = Field(9, alias="CARVAL_WHATSAPP_WORK_FROM")
+    whatsapp_work_to: int = Field(21, alias="CARVAL_WHATSAPP_WORK_TO")
+    whatsapp_managers: str = Field("", alias="CARVAL_WHATSAPP_MANAGERS")  # "Ерлан,Дана,Арман"
+
     config_dir: Path = PROJECT_ROOT / "config"
     prompts_dir: Path = PROJECT_ROOT / "prompts"
     data_dir: Path = PROJECT_ROOT / "data"
@@ -43,6 +53,10 @@ class Settings(BaseSettings):
     @property
     def senior_ids(self) -> set[int]:
         return {int(x) for x in self.senior_appraiser_ids.split(",") if x.strip()}
+
+    @property
+    def manager_list(self) -> list[str]:
+        return [x.strip() for x in self.whatsapp_managers.split(",") if x.strip()]
 
     def config_file(self, name: str) -> Path:
         """Рабочий файл заказчика, если он есть, иначе пример (*.example.*)."""
